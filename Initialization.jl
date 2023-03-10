@@ -5,16 +5,16 @@ using Distributions
 
 export GT, initializeRegion, createGT
 
-# ground truth struct
-struct GT
-    μ
-    Σ
-    distr
+struct Region
+    lb # lower bounds
+    ub # upper bounds
 end
 
-struct Region
-    lb
-    ub
+# ground truth struct
+struct GT
+    μ # expected value
+    Σ # covariance matrix
+    distr # distribution that generates the values
 end
 
 (gt::GT)(X) = pdf(gt.distr, X)./pdf(gt.distr, gt.μ)

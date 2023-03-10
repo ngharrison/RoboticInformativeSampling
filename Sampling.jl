@@ -7,8 +7,8 @@ using LinearAlgebra
 export takeSample, selectSampleLocation, createCostFunc
 
 struct Sample
-    x
-    y
+    x # the location or index variable
+    y # the output or observation
 end
 
 function takeSample(x, gt)
