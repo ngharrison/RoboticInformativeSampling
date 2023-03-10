@@ -8,6 +8,10 @@ using Sampling
 
 export visualize
 
+# placeholders to avoid recomputing
+axis = nothing
+points = nothing
+
 default_res = [0.01, 0.01]
 sample_color = :green
 new_sample_color = :red
@@ -91,39 +95,24 @@ function visualize(region, samples, belief_model::AGP, weights; res=default_res)
     scatter!([x1[end]], [x2[end]], color=new_sample_color)
 end
 
-function getAxes(region; res=default_res)
-    axis = [region.x1.lb:res[1]:region.x1.ub,
-            region.x2.lb:res[2]:region.x2.ub]
-    points = [[x1, x2] for x1 in axis[1] for x2 in axis[2]]
+function getAxes(region; res=nothing)
+    global axis
+    global points
+    global default_res
+    if res !== nothing && res !== default_res # recompute
+        default_res = res
+        axis, points = generateAxes(region; res=default_res)
+    elseif axis === nothing # recompute
+        axis, points = generateAxes(region; res=default_res)
+    end
     return axis, points
 end
 
-# TODO: decide about using this code
-
-# # placeholders to avoid recomputing
-# axis = nothing
-# points = nothing
-# default_res = [0.01, 0.01] # default values
-#
-# function getAxes(region; res=nothing)
-#     global axis
-#     global points
-#     global default_res
-#     if res !== nothing && res !== default_res # recompute
-#         default_res = res
-#         axis, points = generateAxes(region; res)
-#     elseif axis === nothing # recompute
-#         global res
-#         axis, points = generateAxes(region; res)
-#     end
-#     return axis, points
-# end
-#
-# function generateAxes(region; res)
-#     global axis = [region.x1.lb:res[1]:region.x1.ub,
-#                    region.x2.lb:res[2]:region.x2.ub]
-#     global points = [[i,j] for i in axis[1] for j in axis[2]]
-#     return axis, points
-# end
+function generateAxes(region; res=default_res)
+    global axis = [region.x1.lb:res[1]:region.x1.ub,
+                   region.x2.lb:res[2]:region.x2.ub]
+    global points = [[x1,x2] for x1 in axis[1] for x2 in axis[2]]
+    return axis, points
+end
 
 end
