@@ -14,7 +14,9 @@ function generateBeliefModel(region, samples)
 
     # set up hyperparameters
     a = (length(Y_train)>1 ? std(Y_train) : 0.5)/sqrt(2)
-    b = (length(X_train)>1 ? mean(std(X_train)) : 0.2*mean([mean(region.x1), mean(region.x2)]))
+    b = (length(X_train)>1 ?
+        mean(std(X_train)) :
+        0.2*mean(mean([region.lb, region.ub])))
     θ0 = (;
           σ = positive(exp(a)),
           ℓ = positive(exp(b)),

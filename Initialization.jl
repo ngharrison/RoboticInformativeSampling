@@ -12,6 +12,11 @@ struct GT
     distr
 end
 
+struct Region
+    lb
+    ub
+end
+
 (gt::GT)(X) = pdf(gt.distr, X)./pdf(gt.distr, gt.μ)
 
 function createGT(μ=[0.3, 0.3], Σ=0.03*I)
@@ -24,10 +29,10 @@ function createGT(μ=[0.3, 0.3], Σ=0.03*I)
 end
 
 function initializeRegion()
-    x1 = (; lb=0, ub=1)
-    x2 = (; lb=0, ub=1)
+    lb = [0, 0]
+    ub = [1, 1]
     # x3 = zeros(n)
-    return (; x1, x2)
+    return Region(lb, ub)
 end
 
 end

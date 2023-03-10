@@ -6,19 +6,22 @@ using LinearAlgebra
 
 export takeSample, selectSampleLocation, createCostFunc
 
+struct Sample
+    x
+    y
+end
+
 function takeSample(x, gt)
     y = gt(x) # get sample value
-    return (; x, y)
+    return Sample(x, y)
 end
 
 function selectSampleLocation(region, samples, belief_model, weights)
-    lower = [region.x1.lb, region.x2.lb]
-    upper = [region.x1.ub, region.x2.ub]
-    x0 = (upper .- lower)./2 # I think this doesn't matter for PSO
+    x0 = (region.ub .- region.lb)./2 # I think this value doesn't matter for PSO
     opt = optimize(
         createCostFunc(region, samples, belief_model, weights),
         x0,
-        ParticleSwarm(; lower, upper, n_particles=50)
+        ParticleSwarm(; lower=region.lb, upper=region.ub, n_particles=20)
     )
     return opt.minimizer
 end
@@ -32,9 +35,7 @@ function createCostFunc(region, samples, belief_model, weights)
         x_curr = samples[end].x
         μ, σ = only.(getBelief([x], belief_model)) # mean and standard deviation
         τ = pathCost(x_curr, x) # time to location
-        lower = [region.x1.lb, region.x2.lb]
-        upper = [region.x1.ub, region.x2.ub]
-        radius = minimum(upper .- lower)/4
+        radius = minimum(region.ub .- region.lb)/4
         dists = norm.(getfield.(samples, :x) .- Ref(x))
         P = sum((radius./dists).^3) # proximity to other points
         vals = [-μ, -σ, τ, P]

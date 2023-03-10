@@ -109,8 +109,7 @@ function getAxes(region; res=nothing)
 end
 
 function generateAxes(region; res=default_res)
-    global axis = [region.x1.lb:res[1]:region.x1.ub,
-                   region.x2.lb:res[2]:region.x2.ub]
+    global axis = [region.lb[i]:res[i]:region.ub[i] for i in 1:2]
     global points = [[x1,x2] for x1 in axis[1] for x2 in axis[2]]
     return axis, points
 end
