@@ -19,7 +19,7 @@ function explore(region, x_start, weights, gt; num_samples=20, show_visuals=fals
         if belief_model !== nothing # prior belief exists
             x_new = selectSampleLocation(region, samples, belief_model, weights)
 
-            μ, σ = only.(getBelief([x_new], belief_model))
+            μ, σ = getBelief(x_new, belief_model)
             @debug "Sample location: $x_new"
             @debug "Location values: $([μ, σ])"
             @debug "Location costs: $([μ*weights[1], σ*weights[2]])"

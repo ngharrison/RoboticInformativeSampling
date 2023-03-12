@@ -33,7 +33,7 @@ function createCostFunc(region, samples, belief_model, weights)
     x -> begin
         # cost to take new sample at location x given current location x_curr
         x_curr = samples[end].x
-        μ, σ = only.(getBelief([x], belief_model)) # mean and standard deviation
+        μ, σ = getBelief(x, belief_model) # mean and standard deviation
         τ = pathCost(x_curr, x) # time to location
         radius = minimum(region.ub .- region.lb)/4
         dists = norm.(getfield.(samples, :x) .- Ref(x))
