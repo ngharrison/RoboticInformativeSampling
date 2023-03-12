@@ -33,7 +33,7 @@ function explore(region, x_start, weights, gt; num_samples=20, show_visuals=fals
         # new belief
         belief_model = generateBeliefModel(region, samples)
         if show_visuals
-            display(visualize(region, samples, gt, belief_model, weights))
+            display(visualize(gt, belief_model, samples, weights, region))
         end
     end
     println("Mission complete")

@@ -17,18 +17,18 @@ sample_color = :green
 new_sample_color = :red
 
 # main function to visualize everything
-function visualize(region, samples, gt::GT, belief_model::AGP, weights)
+function visualize(gt::GT, belief_model::AGP, samples, weights, region; res=default_res)
     l = @layout [a ; b c]
     plot(
-        visualize(region, samples, belief_model),
-        visualize(region, gt),
-        visualize(region, samples, belief_model, weights),
+        visualize(belief_model, samples, region; res),
+        visualize(gt, region; res),
+        visualize(belief_model, samples, weights, region; res),
         layout=l
     )
 end
 
 # functions to visualize individual pieces
-function visualize(region, gt::GT; res=default_res)
+function visualize(gt::GT, region; res=default_res)
     axis, points = getAxes(region; res)
     Y = gt(points)
     map = reshape(Y, length.(axis)...)
@@ -40,7 +40,7 @@ function visualize(region, gt::GT; res=default_res)
 end
 
 # show side-by-side of belief_model mean and std
-function visualize(region, samples, belief_model::AGP; res=default_res)
+function visualize(belief_model::AGP, samples, region; res=default_res)
     axis, points = getAxes(region; res)
     m1, m2 = length.(axis)
     μ, σ = getBelief(points, belief_model)
@@ -75,7 +75,7 @@ function visualize(region, samples, belief_model::AGP; res=default_res)
 end
 
 # show cost function values
-function visualize(region, samples, belief_model::AGP, weights; res=default_res)
+function visualize(belief_model::AGP, samples, weights, region; res=default_res)
     axis, points = getAxes(region; res)
     vals = -createCostFunc(region, samples, belief_model, weights).(points)
     map = reshape(vals, length.(axis)...)

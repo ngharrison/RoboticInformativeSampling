@@ -19,12 +19,12 @@ region = initializeRegion()
 peaks = [Peak([0.3, 0.3], 0.03*I, 1.0),
          Peak([0.8, 0.7], 0.008*I, 0.4)]
 gt = GaussGT(peaks)
-visualize(region, gt)
+visualize(gt, region)
 
 weights = [1, 6, 4e-1, 1e-2] # mean, std, dist, prox
 x_start = [0.5, 0.2] # starting location
 
 @time samples, belief_model = explore(region, x_start, weights, gt;
-                                      show_visuals=false, sleep_time=0.0);
+                                      show_visuals=true, sleep_time=0.5);
 
-visualize(region, samples, gt, belief_model, weights) # plot stuff
+visualize(gt, belief_model, samples, weights, region) # plot stuff
