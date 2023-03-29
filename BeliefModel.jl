@@ -36,13 +36,13 @@ function generateBeliefModel(region, samples)
     return f_post
 end
 
-function getBelief(x::Vector{Float64}, belief_model)
+function getBelief(x::Vector{<:Real}, belief_model)
     # returns the expected value and uncertainty for a single point
     pred = only(marginals(belief_model([x])))
     return pred.μ, pred.σ
 end
 
-function getBelief(X::Vector{Vector{Float64}}, belief_model)
+function getBelief(X::Vector{<:Vector{<:Real}}, belief_model)
     # returns the expected value and uncertainty for multiple points
     pred = marginals(belief_model(X))
     μ = getfield.(pred, :μ)
