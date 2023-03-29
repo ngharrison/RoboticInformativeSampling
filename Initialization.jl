@@ -1,3 +1,4 @@
+# the pieces of the environment
 module Initialization
 
 using LinearAlgebra
@@ -21,6 +22,8 @@ function (gt::GaussGT)(X)
     # produces ground-truth value(s) for a point or list of points
     # accepts a single vector, a vector of vectors, or a matrix of column vectors
     h_max = maximum(p.h for p in gt.peaks)
+    # create a probability distribution and divide by its own peak and the highest of all the peaks
+    # this will cause the entire GT map to have a max value of 1
     return sum(p.h*pdf(p.distr, X)/pdf(p.distr, p.distr.μ)/h_max for p in gt.peaks)
 end
 
