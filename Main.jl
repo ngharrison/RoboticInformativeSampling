@@ -14,6 +14,7 @@ using Initialization
 using Exploration
 using Visualization
 
+# maybe use StructArrays.jl
 
 region = initializeRegion()
 peaks = [Peak([0.3, 0.3], 0.03*I, 1.0),

@@ -17,7 +17,7 @@ function explore(region, x_start, weights, gt; num_samples=20, show_visuals=fals
 
         # new sample
         if belief_model !== nothing # prior belief exists
-            x_new = selectSampleLocation(region, samples, belief_model, weights)
+            x_new = selectSampleLocation(region, samples, belief_model, getBelief, weights)
 
             μ, σ = getBelief(x_new, belief_model)
             @debug "Sample location: $x_new"

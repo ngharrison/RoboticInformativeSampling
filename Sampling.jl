@@ -1,7 +1,6 @@
 module Sampling
 
 using Optim
-using BeliefModel
 using LinearAlgebra
 
 export takeSample, selectSampleLocation, createCostFunc
@@ -16,10 +15,10 @@ function takeSample(x, gt)
     return Sample(x, y)
 end
 
-function selectSampleLocation(region, samples, belief_model, weights)
+function selectSampleLocation(region, samples, belief_model, getBelief, weights)
     x0 = (region.ub .- region.lb)./2 # I think this value doesn't matter for PSO
     opt = optimize(
-        createCostFunc(region, samples, belief_model, weights),
+        createCostFunc(region, samples, belief_model, getBelief, weights),
         x0,
         ParticleSwarm(; lower=region.lb, upper=region.ub, n_particles=20)
     )
@@ -28,7 +27,7 @@ end
 
 pathCost(x1, x2) = norm(x2-x1)
 
-function createCostFunc(region, samples, belief_model, weights)
+function createCostFunc(region, samples, belief_model, getBelief, weights)
     # return cost function
     x -> begin
         # cost to take new sample at location x given current location x_curr

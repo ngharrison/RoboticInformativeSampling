@@ -77,7 +77,7 @@ end
 # show cost function values
 function visualize(belief_model::AGP, samples, weights, region; res=default_res)
     axis, points = getAxes(region; res)
-    vals = -createCostFunc(region, samples, belief_model, weights).(points)
+    vals = -createCostFunc(region, samples, belief_model, getBelief, weights).(points)
     map = reshape(vals, length.(axis)...)
 
     xp = getfield.(samples, :x)
