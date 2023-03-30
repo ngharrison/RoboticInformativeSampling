@@ -2,7 +2,7 @@ module Visualization
 
 using Plots
 using AbstractGPs: AbstractGP as AGP
-using Initialization
+using Environment
 using BeliefModel
 using Sampling
 

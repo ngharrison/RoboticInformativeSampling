@@ -1,10 +1,11 @@
-# the pieces of the environment
-module Initialization
+# pieces for the environment
+
+module Environment
 
 using LinearAlgebra
 using Distributions
 
-export GT, GaussGT, Peak, initializeRegion
+export GT, GaussGT, Peak, Region
 
 struct Region
     lb # lower bounds
@@ -46,11 +47,5 @@ Peak(μ, Σ, h) = Peak(MvNormal(μ, Σ), h)
 #     indices = [round.(Int, x ./ gt.res).+1 for x in X]
 #     return [gt.map[ind...] for ind in indices]
 # end
-
-function initializeRegion()
-    lb = [0, 0]
-    ub = [1, 1]
-    return Region(lb, ub)
-end
 
 end
