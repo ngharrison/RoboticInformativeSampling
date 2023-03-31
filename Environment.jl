@@ -5,7 +5,7 @@ module Environment
 using LinearAlgebra
 using Distributions
 
-export GT, GaussGT, Peak, Region
+export GT, GaussGT, DiscreteGT, Peak, Region
 
 struct Region
     lb # lower bounds
@@ -36,16 +36,21 @@ end
 Peak(μ, Σ, h) = Peak(MvNormal(μ, Σ), h)
 
 # for future
-# struct GeneralGT <: GT
-#     map
-#     res
-# end
+struct DiscreteGT <: GT
+    map
+    res
+end
 
-# function (gt::GeneralGT)(X)
-#     # produces ground-truth value(s) for a point or list of points
-#     # accepts a single vector, a vector of vectors, or a matrix of column vectors
-#     indices = [round.(Int, x ./ gt.res).+1 for x in X]
-#     return [gt.map[ind...] for ind in indices]
-# end
+function (gt::DiscreteGT)(X)
+    # produces ground-truth value(s) for a point or list of points
+    # accepts a single vector, a vector of vectors, or a matrix of column vectors
+    indices = [round.(Int, x ./ gt.res).+1 for x in X]
+    return [gt.map[ind...] for ind in indices]
+end
+
+function (gt::DiscreteGT)()
+    # if called with no points, return the entire map
+    return gt.map
+end
 
 end

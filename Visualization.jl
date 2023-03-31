@@ -27,7 +27,20 @@ function visualize(gt::GT, belief_model::AGP, samples, weights, region; res=defa
     )
 end
 
-# functions to visualize individual pieces
+## functions to visualize individual pieces
+
+# show ground truth map
+function visualize(gt::DiscreteGT, region)
+    axis, points = getAxes(region; gt.res)
+    map = gt()
+    heatmap(axis..., map;
+            xlabel="x1",
+            ylabel="x2",
+            title="Ground Truth"
+            )
+end
+
+# more generic fallback
 function visualize(gt::GT, region; res=default_res)
     axis, points = getAxes(region; res)
     Y = gt(points)
