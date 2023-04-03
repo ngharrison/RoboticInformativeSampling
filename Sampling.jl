@@ -3,7 +3,7 @@ module Sampling
 using Optim
 using LinearAlgebra
 
-export takeSample, selectSampleLocation, createCostFunc
+export takeSample, selectSampleLocation, CostFunction
 
 struct Sample
     x # the location or index variable
@@ -15,30 +15,43 @@ function takeSample(x, gt)
     return Sample(x, y)
 end
 
-function selectSampleLocation(region, samples, belief_model, getBelief, weights)
+function selectSampleLocation(region, costFunction)
     x0 = (region.ub .- region.lb)./2 # I think this value doesn't matter for PSO
     opt = optimize(
-        createCostFunc(region, samples, belief_model, getBelief, weights),
+        costFunction,
         x0,
         ParticleSwarm(; lower=region.lb, upper=region.ub, n_particles=20)
     )
     return opt.minimizer
 end
 
-pathCost(x1, x2) = norm(x2-x1)
+struct CostFunction
+    region
+    samples
+    beliefModel
+    weights
+end
 
-function createCostFunc(region, samples, belief_model, getBelief, weights)
-    # return cost function
-    x -> begin
-        # cost to take new sample at location x given current location x_curr
-        x_curr = samples[end].x
-        μ, σ = getBelief(x, belief_model) # mean and standard deviation
-        τ = pathCost(x_curr, x) # time to location
-        radius = minimum(region.ub .- region.lb)/4
-        dists = norm.(getfield.(samples, :x) .- Ref(x))
-        P = sum((radius./dists).^3) # proximity to other points
-        vals = [-μ, -σ, τ, P]
-        return weights'*vals
+function (cf::CostFunction)(x)
+    # cost to take new sample at location x
+    μ, σ = cf.beliefModel(x) # mean and standard deviation
+    x_curr = cf.samples[end].x
+    τ = pathCost(x_curr, x, cf.region) # distance to location
+    radius = minimum(cf.region.ub .- cf.region.lb)/4
+    dists = norm.(getfield.(cf.samples, :x) .- Ref(x))
+    P = sum((radius./dists).^3) # proximity to other points
+    vals = [-μ, -σ, τ, P]
+    return cf.weights'*vals
+end
+
+function pathCost(x1, x2, region)
+    # if either point is within an obstacle, just return infinity
+    if any(region.obsMap.([x1, x2]))
+        return Inf
+    else
+        # calculate cost
+        # TODO drop in new method, such as A*
+        return norm(x2-x1)
     end
 end
 

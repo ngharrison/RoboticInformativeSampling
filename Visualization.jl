@@ -1,15 +1,14 @@
 module Visualization
 
 using Plots
-using AbstractGPs: AbstractGP as AGP
 using Environment
-using BeliefModel
+using BeliefModels
 using Sampling
 
 export visualize
 
 # placeholders to avoid recomputing
-axis = nothing
+axes = nothing
 points = nothing
 
 default_res = [0.01, 0.01]
@@ -17,23 +16,23 @@ sample_color = :green
 new_sample_color = :red
 
 # main function to visualize everything
-function visualize(gt::GT, belief_model::AGP, samples, weights, region; res=default_res)
+function visualize(gtMap::Map, beliefModel::BeliefModel, samples, costFunction, region; res=default_res)
     l = @layout [a ; b c]
     plot(
-        visualize(belief_model, samples, region; res),
-        visualize(gt, region; res),
-        visualize(belief_model, samples, weights, region; res),
+        visualize(beliefModel, samples, region; res),
+        visualize(gtMap, region),
+        visualize(costFunction, samples, region; res),
         layout=l
     )
 end
 
 ## functions to visualize individual pieces
 
-# show ground truth map
-function visualize(gt::DiscreteGT, region)
-    axis, points = getAxes(region; gt.res)
-    map = gt()
-    heatmap(axis..., map;
+# show any map data
+function visualize(map::Map, region)
+    axes = (:).(region.lb, map.res, region.ub)
+    data = map()
+    heatmap(axes..., data;
             xlabel="x1",
             ylabel="x2",
             title="Ground Truth"
@@ -42,29 +41,28 @@ end
 
 # more generic fallback
 function visualize(gt::GT, region; res=default_res)
-    axis, points = getAxes(region; res)
-    Y = gt(points)
-    map = reshape(Y, length.(axis)...)
-    heatmap(axis..., map;
+    axes, points = getAxes(region; res)
+    data = gt(points)
+    heatmap(axes..., data;
             xlabel="x1",
             ylabel="x2",
             title="Ground Truth"
             )
 end
 
-# show side-by-side of belief_model mean and std
-function visualize(belief_model::AGP, samples, region; res=default_res)
-    axis, points = getAxes(region; res)
-    m1, m2 = length.(axis)
-    μ, σ = getBelief(points, belief_model)
-    pred_map = reshape(μ, m1,m2)
-    err_map = reshape(σ, m1,m2)
+# show side-by-side of beliefModel mean and std
+function visualize(beliefModel::BeliefModel, samples, region; res=default_res)
+    axes, points = getAxes(region; res)
+    dims = Tuple(length.(axes))
+    μ, σ = beliefModel(vec(points))
+    pred_map = reshape(μ, dims)
+    err_map = reshape(σ, dims)
 
     xp = getfield.(samples, :x)
     x1 = getindex.(xp, 1)
     x2 = getindex.(xp, 2)
 
-    p1 = heatmap(axis..., pred_map)
+    p1 = heatmap(axes..., pred_map)
     scatter!(x1[1:end-1], x2[1:end-1];
              xlabel="x1",
              ylabel="x2",
@@ -74,7 +72,7 @@ function visualize(belief_model::AGP, samples, region; res=default_res)
              )
     scatter!([x1[end]], [x2[end]], color=new_sample_color)
 
-    p2 = heatmap(axis..., err_map)
+    p2 = heatmap(axes..., err_map)
     scatter!(x1[1:end-1], x2[1:end-1];
              xlabel="x1",
              ylabel="x2",
@@ -88,16 +86,15 @@ function visualize(belief_model::AGP, samples, region; res=default_res)
 end
 
 # show cost function values
-function visualize(belief_model::AGP, samples, weights, region; res=default_res)
-    axis, points = getAxes(region; res)
-    vals = -createCostFunc(region, samples, belief_model, getBelief, weights).(points)
-    map = reshape(vals, length.(axis)...)
+function visualize(costFunction::CostFunction, samples, region; res=default_res)
+    axes, points = getAxes(region; res)
+    data = -costFunction.(points)
 
     xp = getfield.(samples, :x)
     x1 = getindex.(xp, 1)
     x2 = getindex.(xp, 2)
 
-    heatmap(axis..., map)
+    heatmap(axes..., data)
     scatter!(x1[1:end-1], x2[1:end-1];
              xlabel="x1",
              ylabel="x2",
@@ -109,22 +106,22 @@ function visualize(belief_model::AGP, samples, weights, region; res=default_res)
 end
 
 function getAxes(region; res=nothing)
-    global axis
+    global axes
     global points
     global default_res
     if res !== nothing && res !== default_res # recompute
         default_res = res
-        axis, points = generateAxes(region; res=default_res)
-    elseif axis === nothing # recompute
-        axis, points = generateAxes(region; res=default_res)
+        axes, points = generateAxes(region; res=default_res)
+    elseif axes === nothing # recompute
+        axes, points = generateAxes(region; res=default_res)
     end
-    return axis, points
+    return axes, points
 end
 
 function generateAxes(region; res=default_res)
-    global axis = [region.lb[i]:res[i]:region.ub[i] for i in 1:2]
-    global points = [[x1,x2] for x1 in axis[1] for x2 in axis[2]]
-    return axis, points
+    global axes = (:).(region.lb, res, region.ub)
+    global points = collect.(Iterators.product(axes...))
+    return axes, points
 end
 
 end

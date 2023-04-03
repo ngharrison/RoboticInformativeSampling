@@ -1,13 +1,32 @@
-module BeliefModel
+module BeliefModels
 
 using AbstractGPs
 using StatsFuns
 using Optim
 using ParameterHandling
 
-export generateBeliefModel, getBelief, lossFunction
+export BeliefModel, update!
 
-function generateBeliefModel(region, samples)
+mutable struct BeliefModel
+    gp
+end
+
+# these work for a GP with 2D input
+function (beliefModel::BeliefModel)(x::Vector{<:Real})
+    # returns the expected value and uncertainty for a single point
+    pred = only(marginals(beliefModel.gp([x])))
+    return pred.μ, pred.σ
+end
+
+function (beliefModel::BeliefModel)(X::Vector{<:Vector{<:Real}})
+    # returns the expected value and uncertainty for multiple points
+    pred = marginals(beliefModel.gp(X))
+    μ = getfield.(pred, :μ)
+    σ = getfield.(pred, :σ)
+    return μ, σ
+end
+
+function update!(beliefModel::BeliefModel, region, samples)
     # set up data
     X_train = getfield.(samples, :x)
     Y_train = getfield.(samples, :y)
@@ -33,21 +52,8 @@ function generateBeliefModel(region, samples)
     f = GP(kernel(θ)) # prior gp
     fx = f(X_train, θ.σn^2+√eps())
     f_post = posterior(fx, Y_train) # gp conditioned on training samples
-    return f_post
-end
-
-function getBelief(x::Vector{<:Real}, belief_model)
-    # returns the expected value and uncertainty for a single point
-    pred = only(marginals(belief_model([x])))
-    return pred.μ, pred.σ
-end
-
-function getBelief(X::Vector{<:Vector{<:Real}}, belief_model)
-    # returns the expected value and uncertainty for multiple points
-    pred = marginals(belief_model(X))
-    μ = getfield.(pred, :μ)
-    σ = getfield.(pred, :σ)
-    return μ, σ
+    beliefModel.gp = f_post
+    return beliefModel
 end
 
 kernel(θ) = θ.σ^2 * with_lengthscale(SqExponentialKernel(), θ.ℓ^2)
