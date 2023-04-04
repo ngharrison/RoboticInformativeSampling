@@ -2,6 +2,7 @@ module Sampling
 
 using Optim
 using LinearAlgebra
+using Environment
 
 export takeSample, selectSampleLocation, CostFunction
 
@@ -42,17 +43,6 @@ function (cf::CostFunction)(x)
     P = sum((radius./dists).^3) # proximity to other points
     vals = [-μ, -σ, τ, P]
     return cf.weights'*vals
-end
-
-function pathCost(x1, x2, region)
-    # if either point is within an obstacle, just return infinity
-    if any(region.obsMap.([x1, x2]))
-        return Inf
-    else
-        # calculate cost
-        # TODO drop in new method, such as A*
-        return norm(x2-x1)
-    end
 end
 
 end

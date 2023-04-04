@@ -45,4 +45,4 @@ weights = [1, 6, 4e-1, 1e-2] # mean, std, dist, prox
 x_start = [0.5, 0.2] # starting location
 
 ## run search alg
-@time samples, beliefModel = explore(region, x_start, weights; show_visuals=true, sleep_time=0.25);
+@time samples, beliefModel = explore(region, x_start, weights; show_visuals=false, sleep_time=0.0);

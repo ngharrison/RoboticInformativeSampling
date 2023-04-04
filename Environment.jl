@@ -4,14 +4,25 @@ module Environment
 
 using LinearAlgebra
 using Distributions
+using Statistics
+using Graphs
 
-export Region, Map, GT, GaussGT, Peak
+export Region, Map, GT, GaussGT, Peak, pathCost
 
 struct Region
     lb # lower bounds
     ub # upper bounds
     obsMap # obstacle map
     gtMap # ground truth map
+    graph # graph for path finding
+    vmap # translates vertices in graph
+end
+
+function Region(lb, ub, obsMap, gtMap)
+    graph = grid(size(obsMap.data))
+    indices = findall(vec(obsMap.data)) # remove all vertices in collision
+    vmap = rem_vertices!(graph, indices, keep_order=true)
+    Region(lb, ub, obsMap, gtMap, graph, vmap)
 end
 
 struct Map
@@ -20,18 +31,33 @@ struct Map
 end
 
 # helper method used with maps
-pointToIndex(x, res) = round.(Int, x ./ res) .+ 1
+pointToIndex(x, map) = CartesianIndex(Tuple(round.(Int, x ./ map.res) .+ 1))
 
 function (map::Map)(x)
     # produces a ground-truth value for a point
     # accepts a single vector
-    index = pointToIndex(x, map.res)
-    return map.data[index...]
+    index = pointToIndex(x, map)
+    return map.data[index]
 end
 
 function (map::Map)()
     # if called with no points, return the entire map
     return map.data
+end
+
+function getGraphIndex(x, region)
+    i = LinearIndices(region.obsMap.data)[pointToIndex(x, region.obsMap)]
+    return findfirst(==(i), region.vmap)
+end
+
+function pathCost(x1, x2, region)
+    # if either point is within an obstacle, just return infinity
+    any(region.obsMap.([x1, x2])) && return Inf
+
+    # calculate cost
+    s, t = getGraphIndex.((x1, x2), Ref(region))
+    path = a_star(region.graph, s, t, weights(region.graph), norm)
+    return length(path)*mean(region.obsMap.res)
 end
 
 
