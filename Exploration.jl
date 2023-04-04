@@ -12,7 +12,6 @@ function explore(region, x_start, weights; num_samples=20, show_visuals=false, s
     beliefModel = BeliefModel(nothing)
     costFunction = CostFunction(region, samples, beliefModel, weights)
     x_new = x_start
-    num_samples=20
     for i in 1:num_samples
         println("Sample number $i")
 
