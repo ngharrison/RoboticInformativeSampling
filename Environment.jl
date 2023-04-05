@@ -56,7 +56,7 @@ function pathCost(x1, x2, region)
 
     # calculate cost
     s, t = getGraphIndex.((x1, x2), Ref(region))
-    path = a_star(region.graph, s, t, weights(region.graph), norm)
+    path = a_star(region.graph, s, t, weights(region.graph), v->norm(t.-v))
     return length(path)*mean(region.obsMap.res)
 end
 
