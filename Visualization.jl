@@ -32,7 +32,7 @@ end
 function visualize(map::Map, region)
     axes = (:).(region.lb, map.res, region.ub)
     data = map()
-    heatmap(axes..., data;
+    heatmap(axes..., data';
             xlabel="x1",
             ylabel="x2",
             title="Ground Truth"
@@ -43,7 +43,7 @@ end
 function visualize(gt::GT, region; res=default_res)
     axes, points = getAxes(region; res)
     data = gt(points)
-    heatmap(axes..., data;
+    heatmap(axes..., data';
             xlabel="x1",
             ylabel="x2",
             title="Ground Truth"
@@ -62,7 +62,7 @@ function visualize(beliefModel::BeliefModel, samples, region; res=default_res)
     x1 = getindex.(xp, 1)
     x2 = getindex.(xp, 2)
 
-    p1 = heatmap(axes..., pred_map)
+    p1 = heatmap(axes..., pred_map')
     scatter!(x1[1:end-1], x2[1:end-1];
              xlabel="x1",
              ylabel="x2",
@@ -72,7 +72,7 @@ function visualize(beliefModel::BeliefModel, samples, region; res=default_res)
              )
     scatter!([x1[end]], [x2[end]], color=new_sample_color)
 
-    p2 = heatmap(axes..., err_map)
+    p2 = heatmap(axes..., err_map')
     scatter!(x1[1:end-1], x2[1:end-1];
              xlabel="x1",
              ylabel="x2",
@@ -94,7 +94,7 @@ function visualize(costFunction::CostFunction, samples, region; res=default_res)
     x1 = getindex.(xp, 1)
     x2 = getindex.(xp, 2)
 
-    heatmap(axes..., data)
+    heatmap(axes..., data')
     scatter!(x1[1:end-1], x2[1:end-1];
              xlabel="x1",
              ylabel="x2",

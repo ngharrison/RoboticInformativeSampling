@@ -24,10 +24,8 @@ axs = (:).(lb, res, ub)
 points = collect.(Iterators.product(axs...))
 
 # exclude points within a chosen rectangle
-obstacle_lb = (30, 35).*res
-obstacle_ub = (75, 50).*res
-obsMap = reduce(.&, [obstacle_lb[i] .<= getindex.(points, i) .<= obstacle_ub[i]
-                     for i in 1:length(obstacle_lb)])
+obsMap = zeros(Bool, length.(axs)...)
+obsMap[30:75, 35:50] .= true
 obsMap = Map(obsMap, res)
 
 ## initialize ground truth
@@ -46,6 +44,6 @@ x_start = [0.5, 0.2] # starting location
 
 ## run search alg
 @time samples, beliefModel = explore(region, x_start, weights;
-                                     num_samples=10,
-                                     show_visuals=false,
+                                     num_samples=20,
+                                     show_visuals=true,
                                      sleep_time=0.0);
