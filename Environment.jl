@@ -21,9 +21,9 @@ end
 
 function Region(lb, ub, obsMap, gtMap)
     # create a graph for path finding
-    graph = grid(size(obsMap.data))
-    li = LinearIndices(obsMap.data)
-    m, n = size(obsMap.data)
+    graph = grid(size(obsMap))
+    li = LinearIndices(obsMap)
+    m, n = size(obsMap)
     for i in 1:m, j in 1:n
         i > 1 && j > 1 && add_edge!(graph, li[i,j], li[i-1,j-1])
         i > 1 && j < n && add_edge!(graph, li[i,j], li[i-1,j+1])
@@ -33,8 +33,8 @@ function Region(lb, ub, obsMap, gtMap)
 
     # give diagonal paths correct distance in weight matrix
     graph_weights = ones(size(graph))
-    ci = CartesianIndices(obsMap.data)
     for i in 1:size(graph_weights, 1), j in 1:size(graph_weights, 2)
+    ci = CartesianIndices(obsMap)
         diff = ci[i] - ci[j]
         if abs(diff[1]) == 1 && abs(diff[2]) == 1
             graph_weights[i,j] = √2
@@ -42,19 +42,22 @@ function Region(lb, ub, obsMap, gtMap)
     end
 
     # remove all vertices in collision
-    indices = findall(vec(obsMap.data))
+    indices = findall(vec(obsMap))
     vmap = rem_vertices!(graph, indices, keep_order=true)
 
     Region(lb, ub, obsMap, gtMap, graph, graph_weights, vmap)
 end
 
-struct Map
-    data
+struct Map{T} <: AbstractMatrix{T}
+    data::Matrix{T}
     res
 end
 
-# helper method used with maps
-pointToIndex(x, map) = CartesianIndex(Tuple(round.(Int, x ./ map.res) .+ 1))
+# make a map function like a matrix
+Base.size(m::Map) = size(m.data)
+Base.IndexStyle(::Type{<:Map}) = IndexLinear()
+Base.getindex(m::Map, i::Int) = m.data[i]
+Base.setindex!(m::Map, v, i::Int) = m.data[i] = v
 
 function (map::Map)(x)
     # produces a ground-truth value for a point
@@ -69,8 +72,8 @@ function (map::Map)()
 end
 
 function getGraphIndex(x, region)
-    i = LinearIndices(region.obsMap.data)[pointToIndex(x, region.obsMap)]
     return findfirst(==(i), region.vmap)
+    i = LinearIndices(region.obsMap)[pointToIndex(x, region.obsMap)]
 end
 
 function pathCost(x1, x2, region)
