@@ -33,13 +33,14 @@ function Region(lb, ub, obsMap, gtMap)
 
     # give diagonal paths correct distance in weight matrix
     graph_weights = ones(size(graph))
-    for i in 1:size(graph_weights, 1), j in 1:size(graph_weights, 2)
     ci = CartesianIndices(obsMap)
+    for i in axes(graph_weights, 1), j in axes(graph_weights, 2)
         diff = ci[i] - ci[j]
         if abs(diff[1]) == 1 && abs(diff[2]) == 1
             graph_weights[i,j] = √2
         end
     end
+    graph_weights .*= mean(obsMap.res)
 
     # remove all vertices in collision
     indices = findall(vec(obsMap))
@@ -71,9 +72,18 @@ function (map::Map)()
     return map.data
 end
 
+# helper method used with maps
+pointToIndex(x, map) = CartesianIndex(Tuple(round.(Int, x ./ map.res) .+ 1))
+indexToPoint(i, map) = (collect(Tuple(i)) .- 1) .* map.res
+
 function getGraphIndex(x, region)
-    return findfirst(==(i), region.vmap)
-    i = LinearIndices(region.obsMap)[pointToIndex(x, region.obsMap)]
+    li = LinearIndices(region.obsMap)[pointToIndex(x, region.obsMap)]
+    return findfirst(==(li), region.vmap)
+end
+
+function getMapPoint(i, region)
+    ci = CartesianIndices(region.obsMap)
+    return indexToPoint(ci[region.vmap[i]], region.obsMap)
 end
 
 function pathCost(x1, x2, region)
@@ -82,8 +92,9 @@ function pathCost(x1, x2, region)
 
     # calculate cost
     s, t = getGraphIndex.((x1, x2), Ref(region))
-    path = a_star(region.graph, s, t, region.graph_weights, v->norm(t.-v))
-    return length(path)*mean(region.obsMap.res)
+    heuristic = v->norm(x2 - getMapPoint(v, region))
+    path = a_star(region.graph, s, t, region.graph_weights, heuristic)
+    return isempty(path) ? 0.0 : sum(region.graph_weights[e.src, e.dst] for e in path)
 end
 
 
