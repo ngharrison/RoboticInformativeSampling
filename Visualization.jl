@@ -3,7 +3,7 @@ module Visualization
 using Plots
 using Environment
 using BeliefModels
-using Sampling
+using Exploration
 
 export visualize
 
@@ -16,12 +16,12 @@ sample_color = :green
 new_sample_color = :red
 
 # main function to visualize everything
-function visualize(gtMap::Map, beliefModel::BeliefModel, samples, costFunction, region; res=default_res)
+function visualize(beliefModel::BeliefModel, gtMap::Map, samples, region; res=default_res)
     l = @layout [a ; b c]
     plot(
         visualize(beliefModel, samples, region; res),
         visualize(gtMap, region),
-        visualize(costFunction, samples, region; res),
+        visualize(region.obsMap, region; title="Obstacle Map"),
         layout=l
     )
 end
@@ -29,13 +29,13 @@ end
 ## functions to visualize individual pieces
 
 # show any map data
-function visualize(map::Map, region)
+function visualize(map::Map, region; title="Map")
     axes = (:).(region.lb, map.res, region.ub)
     data = map()
     heatmap(axes..., data';
             xlabel="x1",
             ylabel="x2",
-            title="Ground Truth"
+            title
             )
 end
 

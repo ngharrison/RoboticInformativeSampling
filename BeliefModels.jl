@@ -5,9 +5,9 @@ using StatsFuns
 using Optim
 using ParameterHandling
 
-export BeliefModel, update!
+export BeliefModel, generateBeliefModel
 
-mutable struct BeliefModel
+struct BeliefModel
     gp
 end
 
@@ -26,7 +26,7 @@ function (beliefModel::BeliefModel)(X::Vector{<:Vector{<:Real}})
     return μ, σ
 end
 
-function update!(beliefModel::BeliefModel, region, samples)
+function generateBeliefModel(region, samples)
     # set up data
     X_train = getfield.(samples, :x)
     Y_train = getfield.(samples, :y)
@@ -52,7 +52,7 @@ function update!(beliefModel::BeliefModel, region, samples)
     f = GP(kernel(θ)) # prior gp
     fx = f(X_train, θ.σn^2+√eps())
     f_post = posterior(fx, Y_train) # gp conditioned on training samples
-    beliefModel.gp = f_post
+    beliefModel = BeliefModel(f_post)
     return beliefModel
 end
 

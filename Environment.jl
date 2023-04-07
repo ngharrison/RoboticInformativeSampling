@@ -2,51 +2,15 @@
 
 module Environment
 
-using LinearAlgebra
 using Distributions
-using Statistics
-using Graphs
 
-export Region, Map, GT, GaussGT, Peak, pathCost
+export Region, Map, GT, GaussGT, Peak, pointToIndex
 
 struct Region
     lb # lower bounds
     ub # upper bounds
     obsMap # obstacle map
     gtMap # ground truth map
-    graph # graph for path finding
-    graph_weights
-    vmap # translates vertices in graph
-end
-
-function Region(lb, ub, obsMap, gtMap)
-    # create a graph for path finding
-    graph = grid(size(obsMap))
-    li = LinearIndices(obsMap)
-    m, n = size(obsMap)
-    for i in 1:m, j in 1:n
-        i > 1 && j > 1 && add_edge!(graph, li[i,j], li[i-1,j-1])
-        i > 1 && j < n && add_edge!(graph, li[i,j], li[i-1,j+1])
-        i < m && j > 1 && add_edge!(graph, li[i,j], li[i+1,j-1])
-        i < m && j < n && add_edge!(graph, li[i,j], li[i+1,j+1])
-    end
-
-    # give diagonal paths correct distance in weight matrix
-    graph_weights = ones(size(graph))
-    ci = CartesianIndices(obsMap)
-    for i in axes(graph_weights, 1), j in axes(graph_weights, 2)
-        diff = ci[i] - ci[j]
-        if abs(diff[1]) == 1 && abs(diff[2]) == 1
-            graph_weights[i,j] = √2
-        end
-    end
-    graph_weights .*= mean(obsMap.res)
-
-    # remove all vertices in collision
-    indices = findall(vec(obsMap))
-    vmap = rem_vertices!(graph, indices, keep_order=true)
-
-    Region(lb, ub, obsMap, gtMap, graph, graph_weights, vmap)
 end
 
 struct Map{T} <: AbstractMatrix{T}
@@ -75,28 +39,6 @@ end
 # helper method used with maps
 pointToIndex(x, map) = CartesianIndex(Tuple(round.(Int, x ./ map.res) .+ 1))
 indexToPoint(i, map) = (collect(Tuple(i)) .- 1) .* map.res
-
-function getGraphIndex(x, region)
-    li = LinearIndices(region.obsMap)[pointToIndex(x, region.obsMap)]
-    return findfirst(==(li), region.vmap)
-end
-
-function getMapPoint(i, region)
-    ci = CartesianIndices(region.obsMap)
-    return indexToPoint(ci[region.vmap[i]], region.obsMap)
-end
-
-function pathCost(x1, x2, region)
-    # if either point is within an obstacle, just return infinity
-    any(region.obsMap.([x1, x2])) && return Inf
-
-    # calculate cost
-    s, t = getGraphIndex.((x1, x2), Ref(region))
-    heuristic = v->norm(x2 - getMapPoint(v, region))
-    path = a_star(region.graph, s, t, region.graph_weights, heuristic)
-    return isempty(path) ? 0.0 : sum(region.graph_weights[e.src, e.dst] for e in path)
-end
-
 
 abstract type GT end
 

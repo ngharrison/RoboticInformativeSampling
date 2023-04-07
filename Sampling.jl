@@ -1,10 +1,8 @@
 module Sampling
 
 using Optim
-using LinearAlgebra
-using Environment
 
-export takeSample, selectSampleLocation, CostFunction
+export takeSample, selectSampleLocation
 
 struct Sample
     x # the location or index variable
@@ -24,25 +22,6 @@ function selectSampleLocation(region, costFunction)
         ParticleSwarm(; lower=region.lb, upper=region.ub, n_particles=20)
     )
     return opt.minimizer
-end
-
-struct CostFunction
-    region
-    samples
-    beliefModel
-    weights
-end
-
-function (cf::CostFunction)(x)
-    # cost to take new sample at location x
-    μ, σ = cf.beliefModel(x) # mean and standard deviation
-    x_curr = cf.samples[end].x
-    τ = pathCost(x_curr, x, cf.region) # distance to location
-    radius = minimum(cf.region.ub .- cf.region.lb)/4
-    dists = norm.(getfield.(cf.samples, :x) .- Ref(x))
-    P = sum((radius./dists).^3) # proximity to other points
-    vals = [-μ, -σ, τ, P]
-    return cf.weights'*vals
 end
 
 end

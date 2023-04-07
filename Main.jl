@@ -1,13 +1,11 @@
 # using Debugger
 # using Profile
 # using ProfileView
-# using Logging
-# debuglogger = ConsoleLogger(stderr, Logging.Info)
-# global_logger(debuglogger)
 
 using Revise
-
 push!(LOAD_PATH, "./") # allows using modules defined in current directory
+Base.active_repl.options.iocontext[:displaysize] = (20, 70) # limit lines printed out
+# Base.active_repl.options.iocontext[:displaysize] = displaysize(stdout) # set back to default
 
 using LinearAlgebra
 using Environment
@@ -36,8 +34,6 @@ gtMap = Map(ggt(points), res)
 
 region = Region(lb, ub, obsMap, gtMap)
 
-visualize(gtMap, region)
-
 ## initialize alg values
 weights = [1, 6, 4e-1, 1e-2] # mean, std, dist, prox
 x_start = [0.5, 0.2] # starting location
@@ -45,5 +41,5 @@ x_start = [0.5, 0.2] # starting location
 ## run search alg
 @time samples, beliefModel = explore(region, x_start, weights;
                                      num_samples=20,
-                                     show_visuals=true,
-                                     sleep_time=0.0);
+                                     visualize,
+                                     sleep_time=0.5);
