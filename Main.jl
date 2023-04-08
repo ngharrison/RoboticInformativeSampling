@@ -29,7 +29,7 @@ obsMap = Map(obsMap, res)
 ## initialize ground truth
 peaks = [Peak([0.3, 0.3], 0.03*I, 1.0),
          Peak([0.8, 0.7], 0.008*I, 0.4)]
-ggt = GaussGT(peaks)
+ggt = GaussGroundTruth(peaks)
 gtMap = Map(ggt(points), res)
 
 region = Region(lb, ub, obsMap, gtMap)

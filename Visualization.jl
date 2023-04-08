@@ -40,9 +40,9 @@ function visualize(map::Map, region; title="Map")
 end
 
 # more generic fallback
-function visualize(gt::GT, region; res=default_res)
+function visualize(groundTruth::GroundTruth, region; res=default_res)
     axes, points = getAxes(region; res)
-    data = gt(points)
+    data = groundTruth(points)
     heatmap(axes..., data';
             xlabel="x1",
             ylabel="x2",

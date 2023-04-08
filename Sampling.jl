@@ -9,8 +9,8 @@ struct Sample
     y # the output or observation
 end
 
-function takeSample(x, gt)
-    y = gt(x) # get sample value
+function takeSample(x, groundTruth)
+    y = groundTruth(x) # get sample value
     return Sample(x, y)
 end
 
