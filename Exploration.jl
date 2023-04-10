@@ -29,7 +29,7 @@ function explore(region, x_start, weights; num_samples=20, visualize=nothing, sl
         push!(samples, sample)
 
         # new belief
-        beliefModel = generateBeliefModel(region, samples)
+        beliefModel = generateBeliefModel(samples, region)
 
         # visualization
         if visualize |> !isnothing

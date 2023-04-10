@@ -26,7 +26,7 @@ function (beliefModel::BeliefModel)(X::Vector{<:Vector{<:Real}})
     return μ, σ
 end
 
-function generateBeliefModel(region, samples)
+function generateBeliefModel(samples, region)
     # set up data
     X_train = getfield.(samples, :x)
     Y_train = getfield.(samples, :y)
