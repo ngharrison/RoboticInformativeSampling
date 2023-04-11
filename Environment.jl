@@ -28,12 +28,7 @@ function (map::Map)(x)
     # produces a ground-truth value for a point
     # accepts a single vector
     index = pointToIndex(x, map)
-    return map.data[index]
-end
-
-function (map::Map)()
-    # if called with no points, return the entire map
-    return map.data
+    return map[index]
 end
 
 # helper method used with maps

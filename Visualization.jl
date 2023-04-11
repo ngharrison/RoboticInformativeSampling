@@ -31,8 +31,7 @@ end
 # show any map data
 function visualize(map::Map, region; title="Map")
     axes = (:).(region.lb, map.res, region.ub)
-    data = map()
-    heatmap(axes..., data';
+    heatmap(axes..., map';
             xlabel="x1",
             ylabel="x2",
             title
