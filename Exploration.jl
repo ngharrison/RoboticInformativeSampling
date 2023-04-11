@@ -1,6 +1,6 @@
 module Exploration
 
-using Sampling
+using Samples
 using BeliefModels
 
 export explore

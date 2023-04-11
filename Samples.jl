@@ -1,4 +1,4 @@
-module Sampling
+module Samples
 
 using LinearAlgebra
 using Optim

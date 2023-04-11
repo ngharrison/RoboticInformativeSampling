@@ -3,7 +3,7 @@ module Visualization
 using Plots
 using Environment
 using BeliefModels
-using Sampling
+using Samples
 
 export visualize
 
