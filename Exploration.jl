@@ -1,12 +1,9 @@
 module Exploration
 
-using LinearAlgebra
 using Sampling
 using BeliefModels
-using Paths
-using Plots
 
-export explore, CostFunction
+export explore
 
 # adaptive sampling
 function explore(region, x_start, weights; num_samples=20, visualize=nothing, sleep_time=0)
@@ -21,8 +18,8 @@ function explore(region, x_start, weights; num_samples=20, visualize=nothing, sl
 
         if beliefModel !== nothing # prior belief exists
             # new sample
-            costFunction = CostFunction(region, samples, beliefModel, weights)
-            x_new = selectSampleLocation(region, costFunction)
+            sampleCost = SampleCost(region, samples, beliefModel, weights)
+            x_new = selectSampleLocation(region, sampleCost)
         end
 
         sample = takeSample(x_new, region.gtMap)
@@ -40,30 +37,6 @@ function explore(region, x_start, weights; num_samples=20, visualize=nothing, sl
 
     println("Mission complete")
     return samples, beliefModel
-end
-
-struct CostFunction
-    region
-    samples
-    beliefModel
-    weights
-    pathCost
-end
-
-function CostFunction(region, samples, beliefModel, weights)
-    pathCost = PathCost(samples[end].x, region.obsMap)
-    CostFunction(region, samples, beliefModel, weights, pathCost)
-end
-
-function (cf::CostFunction)(x)
-    # cost to take new sample at location x
-    μ, σ = cf.beliefModel(x) # mean and standard deviation
-    τ = cf.pathCost(x) # distance to location
-    radius = minimum(cf.region.ub .- cf.region.lb)/4
-    dists = norm.(getfield.(cf.samples, :x) .- Ref(x))
-    P = sum((radius./dists).^3) # proximity to other points
-    vals = [-μ, -σ, τ, P]
-    return cf.weights'*vals
 end
 
 end

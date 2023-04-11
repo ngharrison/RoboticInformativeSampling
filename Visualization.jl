@@ -3,7 +3,7 @@ module Visualization
 using Plots
 using Environment
 using BeliefModels
-using Exploration
+using Sampling
 
 export visualize
 
@@ -86,9 +86,9 @@ function visualize(beliefModel::BeliefModel, samples, region; res=default_res)
 end
 
 # show cost function values
-function visualize(costFunction::CostFunction, samples, region; res=default_res)
+function visualize(sampleCost::SampleCost, samples, region; res=default_res)
     axes, points = getAxes(region; res)
-    data = -costFunction.(points)
+    data = -sampleCost.(points)
 
     xp = getfield.(samples, :x)
     x1 = getindex.(xp, 1)
