@@ -4,28 +4,46 @@ using AbstractGPs
 using StatsFuns
 using Optim
 using ParameterHandling
+using DocStringExtensions
 
 export BeliefModel, generateBeliefModel
 
+"""
+Belief model struct and function.
+
+Designed on top of a Gaussian Process for 2D inputs.
+"""
 struct BeliefModel
     gp
 end
 
-# these work for a GP with 2D input
+"""
+Inputs:
+
+    - X: a single point or an array of multiple points
+
+Outputs:
+
+    - μ, σ: a pair of expected value(s) and uncertainty(s) for the given point(s)
+"""
 function (beliefModel::BeliefModel)(x::Vector{<:Real})
-    # returns the expected value and uncertainty for a single point
     pred = only(marginals(beliefModel.gp([x])))
     return pred.μ, pred.σ
 end
 
 function (beliefModel::BeliefModel)(X::Vector{<:Vector{<:Real}})
-    # returns the expected value and uncertainty for multiple points
     pred = marginals(beliefModel.gp(X))
     μ = getfield.(pred, :μ)
     σ = getfield.(pred, :σ)
     return μ, σ
 end
 
+"""
+$SIGNATURES
+
+Creates and returns a new belief model containing a GP. The GP is trained and
+conditioned on the given samples.
+"""
 function generateBeliefModel(samples, region)
     # set up data
     X_train = getfield.(samples, :x)
@@ -56,8 +74,19 @@ function generateBeliefModel(samples, region)
     return beliefModel
 end
 
+"""
+$SIGNATURES
+
+A simple squared exponential kernel for the GP with parameters θ.
+"""
 kernel(θ) = θ.σ^2 * with_lengthscale(SqExponentialKernel(), θ.ℓ^2)
 
+"""
+$SIGNATURES
+
+This function creates the loss function for training the GP. The negative log
+marginal likelihood is used.
+"""
 function lossFunction(X, Y)
     # returns a function for the negative log marginal likelihood
     θ -> begin

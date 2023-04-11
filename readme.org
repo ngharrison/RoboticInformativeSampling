@@ -1,0 +1,9 @@
+#+title: Adaptive Sampling
+
+A repository for robotic exploration in natural environments.
+
+Main focus on information gathering on a 2D surface.
+
+Written in Julia for speed and code flexibility.
+
+Created by Nicholas Harrison.

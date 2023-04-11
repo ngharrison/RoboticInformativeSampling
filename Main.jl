@@ -1,3 +1,8 @@
+# This file is used as the general scripting area
+# and launching point for running the parts of the
+# system. The main parts are initializing data,
+# running the algorithm, and visualizing results.
+
 # using Debugger
 # using Profile
 # using ProfileView

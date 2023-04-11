@@ -2,17 +2,29 @@ module Paths
 
 using LinearAlgebra
 using DataStructures
+using DocStringExtensions
+
 using Environment
 
 export PathCost
 
-# this is used to initialize the algorithm and keep track of previous computations
+"""
+Struct for PathCost function data. Previous computations are kept track of in
+its data. Can be used multiple times for the same start cell, saving
+computation.
+"""
 struct PathCost
     start
     costMap
     frontier
 end
 
+"""
+$SIGNATURES
+
+The constructor initializes the path search algorithm, created before each new
+start cell.
+"""
 function PathCost(x_start, obsMap)
     start = pointToIndex(x_start, obsMap)
 
@@ -27,8 +39,16 @@ function PathCost(x_start, obsMap)
     PathCost(start, costMap, frontier)
 end
 
-# search for a desired goal cell using the A* algorithm
-# returns the path cost
+"""
+Search for a path to a desired goal location using the A* algorithm.
+
+Returns the path cost, which will be Inf if it is unreachable.
+
+Throws an error if no value can be determined.
+
+If the cells of the path are desired, use the backpath function
+(to be implemented).
+"""
 function (S::PathCost)(x_goal)
     goal = pointToIndex(x_goal, S.costMap)
     S.costMap[goal] |> !isnan && return S.costMap[goal]
