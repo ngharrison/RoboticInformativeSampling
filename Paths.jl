@@ -55,7 +55,7 @@ function (S::PathCost)(x_goal)
 
     # update the frontier for the new goal
     for cell in keys(S.frontier)
-        S.frontier[cell] = S.costMap[cell] + norm(Tuple(goal - cell))
+        S.frontier[cell] = S.costMap[cell] + dist(cell, goal, S.costMap.res)
     end
 
     while !isempty(S.frontier)
@@ -72,18 +72,20 @@ function (S::PathCost)(x_goal)
             new_cell = cell + CartesianIndex(i,j)
             checkbounds(Bool, S.costMap, new_cell) || continue
 
-            new_cost = S.costMap[cell] + norm(Tuple(new_cell - cell) .* S.costMap.res)
+            new_cost = S.costMap[cell] + dist(cell, new_cell, S.costMap.res)
 
             if (S.costMap[new_cell] |> isnan ||
                 new_cell ∈ keys(S.frontier) && S.costMap[new_cell] > new_cost)
                 S.costMap[new_cell] = new_cost
                 # actual cost so far plus heuristic
-                S.frontier[new_cell] = new_cost + norm(Tuple(goal - new_cell))
+                S.frontier[new_cell] = new_cost + dist(new_cell, goal, S.costMap.res)
             end
         end
     end
 
     error("no path found")
 end
+
+dist(x1, x2, weights) = norm(Tuple(x2 - x1) .* weights)
 
 end
