@@ -46,5 +46,5 @@ x_start = [0.5, 0.2] # starting location
 ## run search alg
 @time samples, beliefModel = explore(region, x_start, weights;
                                      num_samples=20,
-                                     visualize,
                                      sleep_time=0.5);
+                                     # visuals=true,

@@ -4,6 +4,7 @@ using DocStringExtensions
 
 using Samples
 using BeliefModels
+using Visualization
 
 export explore
 
@@ -32,7 +33,7 @@ Outputs:
     - beliefModel: the probabilistic representation of the quantity being
       searched for
 """
-function explore(region, x_start, weights; num_samples=20, visualize=nothing, sleep_time=0)
+function explore(region, x_start, weights; num_samples=20, visuals=false, sleep_time=0)
     region.obsMap(x_start) && error("start location is within obstacle")
 
     samples = []
@@ -55,7 +56,7 @@ function explore(region, x_start, weights; num_samples=20, visualize=nothing, sl
         beliefModel = generateBeliefModel(samples, region)
 
         # visualization
-        if visualize |> !isnothing
+        if visuals
             display(visualize(beliefModel, region.gtMap, samples, region))
         end
         sleep(sleep_time)
