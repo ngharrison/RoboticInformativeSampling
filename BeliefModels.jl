@@ -90,9 +90,20 @@ marginal likelihood is used.
 function lossFunction(X, Y)
     # returns a function for the negative log marginal likelihood
     θ -> begin
-        f = GP(kernel(θ))
-        fx = f(X, θ.σn^2+√eps()) # eps to prevent numerical issues
-        return -logpdf(fx, Y)
+        try
+            f = GP(kernel(θ))
+            fx = f(X, θ.σn^2+√eps()) # eps to prevent numerical issues
+            return -logpdf(fx, Y)
+        catch e
+            # for PosDefException
+            # this seems to happen when θ.σ is extremely large and θ.ℓ is
+            # much bigger than the search region dimensions
+            println(); println("Error: $e"); @show(θ, X, Y); println()
+
+            f = GP(kernel(θ))
+            fx = f(X, θ.σn^2+√eps()+1e-2*θ.σ) # fix by making diagonal a little bigger
+            return -logpdf(fx, Y)
+        end
     end
 end
 
