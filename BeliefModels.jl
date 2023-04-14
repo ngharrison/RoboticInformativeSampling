@@ -48,8 +48,6 @@ function generateBeliefModel(samples, region)
     # set up data
     X = getfield.(samples, :x)
     Y = getfield.(samples, :y)
-    outputs = ones(Int, size(X))
-    X_train, Y_train = prepare_heterotopic_multi_output_data(X, Y, outputs)
 
     # outputs
     # T = length(env.data) + 1
@@ -58,13 +56,18 @@ function generateBeliefModel(samples, region)
     # n = 2*T - 1 # manyToOneCovMat
 
     # set up hyperparameters
-    # σ = (length(Y_train)>1 ? std(Y_train) : 0.5)/sqrt(2)
-    σ = (length(Y_train)>1 ? std(Y_train) : 0.5)/sqrt(2) * ones(n)
-    ℓ = positive(length(X_train)>1 ?
-        mean(std(X)) :
-        0.2*mean(mean([region.lb, region.ub])))
+    # σ = (length(Y)>1 ? std(Y) : 0.5)/sqrt(2)
+    σ = (length(Y)>1 ? std(Y) : 0.5)/sqrt(2) * ones(n)
+    ℓ = positive(
+        length(X)==1 ? mean(mean([region.lb, region.ub])) :
+            mean(mean([region.lb, region.ub]))*(1/length(X)) +
+            mean(std(X))*(1-1/length(X))
+    )
     σn = positive(0.001)
     θ0 = (; σ, ℓ, σn)
+
+    outputs = ones(Int, size(Y))
+    X_train, Y_train = prepare_heterotopic_multi_output_data(X, Y, outputs)
 
     θ0_flat, unflatten = value_flatten(θ0)
     k = multiKernel
