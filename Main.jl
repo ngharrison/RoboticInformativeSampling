@@ -40,7 +40,7 @@ gtMap = Map(ggt(points), res)
 region = Region(lb, ub, obsMap, gtMap)
 
 ## initialize alg values
-weights = [1, 6, 4e-1, 1e-2] # mean, std, dist, prox
+weights = [1, 6, 1, 1e-2] # mean, std, dist, prox
 x_start = [0.5, 0.2] # starting location
 
 ## run search alg
