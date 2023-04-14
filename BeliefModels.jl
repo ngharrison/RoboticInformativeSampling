@@ -27,12 +27,12 @@ Outputs:
     - μ, σ: a pair of expected value(s) and uncertainty(s) for the given point(s)
 """
 function (beliefModel::BeliefModel)(x::Vector{<:Real})
-    pred = only(marginals(beliefModel.gp([x])))
+    pred = only(marginals(beliefModel.gp([(x, 1)])))
     return pred.μ, pred.σ
 end
 
 function (beliefModel::BeliefModel)(X::Vector{<:Vector{<:Real}})
-    pred = marginals(beliefModel.gp(X))
+    pred = marginals(beliefModel.gp(tuple.(X, 1)))
     μ = getfield.(pred, :μ)
     σ = getfield.(pred, :σ)
     return μ, σ
@@ -46,28 +46,36 @@ conditioned on the given samples.
 """
 function generateBeliefModel(samples, region)
     # set up data
-    X_train = getfield.(samples, :x)
-    Y_train = getfield.(samples, :y)
+    X = getfield.(samples, :x)
+    Y = getfield.(samples, :y)
+    outputs = ones(Int, size(X))
+    X_train, Y_train = prepare_heterotopic_multi_output_data(X, Y, outputs)
+
+    # outputs
+    # T = length(env.data) + 1
+    T = 1
+    n = (T+1)*T÷2 # fullyConnectedCovMat
+    # n = 2*T - 1 # manyToOneCovMat
 
     # set up hyperparameters
-    a = (length(Y_train)>1 ? std(Y_train) : 0.5)/sqrt(2)
-    b = (length(X_train)>1 ?
-        mean(std(X_train)) :
+    # σ = (length(Y_train)>1 ? std(Y_train) : 0.5)/sqrt(2)
+    σ = (length(Y_train)>1 ? std(Y_train) : 0.5)/sqrt(2) * ones(n)
+    ℓ = positive(length(X_train)>1 ?
+        mean(std(X)) :
         0.2*mean(mean([region.lb, region.ub])))
-    θ0 = (;
-          σ = positive(exp(a)),
-          ℓ = positive(exp(b)),
-          σn = positive(exp(0.001))
-          )
-    θ0_flat, unflatten = ParameterHandling.value_flatten(θ0)
-    loss_flat = lossFunction(X_train, Y_train) ∘ unflatten
+    σn = positive(0.001)
+    θ0 = (; σ, ℓ, σn)
+
+    θ0_flat, unflatten = value_flatten(θ0)
+    k = multiKernel
+    loss_flat = lossFunction(X_train, Y_train, k) ∘ unflatten
 
     # optimize hyperparameters (train)
     opt = optimize(loss_flat, θ0_flat, LBFGS())
     θ = unflatten(opt.minimizer)
 
     # produce optimized gp belief model
-    f = GP(kernel(θ)) # prior gp
+    f = GP(k(θ)) # prior gp
     fx = f(X_train, θ.σn^2+√eps())
     f_post = posterior(fx, Y_train) # gp conditioned on training samples
     beliefModel = BeliefModel(f_post)
@@ -77,21 +85,14 @@ end
 """
 $SIGNATURES
 
-A simple squared exponential kernel for the GP with parameters θ.
-"""
-kernel(θ) = θ.σ^2 * with_lengthscale(SqExponentialKernel(), θ.ℓ^2)
-
-"""
-$SIGNATURES
-
 This function creates the loss function for training the GP. The negative log
 marginal likelihood is used.
 """
-function lossFunction(X, Y)
+function lossFunction(X, Y, k)
     # returns a function for the negative log marginal likelihood
     θ -> begin
         try
-            f = GP(kernel(θ))
+            f = GP(k(θ))
             fx = f(X, θ.σn^2+√eps()) # eps to prevent numerical issues
             return -logpdf(fx, Y)
         catch e
@@ -100,11 +101,53 @@ function lossFunction(X, Y)
             # much bigger than the search region dimensions
             println(); println("Error: $e"); @show(θ, X, Y); println()
 
-            f = GP(kernel(θ))
-            fx = f(X, θ.σn^2+√eps()+1e-2*θ.σ) # fix by making diagonal a little bigger
+            f = GP(k(θ))
+            fx = f(X, θ.σn^2+√eps()+1e-1*θ.σ) # fix by making diagonal a little bigger
             return -logpdf(fx, Y)
         end
     end
 end
+
+
+## Kernel stuff
+
+"""
+$SIGNATURES
+
+A simple squared exponential kernel for the GP with parameters θ.
+"""
+singleKernel(θ) = θ.σ^2 * with_lengthscale(SqExponentialKernel(), θ.ℓ^2)
+
+"""
+$SIGNATURES
+
+A multi-task GP kernel, a variety of multi-output GP kernel based on the
+Intrinsic Coregionalization Model with a Squared Exponential base kernel and an
+output matrix formed from a lower triangular matrix.
+"""
+multiKernel(θ) = IntrinsicCoregionMOKernel(kernel=with_lengthscale(SqExponentialKernel(), θ.ℓ^2),
+                                           B=fullyConnectedCovMat(θ.σ))
+
+function fullyConnectedCovMat(a)
+# Creates an output covariance matrix from an array of parameters
+# Fills a lower triangular matrix
+# a must hold (T+1)*T/2 parameters, where T = number of outputs
+
+    T = floor(Int, sqrt(length(a)*2)) # (T+1)*T/2 in matrix
+
+    # cholesky factorization technique to create a free-form covariance matrix
+    # that is positive semidefinite
+    L = zeros(T,T) # will be lower triangular
+    for u in 1:T
+        for v in 1:u
+            L[u,v] = a[u*(u-1)÷2 + v]
+        end
+    end
+    # A = L'*L # upper triangular times lower
+    A = L*L' # lower triangular times upper
+
+    return A
+end
+
 
 end
