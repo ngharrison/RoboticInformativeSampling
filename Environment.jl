@@ -2,7 +2,7 @@ module Environment
 
 using Distributions
 
-export Region, Map, GroundTruth, GaussGroundTruth, Peak, pointToIndex
+export Region, Map, GroundTruth, GaussGroundTruth, Peak, pointToIndex, indexToPoint
 
 """
 A general container to hold data and metadata of the search region.
@@ -13,12 +13,14 @@ Fields:
     - ub: upper bounds
     - obsMap: obstacle map
     - gtMap: ground truth map
+    - priorData: an array of already collected data
 """
 struct Region
     lb
     ub
     obsMap
     gtMap
+    prior_data
 end
 
 """

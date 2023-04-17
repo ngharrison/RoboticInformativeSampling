@@ -1,12 +1,15 @@
 module BeliefModels
 
+using LinearAlgebra
 using AbstractGPs
 using StatsFuns
 using Optim
 using ParameterHandling
 using DocStringExtensions
 
-export BeliefModel, generateBeliefModel
+using Environment
+
+export BeliefModel, generateBeliefModel, fullyConnectedCovMat
 
 """
 Belief model struct and function.
@@ -15,6 +18,7 @@ Designed on top of a Gaussian Process for 2D inputs.
 """
 struct BeliefModel
     gp
+    θ
 end
 
 """
@@ -50,24 +54,26 @@ function generateBeliefModel(samples, region)
     Y = getfield.(samples, :y)
 
     # outputs
-    # T = length(env.data) + 1
-    T = 1
+    T = length(region.prior_data) + 1
     n = (T+1)*T÷2 # fullyConnectedCovMat
     # n = 2*T - 1 # manyToOneCovMat
 
     # set up hyperparameters
     # σ = (length(Y)>1 ? std(Y) : 0.5)/sqrt(2)
     σ = (length(Y)>1 ? std(Y) : 0.5)/sqrt(2) * ones(n)
-    ℓ = positive(
-        length(X)==1 ? mean(mean([region.lb, region.ub])) :
-            mean(mean([region.lb, region.ub]))*(1/length(X)) +
-            mean(std(X))*(1-1/length(X))
-    )
-    σn = positive(0.001)
+    ℓ = length(X)==1 ? mean(mean([region.lb, region.ub])) :
+        mean(mean([region.lb, region.ub]))*(1/length(X)) +
+        mean(std(X))*(1-1/length(X))
+    σn = 0.001
     θ0 = (; σ, ℓ, σn)
 
-    outputs = ones(Int, size(Y))
-    X_train, Y_train = prepare_heterotopic_multi_output_data(X, Y, outputs)
+    data_X = [vec(indexToPoint.(CartesianIndices(data), Ref(data)))
+              for data in region.prior_data]
+    X_train = vcat((tuple.(X, i) for (i, X) in enumerate((X, data_X...)))...)
+    Y_train = [Y; vec.(region.prior_data)...]
+
+    # outputs = ones(Int, size(Y))
+    # X_train, Y_train = prepare_heterotopic_multi_output_data(X, Y, outputs)
 
     θ0_flat, unflatten = value_flatten(θ0)
     k = multiKernel
@@ -81,7 +87,7 @@ function generateBeliefModel(samples, region)
     f = GP(k(θ)) # prior gp
     fx = f(X_train, θ.σn^2+√eps())
     f_post = posterior(fx, Y_train) # gp conditioned on training samples
-    beliefModel = BeliefModel(f_post)
+    beliefModel = BeliefModel(f_post, θ)
     return beliefModel
 end
 
@@ -149,7 +155,7 @@ function fullyConnectedCovMat(a)
     # A = L'*L # upper triangular times lower
     A = L*L' # lower triangular times upper
 
-    return A
+    return A + √eps()*I
 end
 
 
