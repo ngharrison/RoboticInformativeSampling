@@ -31,7 +31,7 @@ function visualize(beliefModel::BeliefModel, gtMap::Map, samples, region; res=de
     l = @layout [a ; b c]
     plot(
         visualize(beliefModel, samples, region; res),
-        visualize(gtMap, region),
+        visualize(gtMap, region, title="Ground Truth"),
         visualize(region.obsMap, region; title="Obstacle Map"),
         layout=l
     )
