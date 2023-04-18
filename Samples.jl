@@ -17,8 +17,8 @@ Fields:
     - y: the output or observation, a scalar
 """
 struct Sample
-    x
-    y
+    x::Vector{Float64}
+    y::Float64
 end
 
 """

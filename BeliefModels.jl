@@ -61,9 +61,8 @@ function generateBeliefModel(samples, region)
     # set up hyperparameters
     # σ = (length(Y)>1 ? std(Y) : 0.5)/sqrt(2)
     σ = (length(Y)>1 ? std(Y) : 0.5)/sqrt(2) * ones(n)
-    ℓ = length(X)==1 ? mean(mean([region.lb, region.ub])) :
-        mean(mean([region.lb, region.ub]))*(1/length(X)) +
-        mean(std(X))*(1-1/length(X))
+    a = mean(mean([region.lb, region.ub]))
+    ℓ = length(X)==1 ? a : a/length(X) + mean(std(X))*(1-1/length(X))
     σn = 0.001
     θ0 = (; σ, ℓ, σn)
 

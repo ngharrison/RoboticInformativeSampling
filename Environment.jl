@@ -43,7 +43,7 @@ m[i,j] # can also use as if it's just the underlying matrix
 """
 struct Map{T} <: AbstractMatrix{T}
     data::Matrix{T}
-    res
+    res::Vector{Float64}
 end
 
 # make a map function like a matrix

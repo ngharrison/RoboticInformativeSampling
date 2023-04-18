@@ -36,7 +36,7 @@ Outputs:
 function explore(region, x_start, weights; num_samples=20, visuals=false, sleep_time=0)
     region.obsMap(x_start) && error("start location is within obstacle")
 
-    samples = []
+    samples = Sample[]
     beliefModel = nothing
     x_new = x_start
 
