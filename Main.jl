@@ -15,14 +15,26 @@ Base.active_repl.options.iocontext[:displaysize] = (20, 70) # limit lines printe
 
 using LinearAlgebra
 using Statistics
+using Images
+# using ImageView
+# using StaticArrays
+# maybe use StructArrays.jl
+
 using Environment
 using Exploration
+using BeliefModels
 using Visualization
 
-# maybe use StructArrays.jl
-# or StaticArrays.jl
-
 ## initialize region
+
+# read from image
+
+digi_elev_map = load("maps/arthursleigh_shed_small.tif")
+
+# gui = imshow_gui((500, 500))
+# canvas = gui["canvas"]
+# imshow(canvas, digi_elev_map)
+# Gtk.showall(gui["window"])
 
 res = [0.01, 0.01]
 lb = [0, 0]; ub = [1, 1]
@@ -32,14 +44,20 @@ points = collect.(Iterators.product(axs...))
 # exclude points within a chosen rectangle
 obsMap = zeros(Bool, length.(axs)...)
 obsMap[30:75, 35:50] .= true
-obsMap = Map(obsMap, res)
+
+obs_img = load("maps/obstacles_fieldsouth_220727.tif")
+obs_img = imresize(obs_img, Tuple(length.(axs)))
+# imshow(obs_img)
+obs_map = Matrix{Bool}(reverse(Gray.(obs_img) .== 0, dims=1)')
+obsMap = Map(obs_map, (ub.-lb) ./ (size(obs_img).-1))
 
 ## initialize ground truth
+
+# simulated
 peaks = [Peak([0.3, 0.3], 0.03*I, 1.0),
          Peak([0.8, 0.7], 0.008*I, 0.4)]
 ggt = GaussGroundTruth(peaks)
 gtMap = Map(ggt(points), res)
-
 
 ## Create prior prior_data
 
