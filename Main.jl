@@ -39,7 +39,6 @@ digi_elev_map = load("maps/arthursleigh_shed_small.tif")
 res = [0.01, 0.01]
 lb = [0, 0]; ub = [1, 1]
 axs = (:).(lb, res, ub)
-points = collect.(Iterators.product(axs...))
 
 # exclude points within a chosen rectangle
 obsMap = zeros(Bool, length.(axs)...)
@@ -57,6 +56,7 @@ obsMap = Map(obs_map, (ub.-lb) ./ (size(obs_img).-1))
 peaks = [Peak([0.3, 0.3], 0.03*I, 1.0),
          Peak([0.8, 0.7], 0.008*I, 0.4)]
 ggt = GaussGroundTruth(peaks)
+points = collect.(Iterators.product(axs...))
 gtMap = Map(ggt(points), res)
 
 ## Create prior prior_data
@@ -64,38 +64,37 @@ gtMap = Map(ggt(points), res)
 # none -- leave uncommented
 data_full = []
 
-if false
-    # additive
-    push!(data_full, Map(abs.(gtMap .+ 0.1 .* randn(size(gtMap))), res))
+# additive
+push!(data_full, Map(abs.(gtMap .+ 0.1 .* randn(size(gtMap))), res))
 
-    # multiplicative
-    push!(data_full, Map(abs.(gtMap .* randn()), res))
+# multiplicative
+push!(data_full, Map(abs.(gtMap .* randn()), res))
 
-    # # both
-    # push!(data_full, Map(abs.(gtMap .* randn() + 0.1 .* randn(size(gtMap))), res))
+# # both
+# push!(data_full, Map(abs.(gtMap .* randn() + 0.1 .* randn(size(gtMap))), res))
 
-    # # spatial shift
-    # t = rand(1:7)
-    # push!(data_full, [zeros(size(gtMap,1),t) gtMap[:,1:end-t]]) # shift
+# # spatial shift
+# t = rand(1:7)
+# push!(data_full, [zeros(size(gtMap,1),t) gtMap[:,1:end-t]]) # shift
 
-    # purely random
-    num_peaks = 3
-    peaks = [Peak(rand(2).*(ub-lb) .+ lb, 0.02*I, rand())
-                for i in 1:num_peaks]
-    tggt = GaussGroundTruth(peaks)
-    push!(data_full, Map(tggt(points), res))
-end
+# purely random
+num_peaks = 3
+peaks = [Peak(rand(2).*(ub-lb) .+ lb, 0.02*I, rand())
+            for i in 1:num_peaks]
+tggt = GaussGroundTruth(peaks)
+push!(data_full, Map(tggt(points), res))
 
 # reduce resolution
 # currently all data have the same resolution
 h = 20
-axs_sp = (:).(1, h, size(gtMap))
+axs_sp = (:).(1, h, size(gtMap).-1)
 prior_data = [Map(d[axs_sp...], res.*h) for d in data_full]
 
 # Calculate correlation coefficients
 correlations = [cor(vec(gtMap[axs_sp...]), vec(d)) for d in prior_data]
 
 
+# region = Region(lb, ub, obsMap, gtMap, []) # no prior data
 region = Region(lb, ub, obsMap, gtMap, prior_data)
 
 ## initialize alg values
