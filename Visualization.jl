@@ -27,12 +27,12 @@ model, the ground truth, and the obstacles.
 Arguments pass through to the sub-methods that need them. res is the grid
 resolution plotting continuous-valued functions and defaults to $default_res.
 """
-function visualize(beliefModel::BeliefModel, gtMap::Map, samples, region; res=default_res)
+function visualize(beliefModel::BeliefModel, region::Region, samples; res=default_res)
     l = @layout [a ; b c]
     plot(
-        visualize(beliefModel, samples, region; res),
-        visualize(gtMap, region, title="Ground Truth"),
-        visualize(region.obsMap, region; title="Obstacle Map"),
+        visualize(beliefModel, samples, region.gtMap; res),
+        visualize(region.gtMap, "Ground Truth"),
+        visualize(region.occMap, "Occupancy Map"),
         layout=l
     )
 end
@@ -44,8 +44,8 @@ $SIGNATURES
 
 Method to show any Map data.
 """
-function visualize(map::Map, region; title="Map")
-    axes = (:).(region.lb, map.res, region.ub)
+function visualize(map::Map, title="Map")
+    axes = range.(map.lb, map.ub, size(map))
     heatmap(axes..., map';
             xlabel="x1",
             ylabel="x2",
@@ -58,8 +58,8 @@ $SIGNATURES
 
 Method to show ground truth data.
 """
-function visualize(groundTruth::GroundTruth, region; res=default_res)
-    axes, points = getAxes(region; res)
+function visualize(groundTruth::GroundTruth, map; res=default_res)
+    axes, points = getAxes(map; res)
     data = groundTruth(points)
     heatmap(axes..., data';
             xlabel="x1",
@@ -74,19 +74,19 @@ $SIGNATURES
 Method to show belief model values of mean and standard deviation and the sample
 locations that they were generated from. Shows two plots side-by-side.
 """
-function visualize(beliefModel::BeliefModel, samples, region; res=default_res)
-    axes, points = getAxes(region; res)
+function visualize(beliefModel::BeliefModel, samples, map; res=default_res)
+    axes, points = getAxes(map; res)
     dims = Tuple(length.(axes))
     μ, σ = beliefModel(vec(points))
     pred_map = reshape(μ, dims)
     err_map = reshape(σ, dims)
 
-    xp = getfield.(samples, :x)
+    xp = first.(getfield.(samples, :x))
     x1 = getindex.(xp, 1)
     x2 = getindex.(xp, 2)
 
     p1 = heatmap(axes..., pred_map')
-    scatter!(x1[1:end-1], x2[1:end-1];
+    scatter!(x1[begin:end-1], x2[begin:end-1];
              xlabel="x1",
              ylabel="x2",
              title="GP Mean",
@@ -96,7 +96,7 @@ function visualize(beliefModel::BeliefModel, samples, region; res=default_res)
     scatter!([x1[end]], [x2[end]], color=new_sample_color)
 
     p2 = heatmap(axes..., err_map')
-    scatter!(x1[1:end-1], x2[1:end-1];
+    scatter!(x1[begin:end-1], x2[begin:end-1];
              xlabel="x1",
              ylabel="x2",
              title="GP Std",
@@ -114,16 +114,16 @@ $SIGNATURES
 
 Method to show sample cost values.
 """
-function visualize(sampleCost::SampleCost, samples, region; res=default_res)
-    axes, points = getAxes(region; res)
+function visualize(sampleCost::SampleCost, samples, map; res=default_res)
+    axes, points = getAxes(map; res)
     data = -sampleCost.(points)
 
-    xp = getfield.(samples, :x)
+    xp = first.(getfield.(samples, :x))
     x1 = getindex.(xp, 1)
     x2 = getindex.(xp, 2)
 
     heatmap(axes..., data')
-    scatter!(x1[1:end-1], x2[1:end-1];
+    scatter!(x1[begin:end-1], x2[begin:end-1];
              xlabel="x1",
              ylabel="x2",
              title="Obj Function",
@@ -139,15 +139,15 @@ $SIGNATURES
 Method to get the x and y plotting axes. This (re)generates them only if needed
 and saves them into global module variables for future use.
 """
-function getAxes(region; res=nothing)
+function getAxes(map; res=nothing)
     global axes
     global points
     global default_res
     if res !== nothing && res !== default_res # recompute
         default_res = res
-        axes, points = generateAxes(region; res=default_res)
+        axes, points = generateAxes(map; res=default_res)
     elseif axes === nothing # recompute
-        axes, points = generateAxes(region; res=default_res)
+        axes, points = generateAxes(map; res=default_res)
     end
     return axes, points
 end
@@ -157,8 +157,8 @@ $SIGNATURES
 
 Method to generate the x and y plotting axes.
 """
-function generateAxes(region; res=default_res)
-    global axes = (:).(region.lb, res, region.ub)
+function generateAxes(map; res=default_res)
+    global axes = (:).(map.lb, res, map.ub)
     global points = collect.(Iterators.product(axes...))
     return axes, points
 end

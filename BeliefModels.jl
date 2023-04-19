@@ -48,35 +48,26 @@ $SIGNATURES
 Creates and returns a new belief model containing a GP. The GP is trained and
 conditioned on the given samples.
 """
-function generateBeliefModel(samples, region)
-    # set up data
+function generateBeliefModel(samples, occMap)
+    # set up training data
     X = getfield.(samples, :x)
     Y = getfield.(samples, :y)
 
-    # outputs
-    T = length(region.prior_data) + 1
+    # number of outputs
+    T = maximum(last, X)
     n = (T+1)*T÷2 # fullyConnectedCovMat
     # n = 2*T - 1 # manyToOneCovMat
 
     # set up hyperparameters
-    # σ = (length(Y)>1 ? std(Y) : 0.5)/sqrt(2)
     σ = (length(Y)>1 ? std(Y) : 0.5)/sqrt(2) * ones(n)
-    a = mean(mean([region.lb, region.ub]))
-    ℓ = length(X)==1 ? a : a/length(X) + mean(std(X))*(1-1/length(X))
+    a = mean(mean([occMap.lb, occMap.ub]))
+    ℓ = length(X)==1 ? a : a/length(X) + mean(std(first.(X)))*(1-1/length(X))
     σn = 0.001
     θ0 = (; σ, ℓ, σn)
 
-    data_X = [vec(indexToPoint.(CartesianIndices(data), Ref(data)))
-              for data in region.prior_data]
-    X_train = vcat((tuple.(X, i) for (i, X) in enumerate((X, data_X...)))...)
-    Y_train = [Y; vec.(region.prior_data)...]
-
-    # outputs = ones(Int, size(Y))
-    # X_train, Y_train = prepare_heterotopic_multi_output_data(X, Y, outputs)
-
     θ0_flat, unflatten = value_flatten(θ0)
     k = multiKernel
-    loss_flat = lossFunction(X_train, Y_train, k) ∘ unflatten
+    loss_flat = lossFunction(X, Y, k) ∘ unflatten
 
     # optimize hyperparameters (train)
     opt = optimize(loss_flat, θ0_flat, LBFGS())
@@ -84,10 +75,9 @@ function generateBeliefModel(samples, region)
 
     # produce optimized gp belief model
     f = GP(k(θ)) # prior gp
-    fx = f(X_train, θ.σn^2+√eps())
-    f_post = posterior(fx, Y_train) # gp conditioned on training samples
-    beliefModel = BeliefModel(f_post, θ)
-    return beliefModel
+    fx = f(X, θ.σn^2+√eps())
+    f_post = posterior(fx, Y) # gp conditioned on training samples
+    return BeliefModel(f_post, θ)
 end
 
 """

@@ -22,7 +22,8 @@ Inputs:
     - x_start: the starting location
     - weights: weights for picking the next sample location (optional)
     - num_samples: the number of samples to collect in one run
-    - visualize: the function to use to see plots of the algorithm progress, if
+    - prior_samples: any samples taken previously
+    - visuals: the function to use to see plots of the algorithm progress, if
       nothing, no plots will be shown
     - sleep_time: the amount of time to wait after each iteration, useful for
       visualizations
@@ -33,8 +34,12 @@ Outputs:
     - beliefModel: the probabilistic representation of the quantity being
       searched for
 """
-function explore(region, x_start, weights; num_samples=20, visuals=false, sleep_time=0)
-    region.obsMap(x_start) && error("start location is within obstacle")
+function explore(region, x_start, weights;
+                 num_samples=20,
+                 prior_samples=Sample[],
+                 visuals=false,
+                 sleep_time=0)
+    region.occMap(x_start) && error("start location is within obstacle")
 
     samples = Sample[]
     beliefModel = nothing
@@ -45,19 +50,19 @@ function explore(region, x_start, weights; num_samples=20, visuals=false, sleep_
 
         # new sample
         if beliefModel !== nothing # prior belief exists
-            sampleCost = SampleCost(region, samples, beliefModel, weights)
-            x_new = selectSampleLocation(region, sampleCost)
+            sampleCost = SampleCost(region.occMap, samples, beliefModel, weights)
+            x_new = selectSampleLocation(region.occMap, sampleCost)
         end
 
-        sample = takeSample(x_new, region.gtMap)
+        sample = takeSample(x_new, region)
         push!(samples, sample)
 
         # new belief
-        beliefModel = generateBeliefModel(samples, region)
+        beliefModel = generateBeliefModel([prior_samples; samples], region.occMap)
 
         # visualization
         if visuals
-            display(visualize(beliefModel, region.gtMap, samples, region))
+            display(visualize(beliefModel, region, samples))
         end
         sleep(sleep_time)
     end

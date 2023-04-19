@@ -6,18 +6,18 @@ using DocStringExtensions
 
 using Paths
 
-export takeSample, selectSampleLocation, SampleCost
+export Sample, takeSample, selectSampleLocation, SampleCost
 
 """
 Usage: `Sample(x, y)`
 
 Fields:
 
-    - x: the location or index variable, a vector
+    - x: a tuple of the location and the index of measured quantity
     - y: the output or observation, a scalar
 """
 struct Sample
-    x::Vector{Float64}
+    x::Tuple{Vector{Float64}, Int}
     y::Float64
 end
 
@@ -30,13 +30,13 @@ to hold them both.
 Inputs:
 
     - x: the location to sample
-    - groundTruth: a function that gives ground truth values
+    - region: region data, including a function for ground truth values
 
 Outputs a Sample containing location x and measurement y
 """
-function takeSample(x, groundTruth)
-    y = groundTruth(x) # get sample value
-    return Sample(x, y)
+function takeSample(x, region)
+    y = region.gtMap(x) # get sample value
+    return Sample((x, 1), y)
 end
 
 """
@@ -46,15 +46,15 @@ The optimization of choosing a best single sample location.
 
 Inputs:
 
-    - region: region data
+    - occMap: a map containing upper and lower bounds
     - sampleCost: a function from sample location to cost (x->cost(x))
 """
-function selectSampleLocation(region, sampleCost)
-    x0 = (region.ub .- region.lb)./2 # I think this value doesn't matter for PSO
+function selectSampleLocation(occMap, sampleCost)
+    x0 = (occMap.ub .- occMap.lb)./2 # I think this value doesn't matter for PSO
     opt = optimize(
         sampleCost,
         x0,
-        ParticleSwarm(; lower=region.lb, upper=region.ub, n_particles=20)
+        ParticleSwarm(; lower=occMap.lb, upper=occMap.ub, n_particles=20)
     )
     return opt.minimizer
 end
@@ -63,7 +63,7 @@ end
 The cost function used for choosing a new sample location.
 """
 struct SampleCost
-    region
+    occMap
     samples
     beliefModel
     weights
@@ -78,9 +78,9 @@ A pathCost is constructed automatically from the other arguments.
 This object can then be called to get the cost of sampling at a location:
 sampleCost(x)
 """
-function SampleCost(region, samples, beliefModel, weights)
-    pathCost = PathCost(samples[end].x, region.obsMap)
-    SampleCost(region, samples, beliefModel, weights, pathCost)
+function SampleCost(occMap, samples, beliefModel, weights)
+    pathCost = PathCost(samples[end].x[1], occMap)
+    SampleCost(occMap, samples, beliefModel, weights, pathCost)
 end
 
 """
@@ -95,8 +95,8 @@ function (sc::SampleCost)(x)
     # cost to take new sample at location x
     μ, σ = sc.beliefModel(x) # mean and standard deviation
     τ = sc.pathCost(x) # distance to location
-    radius = minimum(sc.region.ub .- sc.region.lb)/4
-    dists = norm.(getfield.(sc.samples, :x) .- Ref(x))
+    radius = minimum(sc.occMap.ub .- sc.occMap.lb)/4
+    dists = norm.(first.(getfield.(sc.samples, :x)) .- Ref(x))
     P = sum((radius./dists).^3) # proximity to other points
     vals = [-μ, -σ, τ, P]
     return sc.weights'*vals

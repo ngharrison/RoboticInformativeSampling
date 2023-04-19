@@ -16,39 +16,39 @@ Base.active_repl.options.iocontext[:displaysize] = (20, 70) # limit lines printe
 using LinearAlgebra
 using Statistics
 using Images
-# using ImageView
 # using StaticArrays
 # maybe use StructArrays.jl
 
 using Environment
 using Exploration
+using Samples
 using BeliefModels
 using Visualization
 
 ## initialize region
 
+lb = [0, 0]; ub = [1, 1]
+
 # read from image
 
-digi_elev_map = load("maps/arthursleigh_shed_small.tif")
+# read in elevation
+elev_img = load("maps/arthursleigh_shed_small.tif")
+elev_mat = permutedims(reverse(gray.(elev_img), dims=1), (2,1))
+elevMap = Map(elev_mat, lb, ub)
 
 # gui = imshow_gui((500, 500))
 # canvas = gui["canvas"]
 # imshow(canvas, digi_elev_map)
 # Gtk.showall(gui["window"])
 
-res = [0.01, 0.01]
-lb = [0, 0]; ub = [1, 1]
-axs = (:).(lb, res, ub)
-
-# exclude points within a chosen rectangle
-obsMap = zeros(Bool, length.(axs)...)
-obsMap[30:75, 35:50] .= true
-
 obs_img = load("maps/obstacles_fieldsouth_220727.tif")
-obs_img = imresize(obs_img, Tuple(length.(axs)))
+obs_img = imresize(obs_img, size(elev_img))
 # imshow(obs_img)
-obs_map = Matrix{Bool}(reverse(Gray.(obs_img) .== 0, dims=1)')
-obsMap = Map(obs_map, (ub.-lb) ./ (size(obs_img).-1))
+# switch from row-column to x-y format
+occ_mat = Matrix{Bool}(Gray.(obs_img) .== 0')
+occ_mat = permutedims(reverse(occ_mat, dims=1), (2,1))
+occMap = Map(occ_mat, lb, ub)
+visualize(occMap)
 
 ## initialize ground truth
 
@@ -56,46 +56,47 @@ obsMap = Map(obs_map, (ub.-lb) ./ (size(obs_img).-1))
 peaks = [Peak([0.3, 0.3], 0.03*I, 1.0),
          Peak([0.8, 0.7], 0.008*I, 0.4)]
 ggt = GaussGroundTruth(peaks)
+axs = range.(lb, ub, size(elev_img))
 points = collect.(Iterators.product(axs...))
-gtMap = Map(ggt(points), res)
+gtMap = Map(ggt(points), lb, ub)
 
-## Create prior prior_data
+## Create prior prior_samples
 
 # none -- leave uncommented
-data_full = []
+prior_maps = []
 
 # additive
-push!(data_full, Map(abs.(gtMap .+ 0.1 .* randn(size(gtMap))), res))
+push!(prior_maps, Map(abs.(gtMap .+ 0.1 .* randn(size(gtMap))), lb, ub))
 
 # multiplicative
-push!(data_full, Map(abs.(gtMap .* randn()), res))
+push!(prior_maps, Map(abs.(gtMap .* randn()), lb, ub))
 
 # # both
-# push!(data_full, Map(abs.(gtMap .* randn() + 0.1 .* randn(size(gtMap))), res))
+# push!(prior_maps, Map(abs.(gtMap .* randn() + 0.1 .* randn(size(gtMap))), lb, ub))
 
 # # spatial shift
 # t = rand(1:7)
-# push!(data_full, [zeros(size(gtMap,1),t) gtMap[:,1:end-t]]) # shift
+# push!(prior_maps, [zeros(size(gtMap,1),t) gtMap[:,1:end-t]]) # shift
 
 # purely random
 num_peaks = 3
 peaks = [Peak(rand(2).*(ub-lb) .+ lb, 0.02*I, rand())
             for i in 1:num_peaks]
 tggt = GaussGroundTruth(peaks)
-push!(data_full, Map(tggt(points), res))
+push!(prior_maps, Map(tggt(points), lb, ub))
 
-# reduce resolution
-# currently all data have the same resolution
-h = 20
-axs_sp = (:).(1, h, size(gtMap).-1)
-prior_data = [Map(d[axs_sp...], res.*h) for d in data_full]
+# sample sparsely from the prior maps
+# currently all data have the same sample numbers and locations
+n = (5,5) # number of samples in each dimension
+axs_sp = range.(lb, ub, n)
+points_sp = vec(collect.(Iterators.product(axs_sp...)))
+prior_samples = [Sample((x, i+1), d(x)) for (i, d) in enumerate(prior_maps) for x in points_sp]
 
 # Calculate correlation coefficients
-correlations = [cor(vec(gtMap[axs_sp...]), vec(d)) for d in prior_data]
+correlations = [cor(gtMap.(points_sp), d.(points_sp)) for d in prior_maps]
 
 
-# region = Region(lb, ub, obsMap, gtMap, []) # no prior data
-region = Region(lb, ub, obsMap, gtMap, prior_data)
+region = Region(occMap, gtMap)
 
 ## initialize alg values
 weights = [1, 6, 1, 1e-2] # mean, std, dist, prox
@@ -104,8 +105,9 @@ x_start = [0.5, 0.2] # starting location
 ## run search alg
 @time samples, beliefModel = explore(region, x_start, weights;
                                      num_samples=20,
-                                     sleep_time=0.5);
+                                     prior_samples,
                                      # visuals=true,
+                                     sleep_time=0.0);
 
 cov_mat = fullyConnectedCovMat(beliefModel.θ.σ)
-correlations = [cov_mat[1,i]/(√cov_mat[1,1]*√cov_mat[i,i]) for i in 2:size(cov_mat, 1)]
+correlations = [cov_mat[i,1]/√(cov_mat[1,1]*cov_mat[i,i]) for i in 2:size(cov_mat, 1)]

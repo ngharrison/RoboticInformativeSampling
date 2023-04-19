@@ -2,26 +2,7 @@ module Environment
 
 using Distributions
 
-export Region, Map, GroundTruth, GaussGroundTruth, Peak, pointToIndex, indexToPoint
-
-"""
-A general container to hold data and metadata of the search region.
-
-Fields:
-
-    - lb: lower bounds
-    - ub: upper bounds
-    - obsMap: obstacle map
-    - gtMap: ground truth map
-    - priorData: an array of already collected data
-"""
-struct Region
-    lb
-    ub
-    obsMap
-    gtMap
-    prior_data
-end
+export Region, Map, GroundTruth, GaussGroundTruth, Peak, pointToIndex, indexToPoint, res
 
 """
 A general type for holding 2D data along with associated cell widths and
@@ -33,24 +14,31 @@ Converting between the two representations treats rows as the first variable
 Also made to function like a built-in matrix directly by sub-typing and
 implementing the base methods.
 
+Fields:
+
+    - data: matrix of data
+    - lb: vector of lower bounds
+    - ub: vector of upper bounds
+
 Usage:
 
 ```julia
-m = Map(matrix, grid_resolutions)
+m = Map(matrix, lb, ub)
 m(x) # returns the value at a single 2D point
 m[i,j] # can also use as if it's just the underlying matrix
 ```
 """
-struct Map{T} <: AbstractMatrix{T}
-    data::Matrix{T}
-    res::Vector{Float64}
+struct Map{T1, T2} <: AbstractMatrix{T1}
+    data::Matrix{T1}
+    lb::Vector{T2}
+    ub::Vector{T2}
 end
 
 # make a map function like a matrix
 Base.size(m::Map) = size(m.data)
 Base.IndexStyle(::Type{<:Map}) = IndexLinear()
 Base.getindex(m::Map, i::Int) = m.data[i]
-Base.setindex!(m::Map, v, i::Int) = m.data[i] = v
+Base.setindex!(m::Map, v, i::Int) = (m.data[i] = v)
 
 function (map::Map)(x)
     # accepts a single vector
@@ -58,9 +46,23 @@ function (map::Map)(x)
     return map[index]
 end
 
-# helper method used with maps
-pointToIndex(x, map) = CartesianIndex(Tuple(round.(Int, x ./ map.res) .+ 1))
-indexToPoint(i, map) = (collect(Tuple(i)) .- 1) .* map.res
+"""
+A general container to hold data and metadata of the search region.
+
+Fields:
+
+    - occMap: occupancy map
+    - gtMap: ground truth map
+"""
+struct Region
+    occMap::Map{Bool}
+    gtMap::Map{Float64}
+end
+
+# helper methods used with maps
+res(map) = (map.ub .- map.lb) ./ (size(map) .- 1)
+pointToIndex(x, map) = CartesianIndex(Tuple(round.(Int, (x .- map.lb) ./ res(map)) .+ 1))
+indexToPoint(ci, map) = (collect(Tuple(ci)) .- 1) .* res(map) .+ map.lb
 
 abstract type GroundTruth end
 

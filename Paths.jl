@@ -25,12 +25,12 @@ $SIGNATURES
 The constructor initializes the path search algorithm, created before each new
 start cell.
 """
-function PathCost(x_start, obsMap)
-    start = pointToIndex(x_start, obsMap)
+function PathCost(x_start, occMap)
+    start = pointToIndex(x_start, occMap)
 
     # initialize data structures with values for first cell
-    costMap = Map(fill(NaN, size(obsMap)), obsMap.res)
-    costMap[obsMap] .= Inf
+    costMap = Map(fill(NaN, size(occMap)), occMap.lb, occMap.ub)
+    costMap[occMap] .= Inf
     costMap[start] = 0.0
 
     frontier = PriorityQueue{CartesianIndex{2}, Float64}()
@@ -55,7 +55,7 @@ function (S::PathCost)(x_goal)
 
     # update the frontier for the new goal
     for cell in keys(S.frontier)
-        S.frontier[cell] = S.costMap[cell] + dist(cell, goal, S.costMap.res)
+        S.frontier[cell] = S.costMap[cell] + dist(cell, goal, res(S.costMap))
     end
 
     while !isempty(S.frontier)
@@ -72,13 +72,13 @@ function (S::PathCost)(x_goal)
             new_cell = cell + CartesianIndex(i,j)
             checkbounds(Bool, S.costMap, new_cell) || continue
 
-            new_cost = S.costMap[cell] + dist(cell, new_cell, S.costMap.res)
+            new_cost = S.costMap[cell] + dist(cell, new_cell, res(S.costMap))
 
             if (S.costMap[new_cell] |> isnan ||
                 new_cell ∈ keys(S.frontier) && S.costMap[new_cell] > new_cost)
                 S.costMap[new_cell] = new_cost
                 # actual cost so far plus heuristic
-                S.frontier[new_cell] = new_cost + dist(new_cell, goal, S.costMap.res)
+                S.frontier[new_cell] = new_cost + dist(new_cell, goal, res(S.costMap))
             end
         end
     end
