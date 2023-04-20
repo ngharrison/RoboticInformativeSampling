@@ -53,6 +53,20 @@ function generateBeliefModel(samples, occMap)
     X = getfield.(samples, :x)
     Y = getfield.(samples, :y)
 
+    θ0 = initHyperparams(X, Y, occMap)
+
+    # optimize hyperparameters (train)
+    k = multiKernel
+    θ, opt = optimize_loss(createLossFunc(X, Y, k), θ0)
+
+    # produce optimized gp belief model
+    f = GP(k(θ)) # prior gp
+    fx = f(X, θ.σn^2+√eps())
+    f_post = posterior(fx, Y) # gp conditioned on training samples
+    return BeliefModel(f_post, θ)
+end
+
+function initHyperparams(X, Y, occMap)
     # number of outputs
     T = maximum(last, X)
     n = (T+1)*T÷2 # fullyConnectedCovMat
@@ -63,21 +77,17 @@ function generateBeliefModel(samples, occMap)
     a = mean(mean([occMap.lb, occMap.ub]))
     ℓ = length(X)==1 ? a : a/length(X) + mean(std(first.(X)))*(1-1/length(X))
     σn = 0.001
-    θ0 = (; σ, ℓ, σn)
+    return (; σ, ℓ, σn)
 
+end
+
+function optimize_loss(lossFunc, θ0; optimizer=default_optimizer, maxiter=1_000)
     θ0_flat, unflatten = value_flatten(θ0)
-    k = multiKernel
-    loss_flat = lossFunction(X, Y, k) ∘ unflatten
+    loss_flat = lossFunc ∘ unflatten
 
-    # optimize hyperparameters (train)
-    opt = optimize(loss_flat, θ0_flat, LBFGS())
-    θ = unflatten(opt.minimizer)
+    opt = optimize(loss_flat, θ0_flat)
 
-    # produce optimized gp belief model
-    f = GP(k(θ)) # prior gp
-    fx = f(X, θ.σn^2+√eps())
-    f_post = posterior(fx, Y) # gp conditioned on training samples
-    return BeliefModel(f_post, θ)
+    return unflatten(opt.minimizer), opt
 end
 
 """
@@ -86,7 +96,7 @@ $SIGNATURES
 This function creates the loss function for training the GP. The negative log
 marginal likelihood is used.
 """
-function lossFunction(X, Y, k)
+function createLossFunc(X, Y, k)
     # returns a function for the negative log marginal likelihood
     θ -> begin
         try
@@ -126,21 +136,24 @@ output matrix formed from a lower triangular matrix.
 multiKernel(θ) = IntrinsicCoregionMOKernel(kernel=with_lengthscale(SqExponentialKernel(), θ.ℓ^2),
                                            B=fullyConnectedCovMat(θ.σ))
 
+"""
+$SIGNATURES
+
+Creates an output covariance matrix from an array of parameters by filling a lower
+triangular matrix.
+
+Inputs:
+
+    - a: parameter vector, must hold (T+1)*T/2 parameters, where T = number of
+      outputs
+"""
 function fullyConnectedCovMat(a)
-# Creates an output covariance matrix from an array of parameters
-# Fills a lower triangular matrix
-# a must hold (T+1)*T/2 parameters, where T = number of outputs
 
     T = floor(Int, sqrt(length(a)*2)) # (T+1)*T/2 in matrix
 
     # cholesky factorization technique to create a free-form covariance matrix
     # that is positive semidefinite
-    L = zeros(T,T) # will be lower triangular
-    for u in 1:T
-        for v in 1:u
-            L[u,v] = a[u*(u-1)÷2 + v]
-        end
-    end
+    L = [(v<=u ? a[u*(u-1)÷2 + v] : 0.0) for u in 1:T, v in 1:T]
     # A = L'*L # upper triangular times lower
     A = L*L' # lower triangular times upper
 

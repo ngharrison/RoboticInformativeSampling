@@ -48,7 +48,6 @@ obs_img = imresize(obs_img, size(elev_img))
 occ_mat = Matrix{Bool}(Gray.(obs_img) .== 0')
 occ_mat = permutedims(reverse(occ_mat, dims=1), (2,1))
 occMap = Map(occ_mat, lb, ub)
-visualize(occMap)
 
 ## initialize ground truth
 
