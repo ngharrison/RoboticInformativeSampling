@@ -9,7 +9,7 @@ using DocStringExtensions
 
 using Environment
 
-export BeliefModel, generateBeliefModel, fullyConnectedCovMat
+export BeliefModel, generateBeliefModel, fullyConnectedCovMat, fullyConnectedCovMat
 
 """
 Belief model struct and function.
@@ -69,8 +69,7 @@ end
 function initHyperparams(X, Y, occMap)
     # number of outputs
     T = maximum(last, X)
-    n = (T+1)*T÷2 # fullyConnectedCovMat
-    # n = 2*T - 1 # manyToOneCovMat
+    n = fullyConnectedCovNum(T)
 
     # set up hyperparameters
     σ = (length(Y)>1 ? std(Y) : 0.5)/sqrt(2) * ones(n)
@@ -136,6 +135,8 @@ output matrix formed from a lower triangular matrix.
 multiKernel(θ) = IntrinsicCoregionMOKernel(kernel=with_lengthscale(SqExponentialKernel(), θ.ℓ^2),
                                            B=fullyConnectedCovMat(θ.σ))
 
+fullyConnectedCovNum(num_outputs) = (num_outputs+1)*num_outputs÷2
+
 """
 $SIGNATURES
 
@@ -154,8 +155,36 @@ function fullyConnectedCovMat(a)
     # cholesky factorization technique to create a free-form covariance matrix
     # that is positive semidefinite
     L = [(v<=u ? a[u*(u-1)÷2 + v] : 0.0) for u in 1:T, v in 1:T]
-    # A = L'*L # upper triangular times lower
     A = L*L' # lower triangular times upper
+
+    return A + √eps()*I
+end
+
+manyToOneCovNum(num_outputs) = 2*num_outputs - 1
+
+"""
+$SIGNATURES
+
+Creates an output covariance matrix from an array of parameters by filling the
+first column and diagonal of a lower triangular matrix.
+
+Inputs:
+
+    - a: parameter vector, must hold 2T-1 parameters, where T = number of
+      outputs
+"""
+function manyToOneCovMat(a)
+
+    # cholesky factorization technique to create a free-form covariance matrix
+    # that is positive semidefinite
+    T = (length(a)+1)÷2 # T on column + T-1 more on diagonal = 2T-1
+    L = zeros(T,T) # will be lower triangular
+    L[1,1] = a[1]
+    for t=2:T
+        L[t,1] = a[1 + t-1]
+        L[t,t] = a[1 + 2*(t-1)]
+    end
+    A = L'*L # upper triangular times lower
 
     return A + √eps()*I
 end
