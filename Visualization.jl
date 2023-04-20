@@ -37,6 +37,20 @@ function visualize(beliefModel::BeliefModel, region::Region, samples; res=defaul
     )
 end
 
+"""
+$SIGNATURES
+
+Method to show a ground truth map and up to three other prior data maps.
+Pass each map in as its own argument.
+"""
+function visualize(maps::Map...;
+                   titles=["Ground Truth"; ["Prior $i" for i in 1:length(maps)-1]])
+    plot(
+        visualize.(maps, titles; clim=extrema(maps[1]))...,
+        layout=grid(2,2)
+    )
+end
+
 ## functions to visualize individual pieces
 
 """
@@ -44,12 +58,13 @@ $SIGNATURES
 
 Method to show any Map data.
 """
-function visualize(map::Map, title="Map")
+function visualize(map::Map, title="Map"; clim=nothing)
     axes = range.(map.lb, map.ub, size(map))
     heatmap(axes..., map';
             xlabel="x1",
             ylabel="x2",
-            title
+            title,
+            clim
             )
 end
 

@@ -77,6 +77,8 @@ push!(prior_maps, Map(abs.(gtMap .* randn()), lb, ub))
 # t = rand(1:7)
 # push!(prior_maps, [zeros(size(gtMap,1),t) gtMap[:,1:end-t]]) # shift
 
+visualize(gtMap, prior_maps...)
+
 # purely random
 num_peaks = 3
 peaks = [Peak(rand(2).*(ub-lb) .+ lb, 0.02*I, rand())
