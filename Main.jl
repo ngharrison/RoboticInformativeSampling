@@ -33,8 +33,7 @@ lb = [0, 0]; ub = [1, 1]
 
 # read in elevation
 elev_img = load("maps/arthursleigh_shed_small.tif")
-elev_mat = permutedims(reverse(gray.(elev_img), dims=1), (2,1))
-elevMap = Map(elev_mat, lb, ub)
+elevMap = imgToMap(gray.(elev_img), lb, ub)
 
 # gui = imshow_gui((500, 500))
 # canvas = gui["canvas"]
@@ -46,8 +45,7 @@ obs_img = imresize(obs_img, size(elev_img))
 # imshow(obs_img)
 # switch from row-column to x-y format
 occ_mat = Matrix{Bool}(Gray.(obs_img) .== 0')
-occ_mat = permutedims(reverse(occ_mat, dims=1), (2,1))
-occMap = Map(occ_mat, lb, ub)
+occMap = imgToMap(occ_mat, lb, ub)
 
 ## initialize ground truth
 

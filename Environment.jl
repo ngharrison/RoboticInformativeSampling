@@ -2,7 +2,8 @@ module Environment
 
 using Distributions
 
-export Region, Map, GroundTruth, GaussGroundTruth, Peak, pointToIndex, indexToPoint, res
+export Region, Map, imgToMap, pointToIndex, indexToPoint, res, GroundTruth,
+GaussGroundTruth, Peak
 
 """
 A general type for holding 2D data along with associated cell widths and
@@ -33,6 +34,13 @@ struct Map{T1, T2} <: AbstractMatrix{T1}
     lb::Vector{T2}
     ub::Vector{T2}
 end
+
+"""
+Takes a matrix in the format created from an image, re-formats it, and returns a
+Map. Images view a matrix with its indexing top-down and left-right. Maps view a
+matrix with its indexing left-right and bottom-up.
+"""
+imgToMap(img, lb, ub) = Map(permutedims(reverse(img, dims=1), (2,1)), lb, ub)
 
 # make a map function like a matrix
 Base.size(m::Map) = size(m.data)
