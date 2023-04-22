@@ -29,8 +29,8 @@ m(x) # returns the value at a single 2D point
 m[i,j] # can also use as if it's just the underlying matrix
 ```
 """
-struct Map{T1, T2} <: AbstractMatrix{T1}
-    data::Matrix{T1}
+struct Map{T1<:Real, M<:AbstractMatrix{T1}, T2<:Real} <: AbstractMatrix{T1}
+    data::M
     lb::Vector{T2}
     ub::Vector{T2}
 end
@@ -42,17 +42,14 @@ matrix with its indexing left-right and bottom-up.
 """
 imgToMap(img, lb, ub) = Map(permutedims(reverse(img, dims=1), (2,1)), lb, ub)
 
-# make a map function like a matrix
+# make a map behave like a matrix
 Base.size(m::Map) = size(m.data)
 Base.IndexStyle(::Type{<:Map}) = IndexLinear()
 Base.getindex(m::Map, i::Int) = m.data[i]
 Base.setindex!(m::Map, v, i::Int) = (m.data[i] = v)
 
-function (map::Map)(x)
-    # accepts a single vector
-    index = pointToIndex(x, map)
-    return map[index]
-end
+# accepts a single vector, returns a scalar
+(map::Map)(x) = map[pointToIndex(x, map)]
 
 """
 A general container to hold data and metadata of the search region.
