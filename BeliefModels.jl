@@ -8,83 +8,155 @@ using ParameterHandling
 using DocStringExtensions
 
 using Environment
+using Samples
 
 export BeliefModel, generateBeliefModel, fullyConnectedCovMat, fullyConnectedCovMat
 
-"""
-Belief model struct and function.
+abstract type BeliefModel end
 
-Designed on top of a Gaussian Process for 2D inputs.
 """
-struct BeliefModel
+Belief model struct and function for a single output.
+
+Designed on top of a Multi-output Gaussian Process for 2D inputs. Can still be
+used with a single output.
+"""
+struct BeliefModelSimple <: BeliefModel
     gp
     θ
 end
 
 """
+Belief model struct and function for multiple outputs.
+
+Designed on top of a Single-output and a Multi-output Gaussian Process for 2D
+inputs.
+
+The main purpose for this one is to use the SOGP for mean estimates and the MOGP
+for variance estimates.
+"""
+struct BeliefModelSplit <: BeliefModel
+    gp
+    θ
+    simpleBM
+end
+
+"""
 Inputs:
 
-    - X: a single point or an array of multiple points
+    - X: a single sample index or an array of multiple
 
 Outputs:
 
     - μ, σ: a pair of expected value(s) and uncertainty(s) for the given point(s)
 """
-function (beliefModel::BeliefModel)(x::Vector{<:Real})
-    pred = only(marginals(beliefModel.gp([(x, 1)])))
+function (beliefModel::BeliefModelSimple)(x)
+    pred = only(marginals(beliefModel.gp([x])))
     return pred.μ, pred.σ
 end
 
-function (beliefModel::BeliefModel)(X::Vector{<:Vector{<:Real}})
-    pred = marginals(beliefModel.gp(tuple.(X, 1)))
+function (beliefModel::BeliefModelSimple)(X::Vector)
+    pred = marginals(beliefModel.gp(X))
     μ = getfield.(pred, :μ)
     σ = getfield.(pred, :σ)
     return μ, σ
 end
 
 """
+Inputs:
+
+    - X: a single sample index or an array of multiple
+
+Outputs:
+
+    - μ, σ: a pair of expected value(s) and uncertainty(s) for the given point(s)
+
+Assumes that all sample indices given are for the same, primary search quantity.
+"""
+function (beliefModel::BeliefModelSplit)(x)
+    μ = only(marginals(beliefModel.gp([x]))).μ
+    _, σ = beliefModel.simpleBM(x)
+    return μ, σ
+end
+
+function (beliefModel::BeliefModelSplit)(X::Vector)
+    μ = getfield.(marginals(beliefModel.gp(X)), :μ)
+    _, σ = beliefModel.simpleBM(X)
+    return μ, σ
+end
+
+"""
 $SIGNATURES
 
-Creates and returns a new belief model containing a GP. The GP is trained and
-conditioned on the given samples.
+Creates and returns a new belief model containing a single-output GP. The GP is
+trained and conditioned on the given samples.
+
+Returns a BeliefModelSimple.
 """
-function generateBeliefModel(samples, occMap)
+function generateBeliefModel(samples, lb, ub)
+    return BeliefModelSimple(generateGP(samples, lb, ub)...)
+end
+
+"""
+$SIGNATURES
+
+Creates and returns a new belief model containing a multi-output GP and an inner
+single-output GP. The SOGP is trained and conditioned on the given samples. The
+MOGP is trained and conditioned on both the samples and the prior samples.
+
+Returns a BeliefModelSplit.
+"""
+function generateBeliefModel(samples, prior_samples, lb, ub)
+    # inner single-output GP
+    simpleBM = BeliefModelSimple(generateGP(samples, lb, ub)...)
+    # full multi-output GP
+    f_post, θ = generateGP([prior_samples; samples], lb, ub)
+    return BeliefModelSplit(f_post, θ, simpleBM) # nested
+end
+
+"""
+$SIGNATURES
+
+Inner function run by generateBeliefModel to create the fields needed by each
+BeliefModel.
+
+Returns the posterior (conditioned) GP and the trained hyperparameters.
+"""
+function generateGP(samples, lb, ub, kernel=multiKernel)
     # set up training data
     X = getfield.(samples, :x)
     Y = getfield.(samples, :y)
 
-    θ0 = initHyperparams(X, Y, occMap)
+    θ0 = initHyperparams(X, Y, lb, ub)
 
     # optimize hyperparameters (train)
-    k = multiKernel
-    θ, opt = optimize_loss(createLossFunc(X, Y, k), θ0)
+    θ, opt = optimize_loss(createLossFunc(X, Y, kernel), θ0)
 
     # produce optimized gp belief model
-    f = GP(k(θ)) # prior gp
+    f = GP(kernel(θ)) # prior gp
     fx = f(X, θ.σn^2+√eps())
     f_post = posterior(fx, Y) # gp conditioned on training samples
-    return BeliefModel(f_post, θ)
+
+    return f_post, θ
 end
 
-function initHyperparams(X, Y, occMap)
-    # number of outputs
-    T = maximum(last, X)
+function initHyperparams(X, Y, lb, ub)
+    T = maximum(last, X) # number of outputs
     n = fullyConnectedCovNum(T)
-
-    # set up hyperparameters
+    # TODO may change to all just 0.5
     σ = (length(Y)>1 ? std(Y) : 0.5)/sqrt(2) * ones(n)
-    a = mean(mean([occMap.lb, occMap.ub]))
+    a = mean(mean([lb, ub]))
     ℓ = length(X)==1 ? a : a/length(X) + mean(std(first.(X)))*(1-1/length(X))
     σn = 0.001
     return (; σ, ℓ, σn)
-
 end
 
-function optimize_loss(lossFunc, θ0; optimizer=default_optimizer, maxiter=1_000)
+function optimize_loss(lossFunc, θ0; solver=NelderMead(), iterations=1_000)
+    options = Optim.Options(; iterations)
+
     θ0_flat, unflatten = value_flatten(θ0)
     loss_flat = lossFunc ∘ unflatten
 
-    opt = optimize(loss_flat, θ0_flat)
+    opt = optimize(loss_flat, θ0_flat, solver, options)
 
     return unflatten(opt.minimizer), opt
 end
@@ -95,11 +167,11 @@ $SIGNATURES
 This function creates the loss function for training the GP. The negative log
 marginal likelihood is used.
 """
-function createLossFunc(X, Y, k)
+function createLossFunc(X, Y, kernel)
     # returns a function for the negative log marginal likelihood
     θ -> begin
         try
-            f = GP(k(θ))
+            f = GP(kernel(θ))
             fx = f(X, θ.σn^2+√eps()) # eps to prevent numerical issues
             return -logpdf(fx, Y)
         catch e
@@ -108,7 +180,7 @@ function createLossFunc(X, Y, k)
             # much bigger than the search region dimensions
             println(); println("Error: $e"); @show(θ, X, Y); println()
 
-            f = GP(k(θ))
+            f = GP(kernel(θ))
             fx = f(X, θ.σn^2+√eps()+1e-1*θ.σ) # fix by making diagonal a little bigger
             return -logpdf(fx, Y)
         end

@@ -14,6 +14,8 @@ Usage: `Sample(x, y)`
 Fields:
 
     - x: a tuple of the location and the index of measured quantity
+      can be either a SO for a single output
+      or a MO for multiple outputs
     - y: the output or observation, a scalar
 """
 struct Sample
@@ -35,8 +37,8 @@ Inputs:
 Outputs a Sample containing location x and measurement y
 """
 function takeSample(x, region)
-    y = region.gtMap(x) # get sample value
-    return Sample((x, 1), y)
+    y = region.gtMap(x[1]) # get value at sample location
+    return Sample(x, y)
 end
 
 """
@@ -49,12 +51,12 @@ Inputs:
     - occMap: a map containing upper and lower bounds
     - sampleCost: a function from sample location to cost (x->cost(x))
 """
-function selectSampleLocation(occMap, sampleCost)
-    x0 = (occMap.ub .- occMap.lb)./2 # I think this value doesn't matter for PSO
+function selectSampleLocation(sampleCost, lb, ub)
+    x0 = (ub .- lb)./2 # I think this value doesn't matter for PSO
     opt = optimize(
         sampleCost,
         x0,
-        ParticleSwarm(; lower=occMap.lb, upper=occMap.ub, n_particles=20)
+        ParticleSwarm(; lower=lb, upper=ub, n_particles=20)
     )
     return opt.minimizer
 end
@@ -79,7 +81,7 @@ This object can then be called to get the cost of sampling at a location:
 sampleCost(x)
 """
 function SampleCost(occMap, samples, beliefModel, weights)
-    pathCost = PathCost(samples[end].x[1], occMap)
+    pathCost = PathCost(samples[end].x[1], occMap) # just looking at locations
     SampleCost(occMap, samples, beliefModel, weights, pathCost)
 end
 
@@ -93,7 +95,7 @@ cost = - w1 μ - w2 σ + w3 τ + w4 D
 """
 function (sc::SampleCost)(x)
     # cost to take new sample at location x
-    μ, σ = sc.beliefModel(x) # mean and standard deviation
+    μ, σ = sc.beliefModel((x, 1)) # mean and standard deviation
     τ = sc.pathCost(x) # distance to location
     radius = minimum(sc.occMap.ub .- sc.occMap.lb)/4
     dists = norm.(first.(getfield.(sc.samples, :x)) .- Ref(x))

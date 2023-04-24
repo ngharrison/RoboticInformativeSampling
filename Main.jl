@@ -20,10 +20,10 @@ using Images
 # maybe use StructArrays.jl
 
 using Environment
-using Exploration
 using Samples
 using BeliefModels
 using Visualization
+using Exploration
 
 ## initialize region
 
@@ -110,3 +110,4 @@ x_start = [0.5, 0.2] # starting location
 
 cov_mat = fullyConnectedCovMat(beliefModel.θ.σ)
 correlations = [cov_mat[i,1]/√(cov_mat[1,1]*cov_mat[i,i]) for i in 2:size(cov_mat, 1)]
+@show correlations

@@ -92,7 +92,7 @@ locations that they were generated from. Shows two plots side-by-side.
 function visualize(beliefModel::BeliefModel, samples, map; res=default_res)
     axes, points = getAxes(map; res)
     dims = Tuple(length.(axes))
-    μ, σ = beliefModel(vec(points))
+    μ, σ = beliefModel(tuple.(vec(points), 1))
     pred_map = reshape(μ, dims)
     err_map = reshape(σ, dims)
 

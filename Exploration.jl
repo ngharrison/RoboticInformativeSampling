@@ -41,9 +41,11 @@ function explore(region, x_start, weights;
                  sleep_time=0)
     region.occMap(x_start) && error("start location is within obstacle")
 
-    samples = Sample[]
+    lb, ub = region.occMap.lb, region.occMap.ub
+    samples = empty(prior_samples)
     beliefModel = nothing
     x_new = x_start
+    sensor = 1 # right now only a single sensor
 
     for i in 1:num_samples
         println("Sample number $i")
@@ -51,19 +53,22 @@ function explore(region, x_start, weights;
         # new sample
         if beliefModel !== nothing # prior belief exists
             sampleCost = SampleCost(region.occMap, samples, beliefModel, weights)
-            x_new = selectSampleLocation(region.occMap, sampleCost)
+            x_new = selectSampleLocation(sampleCost, lb, ub)
         end
 
-        sample = takeSample(x_new, region)
+        sample = takeSample((x_new, sensor), region)
         push!(samples, sample)
 
         # new belief
-        beliefModel = generateBeliefModel([prior_samples; samples], region.occMap)
+        beliefModel = generateBeliefModel(samples, prior_samples, lb, ub)
 
         # visualization
         if visuals
             display(visualize(beliefModel, region, samples))
         end
+        # cov_mat = fullyConnectedCovMat(beliefModel.θ.σ)
+        # correlations = [cov_mat[i,1]/√(cov_mat[1,1]*cov_mat[i,i]) for i in 2:size(cov_mat, 1)]
+        # @show correlations
         sleep(sleep_time)
     end
 
