@@ -20,9 +20,9 @@ new_sample_color = :red
 """
 $SIGNATURES
 
-Main method to visualize everything. Generates all the other visuals through
-their respective methods and lays them out in a grid. Currently shows the belief
-model, the ground truth, and the obstacles.
+Main method to visualize the current state of a search. Generates all the other
+visuals through their respective methods and lays them out in a grid. Currently
+shows the belief model, the ground truth, and the obstacles.
 
 Arguments pass through to the sub-methods that need them. res is the grid
 resolution plotting continuous-valued functions and defaults to $default_res.

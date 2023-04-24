@@ -10,15 +10,15 @@ using DocStringExtensions
 using Environment
 using Samples
 
-export BeliefModel, generateBeliefModel, fullyConnectedCovMat, fullyConnectedCovMat
+export BeliefModel, generateBeliefModel, fullyConnectedCovMat, fullyConnectedCovMat, correlations
 
 abstract type BeliefModel end
 
 """
-Belief model struct and function for a single output.
+Belief model struct and function for multiple outputs with 2D inputs.
 
-Designed on top of a Multi-output Gaussian Process for 2D inputs. Can still be
-used with a single output.
+Designed on top of a Multi-output Gaussian Process. Can still be used with a
+single output.
 """
 struct BeliefModelSimple <: BeliefModel
     gp
@@ -26,9 +26,7 @@ struct BeliefModelSimple <: BeliefModel
 end
 
 """
-Belief model struct and function for multiple outputs.
-
-Built on top of two BeliefModelSimples. One is trained on current samples and
+A combination of two BeliefModelSimples. One is trained on current samples and
 the other is trained on current and previous samples. The main purpose for this
 is to use the current for mean estimates and the combined for variance
 estimates.
@@ -67,8 +65,6 @@ Inputs:
 Outputs:
 
     - μ, σ: a pair of expected value(s) and uncertainty(s) for the given point(s)
-
-Assumes that all sample indices given are for the same, primary search quantity.
 """
 function (beliefModel::BeliefModelSplit)(X)
     μ, _ = beliefModel.combined(X)
@@ -87,22 +83,20 @@ the hyperparameters.
 """
 function generateBeliefModel(samples, prior_samples, lb, ub)
     # simple
-    current = BeliefModelSimple(generateGP(samples, lb, ub)...)
+    current = generateBeliefModel(samples, lb, ub)
     isempty(prior_samples) && return current
     # split
-    combined = BeliefModelSimple(generateGP([prior_samples; samples], lb, ub)...)
-    return BeliefModelSplit(current, combined) # nested
+    combined = generateBeliefModel([prior_samples; samples], lb, ub)
+    return BeliefModelSplit(current, combined)
 end
 
 """
 $SIGNATURES
 
-Inner function run by generateBeliefModel to create the fields needed by each
-BeliefModel.
-
-Returns the posterior (conditioned) GP and the trained hyperparameters.
+Creates and returns a BeliefModelSimple with hyperparameters trained and
+conditioned on the the samples given.
 """
-function generateGP(samples, lb, ub, kernel=multiKernel)
+function generateBeliefModel(samples, lb, ub; kernel=multiKernel)
     # set up training data
     X = getfield.(samples, :x)
     Y = getfield.(samples, :y)
@@ -117,9 +111,14 @@ function generateGP(samples, lb, ub, kernel=multiKernel)
     fx = f(X, θ.σn^2+√eps())
     f_post = posterior(fx, Y) # gp conditioned on training samples
 
-    return f_post, θ
+    return BeliefModelSimple(f_post, θ)
 end
 
+"""
+$SIGNATURES
+
+Creates the structure of hyperparameters and gives them initial values.
+"""
 function initHyperparams(X, Y, lb, ub)
     T = maximum(last, X) # number of outputs
     n = fullyConnectedCovNum(T)
@@ -131,13 +130,21 @@ function initHyperparams(X, Y, lb, ub)
     return (; σ, ℓ, σn)
 end
 
-function optimize_loss(lossFunc, θ0; solver=NelderMead(), iterations=1_000)
+"""
+$SIGNATURES
+
+Routine to optimize the lossFunc.
+
+Can pass in a different solver. NelderMead is picked as default for better speed
+with about the same performance as LFBGS.
+"""
+function optimize_loss(lossFunc, θ0; solver=NelderMead, iterations=1_000)
     options = Optim.Options(; iterations)
 
     θ0_flat, unflatten = value_flatten(θ0)
     loss_flat = lossFunc ∘ unflatten
 
-    opt = optimize(loss_flat, θ0_flat, solver, options)
+    opt = optimize(loss_flat, θ0_flat, solver(), options)
 
     return unflatten(opt.minimizer), opt
 end

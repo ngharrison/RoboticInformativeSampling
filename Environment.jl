@@ -6,11 +6,11 @@ export Region, Map, imgToMap, pointToIndex, indexToPoint, res, GroundTruth,
 GaussGroundTruth, Peak
 
 """
-A general type for holding 2D data along with associated cell widths and
-heights. It's main purpose is to handle the conversion between world coordinates
-and grid indices internally. Accepts a 2-element vector as a coordinate pair.
-Converting between the two representations treats rows as the first variable
-(x-axis) and columns as the second (y-axis).
+A general type for holding 2D data along with associated map bounds. It's main
+purpose is to handle the conversion between world coordinates and grid indices
+internally. Accepts a 2-element vector as a coordinate pair.  Converting between
+the two representations treats rows as the first variable (x-axis) and columns
+as the second (y-axis).
 
 Also made to function like a built-in matrix directly by sub-typing and
 implementing the base methods.
@@ -65,9 +65,22 @@ struct Region
 end
 
 # helper methods used with maps
+"""
+Returns the resolution for each dimension of the given Map as a vector.
+"""
 res(map) = (map.ub .- map.lb) ./ (size(map) .- 1)
+
+"""
+Takes in a point in world-coordinates and a Map and returns a CartesianIndex for
+the underlying matrix.
+"""
 pointToIndex(x, map) = CartesianIndex(Tuple(round.(Int, (x .- map.lb) ./ res(map)) .+ 1))
+
+"""
+Takes in a CartesianIndex and a Map and returns a point in world-coordinates.
+"""
 indexToPoint(ci, map) = (collect(Tuple(ci)) .- 1) .* res(map) .+ map.lb
+
 
 abstract type GroundTruth end
 

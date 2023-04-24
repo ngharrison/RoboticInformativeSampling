@@ -47,7 +47,7 @@ Returns the path cost, which will be Inf if it is unreachable.
 Throws an error if no value can be determined.
 
 If the cells of the path are desired, use the backpath function
-(to be implemented).
+(not yet implemented).
 """
 function (S::PathCost)(x_goal)
     goal = pointToIndex(x_goal, S.costMap)
@@ -63,7 +63,7 @@ function (S::PathCost)(x_goal)
         cost = S.costMap[cell] # get the cost of this cell from the matrix
 
         # check if we've reached the goal
-        cell == goal && return cost # we're done
+        cell == goal && return cost
 
         # now look all around the current cell
         for i in -1:1, j in -1:1

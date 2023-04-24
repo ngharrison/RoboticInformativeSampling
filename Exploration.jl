@@ -20,17 +20,16 @@ Inputs:
 
     - region: the search region
     - x_start: the starting location
-    - weights: weights for picking the next sample location (optional)
-    - num_samples: the number of samples to collect in one run
-    - prior_samples: any samples taken previously
-    - visuals: the function to use to see plots of the algorithm progress, if
-      nothing, no plots will be shown
+    - weights: weights for picking the next sample location
+    - num_samples: the number of samples to collect in one run (default 20)
+    - prior_samples: any samples taken previously (default empty)
+    - visuals: true or false to cause map plots to be shown or not
     - sleep_time: the amount of time to wait after each iteration, useful for
       visualizations
 
 Outputs:
 
-    - samples: the samples collected
+    - samples: the new samples collected
     - beliefModel: the probabilistic representation of the quantity being
       searched for
 """
@@ -45,7 +44,7 @@ function explore(region, x_start, weights;
     samples = empty(prior_samples)
     beliefModel = nothing
     x_new = x_start
-    sensor = 1 # right now only a single sensor
+    quantity = 1 # right now only a single quantity
 
     for i in 1:num_samples
         println("Sample number $i")
@@ -56,7 +55,7 @@ function explore(region, x_start, weights;
             x_new = selectSampleLocation(sampleCost, lb, ub)
         end
 
-        sample = takeSample((x_new, sensor), region)
+        sample = takeSample((x_new, quantity), region)
         push!(samples, sample)
 
         # new belief

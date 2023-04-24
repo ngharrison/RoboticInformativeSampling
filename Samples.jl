@@ -14,8 +14,6 @@ Usage: `Sample(x, y)`
 Fields:
 
     - x: a tuple of the location and the index of measured quantity
-      can be either a SO for a single output
-      or a MO for multiple outputs
     - y: the output or observation, a scalar
 """
 struct Sample
@@ -26,12 +24,12 @@ end
 """
 $SIGNATURES
 
-Pulls a ground truth value from a given location and constructs a sample object
+Pulls a ground truth value from a given location and constructs a Sample object
 to hold them both.
 
 Inputs:
 
-    - x: the location to sample
+    - x: a tuple of the location and index of quantity to sample
     - region: region data, including a function for ground truth values
 
 Outputs a Sample containing location x and measurement y
@@ -52,6 +50,7 @@ Inputs:
     - sampleCost: a function from sample location to cost (x->cost(x))
 """
 function selectSampleLocation(sampleCost, lb, ub)
+    # TODO change this to be a full Sample with a fixed quantity id
     x0 = (ub .- lb)./2 # I think this value doesn't matter for PSO
     opt = optimize(
         sampleCost,
