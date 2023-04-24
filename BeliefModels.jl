@@ -242,5 +242,18 @@ function manyToOneCovMat(a)
     return A + √eps()*I
 end
 
+"""
+$SIGNATURES
+
+Gives the correlations between the first output and any outputs.
+"""
+function correlations(beliefModel::BeliefModelSimple)
+    cov_mat = fullyConnectedCovMat(beliefModel.θ.σ)
+    return [cov_mat[i,1]/√(cov_mat[1,1]*cov_mat[i,i]) for i in 2:size(cov_mat, 1)]
+end
+
+function correlations(beliefModel::BeliefModelSplit)
+    return correlations(beliefModel.combined)
+end
 
 end

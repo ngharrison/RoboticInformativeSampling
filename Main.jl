@@ -92,7 +92,7 @@ points_sp = vec(collect.(Iterators.product(axs_sp...)))
 prior_samples = [Sample((x, i+1), d(x)) for (i, d) in enumerate(prior_maps) for x in points_sp]
 
 # Calculate correlation coefficients
-correlations = [cor(groundTruth.(points_sp), d.(points_sp)) for d in prior_maps]
+[cor(groundTruth.(points_sp), d.(points_sp)) for d in prior_maps]
 
 
 region = Region(occupancy, groundTruth)
@@ -108,6 +108,4 @@ x_start = [0.5, 0.2] # starting location
                                      visuals=true,
                                      sleep_time=0.0);
 
-cov_mat = fullyConnectedCovMat(beliefModel.θ.σ)
-correlations = [cov_mat[i,1]/√(cov_mat[1,1]*cov_mat[i,i]) for i in 2:size(cov_mat, 1)]
-@show correlations
+@show correlations(beliefModel)

@@ -66,9 +66,7 @@ function explore(region, x_start, weights;
         if visuals
             display(visualize(beliefModel, region, samples))
         end
-        # cov_mat = fullyConnectedCovMat(beliefModel.θ.σ)
-        # correlations = [cov_mat[i,1]/√(cov_mat[1,1]*cov_mat[i,i]) for i in 2:size(cov_mat, 1)]
-        # @show correlations
+        # @show correlations(beliefModel)
         sleep(sleep_time)
     end
 
