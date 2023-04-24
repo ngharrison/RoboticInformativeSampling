@@ -45,7 +45,7 @@ obs_img = imresize(obs_img, size(elev_img))
 # imshow(obs_img)
 # switch from row-column to x-y format
 occ_mat = Matrix{Bool}(Gray.(obs_img) .== 0')
-occMap = imgToMap(occ_mat, lb, ub)
+occupancy = imgToMap(occ_mat, lb, ub)
 
 ## initialize ground truth
 
@@ -55,7 +55,7 @@ peaks = [Peak([0.3, 0.3], 0.03*I, 1.0),
 ggt = GaussGroundTruth(peaks)
 axs = range.(lb, ub, size(elev_img))
 points = collect.(Iterators.product(axs...))
-gtMap = Map(ggt(points), lb, ub)
+groundTruth = Map(ggt(points), lb, ub)
 
 ## Create prior prior_samples
 
@@ -63,19 +63,19 @@ gtMap = Map(ggt(points), lb, ub)
 prior_maps = []
 
 # additive
-push!(prior_maps, Map(abs.(gtMap .+ 0.1 .* randn(size(gtMap))), lb, ub))
+push!(prior_maps, Map(abs.(groundTruth .+ 0.1 .* randn(size(groundTruth))), lb, ub))
 
 # multiplicative
-push!(prior_maps, Map(abs.(gtMap .* randn()), lb, ub))
+push!(prior_maps, Map(abs.(groundTruth .* randn()), lb, ub))
 
 # # both
-# push!(prior_maps, Map(abs.(gtMap .* randn() + 0.1 .* randn(size(gtMap))), lb, ub))
+# push!(prior_maps, Map(abs.(groundTruth .* randn() + 0.1 .* randn(size(groundTruth))), lb, ub))
 
 # # spatial shift
 # t = rand(1:7)
-# push!(prior_maps, [zeros(size(gtMap,1),t) gtMap[:,1:end-t]]) # shift
+# push!(prior_maps, [zeros(size(groundTruth,1),t) groundTruth[:,1:end-t]]) # shift
 
-visualize(gtMap, prior_maps...)
+visualize(groundTruth, prior_maps...)
 
 # purely random
 num_peaks = 3
@@ -92,10 +92,10 @@ points_sp = vec(collect.(Iterators.product(axs_sp...)))
 prior_samples = [Sample((x, i+1), d(x)) for (i, d) in enumerate(prior_maps) for x in points_sp]
 
 # Calculate correlation coefficients
-correlations = [cor(gtMap.(points_sp), d.(points_sp)) for d in prior_maps]
+correlations = [cor(groundTruth.(points_sp), d.(points_sp)) for d in prior_maps]
 
 
-region = Region(occMap, gtMap)
+region = Region(occupancy, groundTruth)
 
 ## initialize alg values
 weights = [1, 6, 1, 1e-2] # mean, std, dist, prox
@@ -105,7 +105,7 @@ x_start = [0.5, 0.2] # starting location
 @time samples, beliefModel = explore(region, x_start, weights;
                                      num_samples=20,
                                      prior_samples,
-                                     # visuals=true,
+                                     visuals=true,
                                      sleep_time=0.0);
 
 cov_mat = fullyConnectedCovMat(beliefModel.θ.σ)

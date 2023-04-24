@@ -30,9 +30,9 @@ resolution plotting continuous-valued functions and defaults to $default_res.
 function visualize(beliefModel::BeliefModel, region::Region, samples; res=default_res)
     l = @layout [a ; b c]
     plot(
-        visualize(beliefModel, samples, region.gtMap; res),
-        visualize(region.gtMap, "Ground Truth"),
-        visualize(region.occMap, "Occupancy Map"),
+        visualize(beliefModel, samples, region.groundTruth; res),
+        visualize(region.groundTruth, "Ground Truth"),
+        visualize(region.occupancy, "Occupancy Map"),
         layout=l
     )
 end

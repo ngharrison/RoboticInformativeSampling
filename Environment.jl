@@ -56,12 +56,12 @@ A general container to hold data and metadata of the search region.
 
 Fields:
 
-    - occMap: occupancy map
-    - gtMap: ground truth map
+    - occupancy: occupancy map
+    - groundTruth: ground truth map
 """
 struct Region
-    occMap::Map{Bool}
-    gtMap::Map{Float64}
+    occupancy::Map{Bool}
+    groundTruth::Map{Float64}
 end
 
 # helper methods used with maps

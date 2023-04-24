@@ -25,12 +25,12 @@ $SIGNATURES
 The constructor initializes the path search algorithm, created before each new
 start cell.
 """
-function PathCost(x_start, occMap)
-    start = pointToIndex(x_start, occMap)
+function PathCost(x_start, occupancy)
+    start = pointToIndex(x_start, occupancy)
 
     # initialize data structures with values for first cell
-    costMap = Map(fill(NaN, size(occMap)), occMap.lb, occMap.ub)
-    costMap[occMap] .= Inf
+    costMap = Map(fill(NaN, size(occupancy)), occupancy.lb, occupancy.ub)
+    costMap[occupancy] .= Inf
     costMap[start] = 0.0
 
     frontier = PriorityQueue{CartesianIndex{2}, Float64}()

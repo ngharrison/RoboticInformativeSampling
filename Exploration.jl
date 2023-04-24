@@ -39,9 +39,9 @@ function explore(region, x_start, weights;
                  prior_samples=Sample[],
                  visuals=false,
                  sleep_time=0)
-    region.occMap(x_start) && error("start location is within obstacle")
+    region.occupancy(x_start) && error("start location is within obstacle")
 
-    lb, ub = region.occMap.lb, region.occMap.ub
+    lb, ub = region.occupancy.lb, region.occupancy.ub
     samples = empty(prior_samples)
     beliefModel = nothing
     x_new = x_start
@@ -52,7 +52,7 @@ function explore(region, x_start, weights;
 
         # new sample
         if beliefModel !== nothing # prior belief exists
-            sampleCost = SampleCost(region.occMap, samples, beliefModel, weights)
+            sampleCost = SampleCost(region.occupancy, samples, beliefModel, weights)
             x_new = selectSampleLocation(sampleCost, lb, ub)
         end
 

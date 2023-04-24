@@ -37,7 +37,7 @@ Inputs:
 Outputs a Sample containing location x and measurement y
 """
 function takeSample(x, region)
-    y = region.gtMap(x[1]) # get value at sample location
+    y = region.groundTruth(x[1]) # get value at sample location
     return Sample(x, y)
 end
 
@@ -48,7 +48,7 @@ The optimization of choosing a best single sample location.
 
 Inputs:
 
-    - occMap: a map containing upper and lower bounds
+    - occupancy: a map containing upper and lower bounds
     - sampleCost: a function from sample location to cost (x->cost(x))
 """
 function selectSampleLocation(sampleCost, lb, ub)
@@ -65,7 +65,7 @@ end
 The cost function used for choosing a new sample location.
 """
 struct SampleCost
-    occMap
+    occupancy
     samples
     beliefModel
     weights
@@ -80,9 +80,9 @@ A pathCost is constructed automatically from the other arguments.
 This object can then be called to get the cost of sampling at a location:
 sampleCost(x)
 """
-function SampleCost(occMap, samples, beliefModel, weights)
-    pathCost = PathCost(samples[end].x[1], occMap) # just looking at locations
-    SampleCost(occMap, samples, beliefModel, weights, pathCost)
+function SampleCost(occupancy, samples, beliefModel, weights)
+    pathCost = PathCost(samples[end].x[1], occupancy) # just looking at locations
+    SampleCost(occupancy, samples, beliefModel, weights, pathCost)
 end
 
 """
@@ -97,7 +97,7 @@ function (sc::SampleCost)(x)
     # cost to take new sample at location x
     μ, σ = sc.beliefModel((x, 1)) # mean and standard deviation
     τ = sc.pathCost(x) # distance to location
-    radius = minimum(sc.occMap.ub .- sc.occMap.lb)/4
+    radius = minimum(sc.occupancy.ub .- sc.occupancy.lb)/4
     dists = norm.(first.(getfield.(sc.samples, :x)) .- Ref(x))
     P = sum((radius./dists).^3) # proximity to other points
     vals = [-μ, -σ, τ, P]
