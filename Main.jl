@@ -75,14 +75,14 @@ push!(prior_maps, Map(abs.(groundTruth .* randn()), lb, ub))
 # t = rand(1:7)
 # push!(prior_maps, [zeros(size(groundTruth,1),t) groundTruth[:,1:end-t]]) # shift
 
-visualize(groundTruth, prior_maps...)
-
 # purely random
 num_peaks = 3
 peaks = [Peak(rand(2).*(ub-lb) .+ lb, 0.02*I, rand())
             for i in 1:num_peaks]
 tggt = GaussGroundTruth(peaks)
 push!(prior_maps, Map(tggt(points), lb, ub))
+
+visualize(groundTruth, prior_maps...)
 
 # sample sparsely from the prior maps
 # currently all data have the same sample numbers and locations

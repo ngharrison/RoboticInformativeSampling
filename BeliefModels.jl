@@ -28,16 +28,14 @@ end
 """
 Belief model struct and function for multiple outputs.
 
-Designed on top of a Single-output and a Multi-output Gaussian Process for 2D
-inputs.
-
-The main purpose for this one is to use the SOGP for mean estimates and the MOGP
-for variance estimates.
+Built on top of two BeliefModelSimples. One is trained on current samples and
+the other is trained on current and previous samples. The main purpose for this
+is to use the current for mean estimates and the combined for variance
+estimates.
 """
 struct BeliefModelSplit <: BeliefModel
-    gp
-    θ
-    simpleBM
+    current
+    combined
 end
 
 """
@@ -72,45 +70,28 @@ Outputs:
 
 Assumes that all sample indices given are for the same, primary search quantity.
 """
-function (beliefModel::BeliefModelSplit)(x)
-    μ = only(marginals(beliefModel.gp([x]))).μ
-    _, σ = beliefModel.simpleBM(x)
-    return μ, σ
-end
-
-function (beliefModel::BeliefModelSplit)(X::Vector)
-    μ = getfield.(marginals(beliefModel.gp(X)), :μ)
-    _, σ = beliefModel.simpleBM(X)
+function (beliefModel::BeliefModelSplit)(X)
+    μ, _ = beliefModel.combined(X)
+    _, σ = beliefModel.current(X)
     return μ, σ
 end
 
 """
 $SIGNATURES
 
-Creates and returns a new belief model containing a single-output GP. The GP is
-trained and conditioned on the given samples.
-
-Returns a BeliefModelSimple.
-"""
-function generateBeliefModel(samples, lb, ub)
-    return BeliefModelSimple(generateGP(samples, lb, ub)...)
-end
-
-"""
-$SIGNATURES
-
-Creates and returns a new belief model containing a multi-output GP and an inner
-single-output GP. The SOGP is trained and conditioned on the given samples. The
-MOGP is trained and conditioned on both the samples and the prior samples.
-
-Returns a BeliefModelSplit.
+Creates and returns a new BeliefModel. A BeliefModelSimple is returned if there
+are no prior_samples, and it is trained and conditioned on the given samples.
+Otherwise a BeliefModelSplit is returned, trained and conditioned on both the
+samples and prior_samples. Lower and upper bounds are used to initialize one of
+the hyperparameters.
 """
 function generateBeliefModel(samples, prior_samples, lb, ub)
-    # inner single-output GP
-    simpleBM = BeliefModelSimple(generateGP(samples, lb, ub)...)
-    # full multi-output GP
-    f_post, θ = generateGP([prior_samples; samples], lb, ub)
-    return BeliefModelSplit(f_post, θ, simpleBM) # nested
+    # simple
+    current = BeliefModelSimple(generateGP(samples, lb, ub)...)
+    isempty(prior_samples) && return current
+    # split
+    combined = BeliefModelSimple(generateGP([prior_samples; samples], lb, ub)...)
+    return BeliefModelSplit(current, combined) # nested
 end
 
 """
