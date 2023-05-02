@@ -17,7 +17,6 @@ using LinearAlgebra
 using Statistics
 using Images
 # using StaticArrays
-# maybe use StructArrays.jl
 
 using Environment
 using Samples
@@ -35,16 +34,9 @@ lb = [0, 0]; ub = [1, 1]
 elev_img = load("maps/arthursleigh_shed_small.tif")
 elevMap = imgToMap(gray.(elev_img), lb, ub)
 
-# gui = imshow_gui((500, 500))
-# canvas = gui["canvas"]
-# imshow(canvas, digi_elev_map)
-# Gtk.showall(gui["window"])
-
 obs_img = load("maps/obstacles_fieldsouth_220727.tif")
-obs_img = imresize(obs_img, size(elev_img))
-# imshow(obs_img)
-# switch from row-column to x-y format
-occ_mat = Matrix{Bool}(Gray.(obs_img) .== 0')
+obs_img_res = imresize(obs_img, size(elev_img))
+occ_mat = Matrix{Bool}(Gray.(obs_img_res) .== 0')
 occupancy = imgToMap(occ_mat, lb, ub)
 
 ## initialize ground truth
