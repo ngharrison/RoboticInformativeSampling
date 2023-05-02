@@ -18,8 +18,8 @@ implementing the base methods.
 Fields:
 
     - data: matrix of data
-    - lb: vector of lower bounds
-    - ub: vector of upper bounds
+    - lb: vector of lower bounds, defaults to [0, 0]
+    - ub: vector of upper bounds, defaults to [1, 1]
 
 Usage:
 
@@ -34,6 +34,8 @@ struct Map{T1<:Real, M<:AbstractMatrix{T1}, T2<:Real} <: AbstractMatrix{T1}
     lb::Vector{T2}
     ub::Vector{T2}
 end
+
+Map(data::AbstractMatrix{<:Real}) = Map(data, [0, 0], [1, 1])
 
 """
 Takes a matrix in the format created from an image, re-formats it, and returns a
