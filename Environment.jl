@@ -3,7 +3,7 @@ module Environment
 using Distributions
 
 export Region, Map, imgToMap, pointToIndex, indexToPoint, res, GroundTruth,
-GaussGroundTruth, Peak
+GaussGroundTruth, Peak, MultiMap
 
 """
 A general type for holding 2D data along with associated map bounds. It's main
@@ -44,14 +44,36 @@ matrix with its indexing left-right and bottom-up.
 """
 imgToMap(img, lb, ub) = Map(permutedims(reverse(img, dims=1), (2,1)), lb, ub)
 
-# make a map behave like a matrix
+# make a map behave like an array
 Base.size(m::Map) = size(m.data)
 Base.IndexStyle(::Type{<:Map}) = IndexLinear()
 Base.getindex(m::Map, i::Int) = m.data[i]
 Base.setindex!(m::Map, v, i::Int) = (m.data[i] = v)
 
 # accepts a single vector, returns a scalar
-(map::Map)(x) = map[pointToIndex(x, map)]
+(map::Map)(x::Vector{<:Real}) = map[pointToIndex(x, map)]
+
+"""
+Handles samples of the form (location, quantity) to give the value from the
+right map. Internally a list of maps.
+
+Constructor can take in a tuple or list of Maps or each Map as a separate
+argument.
+"""
+struct MultiMap{T}
+    maps::Tuple{Map{T}}
+end
+
+MultiMap(maps::Map...) = MultiMap(maps)
+MultiMap(maps::Vector{Map}) = MultiMap(Tuple(maps))
+
+# make a multimap behave like an array
+Base.size(m::MultiMap) = size(m.maps)
+Base.IndexStyle(::Type{<:MultiMap}) = IndexLinear()
+Base.getindex(m::MultiMap, i::Int) = m.maps[i]
+Base.setindex!(m::MultiMap, v, i::Int) = (m.maps[i] = v)
+
+(mmap::MultiMap)(x::Tuple{Vector{<:Real}, Int}) = mmap.maps[x[2]](x[1])
 
 """
 A general container to hold data and metadata of the search region.
@@ -63,7 +85,7 @@ Fields:
 """
 struct Region
     occupancy::Map{Bool}
-    groundTruth::Map{Float64}
+    groundTruth::MultiMap{Float64}
 end
 
 # helper methods used with maps

@@ -30,12 +30,12 @@ to hold them both.
 Inputs:
 
     - x: a tuple of the location and index of quantity to sample
-    - region: region data, including a function for ground truth values
+    - groundTruth: a function that returns ground truth values
 
 Outputs a Sample containing location x and measurement y
 """
-function takeSample(x, region)
-    y = region.groundTruth(x[1]) # get value at sample location
+function takeSample(x, groundTruth)
+    y = groundTruth(x) # get value of sample with location and quantity
     return Sample(x, y)
 end
 
@@ -67,6 +67,7 @@ struct SampleCost
     occupancy
     samples
     beliefModel
+    quantity
     weights
     pathCost
 end
@@ -79,9 +80,9 @@ A pathCost is constructed automatically from the other arguments.
 This object can then be called to get the cost of sampling at a location:
 sampleCost(x)
 """
-function SampleCost(occupancy, samples, beliefModel, weights)
+function SampleCost(occupancy, samples, beliefModel, quantity, weights)
     pathCost = PathCost(samples[end].x[1], occupancy) # just looking at locations
-    SampleCost(occupancy, samples, beliefModel, weights, pathCost)
+    SampleCost(occupancy, samples, beliefModel, quantity, weights, pathCost)
 end
 
 """
@@ -94,7 +95,7 @@ cost = - w1 μ - w2 σ + w3 τ + w4 D
 """
 function (sc::SampleCost)(x)
     # cost to take new sample at location x
-    μ, σ = sc.beliefModel((x, 1)) # mean and standard deviation
+    μ, σ = sc.beliefModel((x, sc.quantity)) # mean and standard deviation
     τ = sc.pathCost(x) # distance to location
     radius = minimum(sc.occupancy.ub .- sc.occupancy.lb)/4
     dists = norm.(first.(getfield.(sc.samples, :x)) .- Ref(x))

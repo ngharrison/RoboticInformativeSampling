@@ -87,14 +87,14 @@ prior_samples = [Sample((x, i+1), d(x)) for (i, d) in enumerate(prior_maps) for 
 [cor(groundTruth.(points_sp), d.(points_sp)) for d in prior_maps]
 
 
-region = Region(occupancy, groundTruth)
+region = Region(occupancy, MultiMap(groundTruth))
 
 ## initialize alg values
 weights = [1, 6, 1, 1e-2] # mean, std, dist, prox
-x_start = [0.5, 0.2] # starting location
+start_loc = [0.5, 0.2] # starting location
 
 ## run search alg
-@time samples, beliefModel = explore(region, x_start, weights;
+@time samples, beliefModel = explore(region, start_loc, weights;
                                      num_samples=20,
                                      prior_samples,
                                      visuals=true,

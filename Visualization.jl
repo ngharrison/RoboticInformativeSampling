@@ -27,11 +27,11 @@ shows the belief model, the ground truth, and the obstacles.
 Arguments pass through to the sub-methods that need them. res is the grid
 resolution plotting continuous-valued functions and defaults to $default_res.
 """
-function visualize(beliefModel::BeliefModel, region::Region, samples; res=default_res)
+function visualize(beliefModel::BeliefModel, region::Region, samples, quantity; res=default_res)
     l = @layout [a ; b c]
     plot(
-        visualize(beliefModel, samples, region.groundTruth; res),
-        visualize(region.groundTruth, "Ground Truth"),
+        visualize(beliefModel, samples, region.groundTruth[quantity], quantity; res),
+        visualize(region.groundTruth[quantity], "Ground Truth"),
         visualize(region.occupancy, "Occupancy Map"),
         layout=l
     )
@@ -89,10 +89,10 @@ $SIGNATURES
 Method to show belief model values of mean and standard deviation and the sample
 locations that they were generated from. Shows two plots side-by-side.
 """
-function visualize(beliefModel::BeliefModel, samples, map; res=default_res)
+function visualize(beliefModel::BeliefModel, samples, map, quantity; res=default_res)
     axes, points = getAxes(map; res)
     dims = Tuple(length.(axes))
-    μ, σ = beliefModel(tuple.(vec(points), 1))
+    μ, σ = beliefModel(tuple.(vec(points), quantity))
     pred_map = reshape(μ, dims)
     err_map = reshape(σ, dims)
 

@@ -19,7 +19,7 @@ samples is collected.
 Inputs:
 
     - region: the search region
-    - x_start: the starting location
+    - start_loc: the starting location
     - weights: weights for picking the next sample location
     - num_samples: the number of samples to collect in one run (default 20)
     - prior_samples: any samples taken previously (default empty)
@@ -33,29 +33,30 @@ Outputs:
     - beliefModel: the probabilistic representation of the quantity being
       searched for
 """
-function explore(region, x_start, weights;
+function explore(region, start_loc, weights;
                  num_samples=20,
                  prior_samples=Sample[],
                  visuals=false,
                  sleep_time=0)
-    region.occupancy(x_start) && error("start location is within obstacle")
+    region.occupancy(start_loc) && error("start location is within obstacle")
 
     lb, ub = region.occupancy.lb, region.occupancy.ub
     samples = empty(prior_samples)
     beliefModel = nothing
-    x_new = x_start
-    quantity = 1 # right now only a single quantity
+    quantity = 1 # right now only a single quantity (sensor measurement)
+    x_new = (start_loc, quantity)
 
     for i in 1:num_samples
         println("Sample number $i")
 
         # new sample
         if beliefModel !== nothing # prior belief exists
-            sampleCost = SampleCost(region.occupancy, samples, beliefModel, weights)
-            x_new = selectSampleLocation(sampleCost, lb, ub)
+            sampleCost = SampleCost(region.occupancy, samples, beliefModel, quantity, weights)
+            new_loc = selectSampleLocation(sampleCost, lb, ub)
+            x_new = (new_loc, quantity) # currently quantity is fixed
         end
 
-        sample = takeSample((x_new, quantity), region)
+        sample = takeSample(x_new, region.groundTruth)
         push!(samples, sample)
 
         # new belief
@@ -63,7 +64,7 @@ function explore(region, x_start, weights;
 
         # visualization
         if visuals
-            display(visualize(beliefModel, region, samples))
+            display(visualize(beliefModel, region, samples, quantity))
         end
         # @show correlations(beliefModel)
         sleep(sleep_time)

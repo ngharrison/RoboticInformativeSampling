@@ -25,8 +25,8 @@ $SIGNATURES
 The constructor initializes the path search algorithm, created before each new
 start cell.
 """
-function PathCost(x_start, occupancy)
-    start = pointToIndex(x_start, occupancy)
+function PathCost(start_loc, occupancy)
+    start = pointToIndex(start_loc, occupancy)
 
     # initialize data structures with values for first cell
     costMap = Map(fill(NaN, size(occupancy)), occupancy.lb, occupancy.ub)
