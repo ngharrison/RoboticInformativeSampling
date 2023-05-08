@@ -26,7 +26,7 @@ The constructor initializes the path search algorithm, created before each new
 start cell.
 """
 function PathCost(start_loc, occupancy)
-    start = pointToIndex(start_loc, occupancy)
+    start = pointToCell(start_loc, occupancy)
 
     # initialize data structures with values for first cell
     costMap = Map(fill(NaN, size(occupancy)), occupancy.lb, occupancy.ub)
@@ -50,7 +50,7 @@ If the cells of the path are desired, use the backpath function
 (not yet implemented).
 """
 function (S::PathCost)(x_goal)
-    goal = pointToIndex(x_goal, S.costMap)
+    goal = pointToCell(x_goal, S.costMap)
     S.costMap[goal] |> !isnan && return S.costMap[goal]
 
     # update the frontier for the new goal

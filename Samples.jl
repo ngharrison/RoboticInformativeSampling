@@ -4,6 +4,7 @@ using LinearAlgebra
 using Optim
 using DocStringExtensions
 
+using Environment
 using Paths
 
 export Sample, takeSample, selectSampleLocation, SampleCost
@@ -14,11 +15,30 @@ Usage: `Sample(x, y)`
 Fields:
 
     - x: a tuple of the location and the index of measured quantity
+         also called the sample index
     - y: the output or observation, a scalar
 """
 struct Sample
-    x::Tuple{Vector{Float64}, Int}
+    x::Index
     y::Float64
+end
+
+struct D
+    x::Real
+end
+
+macro concrete(expr)
+    @assert expr.head == :struct
+    S = expr.args[2]
+    return quote
+        $(esc(expr))
+
+        for n in fieldnames($S)
+            if !isconcretetype(fieldtype($S, n))
+                error("field $n is not concrete")
+            end
+        end
+    end
 end
 
 """
@@ -51,10 +71,10 @@ Inputs:
 """
 function selectSampleLocation(sampleCost, lb, ub)
     # TODO change this to be a full Sample with a fixed quantity id
-    x0 = (ub .- lb)./2 # I think this value doesn't matter for PSO
+    loc0 = (ub .- lb)./2 # I think this value doesn't matter for PSO
     opt = optimize(
         sampleCost,
-        x0,
+        loc0,
         ParticleSwarm(; lower=lb, upper=ub, n_particles=20)
     )
     return opt.minimizer
@@ -67,7 +87,7 @@ struct SampleCost
     occupancy
     samples
     beliefModel
-    quantity
+    quantities
     weights
     pathCost
 end
@@ -80,27 +100,29 @@ A pathCost is constructed automatically from the other arguments.
 This object can then be called to get the cost of sampling at a location:
 sampleCost(x)
 """
-function SampleCost(occupancy, samples, beliefModel, quantity, weights)
+function SampleCost(occupancy, samples, beliefModel, quantities, weights)
     pathCost = PathCost(samples[end].x[1], occupancy) # just looking at locations
-    SampleCost(occupancy, samples, beliefModel, quantity, weights, pathCost)
+    SampleCost(occupancy, samples, beliefModel, quantities, weights, pathCost)
 end
 
 """
-Cost to take a new sample at location x.
+Cost to take a new sample at a location.
 Combines belief mean and standard deviation, travel distance,
 and sample proximity.
 
 Has the form:
 cost = - w1 μ - w2 σ + w3 τ + w4 D
 """
-function (sc::SampleCost)(x)
-    # cost to take new sample at location x
-    μ, σ = sc.beliefModel((x, sc.quantity)) # mean and standard deviation
-    τ = sc.pathCost(x) # distance to location
+function (sc::SampleCost)(loc)
+    beliefs = (sc.beliefModel((loc, q)) for q in sc.quantities) # mean and standard deviation
+    # TODO probably need to normalize before adding,
+    # but requires generating belief over entire region
+    μ_tot, σ_tot = .+(beliefs...)
+    τ = sc.pathCost(loc) # distance to location
     radius = minimum(sc.occupancy.ub .- sc.occupancy.lb)/4
-    dists = norm.(first.(getfield.(sc.samples, :x)) .- Ref(x))
+    dists = norm.(first.(getfield.(sc.samples, :x)) .- Ref(loc))
     P = sum((radius./dists).^3) # proximity to other points
-    vals = [-μ, -σ, τ, P]
+    vals = [-μ_tot, -σ_tot, τ, P]
     return sc.weights'*vals
 end
 

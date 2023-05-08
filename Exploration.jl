@@ -30,12 +30,13 @@ Inputs:
 Outputs:
 
     - samples: the new samples collected
-    - beliefModel: the probabilistic representation of the quantity being
+    - beliefModel: the probabilistic representation of the quantities being
       searched for
 """
 function explore(region, start_loc, weights;
                  num_samples=20,
                  prior_samples=Sample[],
+                 quantities=eachindex(region.groundTruth),
                  visuals=false,
                  sleep_time=0)
     region.occupancy(start_loc) && error("start location is within obstacle")
@@ -43,28 +44,27 @@ function explore(region, start_loc, weights;
     lb, ub = region.occupancy.lb, region.occupancy.ub
     samples = empty(prior_samples)
     beliefModel = nothing
-    quantity = 1 # right now only a single quantity (sensor measurement)
-    x_new = (start_loc, quantity)
+    sample_indices = [(start_loc, q) for q in quantities]
 
     for i in 1:num_samples
         println("Sample number $i")
 
         # new sample
         if beliefModel !== nothing # prior belief exists
-            sampleCost = SampleCost(region.occupancy, samples, beliefModel, quantity, weights)
+            sampleCost = SampleCost(region.occupancy, samples, beliefModel, quantities, weights)
             new_loc = selectSampleLocation(sampleCost, lb, ub)
-            x_new = (new_loc, quantity) # currently quantity is fixed
+            sample_indices = [(new_loc, q) for q in quantities] # sample all quantities
         end
 
-        sample = takeSample(x_new, region.groundTruth)
-        push!(samples, sample)
+        new_samples = takeSample.(sample_indices, region.groundTruth)
+        append!(samples, new_samples)
 
         # new belief
         beliefModel = generateBeliefModel(samples, prior_samples, lb, ub)
 
         # visualization
         if visuals
-            display(visualize(beliefModel, region, samples, quantity))
+            display(visualize(beliefModel, region, samples, 1))
         end
         # @show correlations(beliefModel)
         sleep(sleep_time)

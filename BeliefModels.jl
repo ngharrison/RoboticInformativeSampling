@@ -45,12 +45,12 @@ Outputs:
 
     - μ, σ: a pair of expected value(s) and uncertainty(s) for the given point(s)
 """
-function (beliefModel::BeliefModelSimple)(x)
+function (beliefModel::BeliefModelSimple)(x::Index)
     pred = only(marginals(beliefModel.gp([x])))
     return pred.μ, pred.σ
 end
 
-function (beliefModel::BeliefModelSimple)(X::Vector)
+function (beliefModel::BeliefModelSimple)(X::Vector{Index})
     pred = marginals(beliefModel.gp(X))
     μ = getfield.(pred, :μ)
     σ = getfield.(pred, :σ)
@@ -66,7 +66,7 @@ Outputs:
 
     - μ, σ: a pair of expected value(s) and uncertainty(s) for the given point(s)
 """
-function (beliefModel::BeliefModelSplit)(X)
+function (beliefModel::BeliefModelSplit)(X::Union{Index, Vector{Index}})
     μ, _ = beliefModel.combined(X)
     _, σ = beliefModel.current(X)
     return μ, σ

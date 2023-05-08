@@ -2,8 +2,11 @@ module Environment
 
 using Distributions
 
-export Region, Map, imgToMap, pointToIndex, indexToPoint, res, GroundTruth,
-GaussGroundTruth, Peak, MultiMap
+export Region, Map, imgToMap, pointToCell, cellToPoint, res, GroundTruth,
+GaussGroundTruth, Peak, MultiMap, Index
+
+const Location = Vector{Float64}
+const Index = Tuple{Location, Int} # measurement index
 
 """
 A general type for holding 2D data along with associated map bounds. It's main
@@ -51,29 +54,31 @@ Base.getindex(m::Map, i::Int) = m.data[i]
 Base.setindex!(m::Map, v, i::Int) = (m.data[i] = v)
 
 # accepts a single vector, returns a scalar
-(map::Map)(x::Vector{<:Real}) = map[pointToIndex(x, map)]
+(map::Map)(x::Location) = map[pointToCell(x, map)]
 
 """
 Handles samples of the form (location, quantity) to give the value from the
 right map. Internally a list of maps.
 
-Constructor can take in a tuple or list of Maps or each Map as a separate
+Constructor can take in a tuple or vector of Maps or each Map as a separate
 argument.
 """
-struct MultiMap{T}
-    maps::Tuple{Map{T}}
+struct MultiMap{T1<:Real}
+    maps::Tuple{Vararg{Map{T1}}}
 end
 
 MultiMap(maps::Map...) = MultiMap(maps)
-MultiMap(maps::Vector{Map}) = MultiMap(Tuple(maps))
+MultiMap(maps::AbstractVector{Map}) = MultiMap(Tuple(maps))
 
 # make a multimap behave like an array
-Base.size(m::MultiMap) = size(m.maps)
+Base.keys(m::MultiMap) = keys(m.maps)
+Base.length(m::MultiMap) = length(m.maps)
+Base.Broadcast.broadcastable(m::MultiMap) = Ref(m) # don't broadcast
 Base.IndexStyle(::Type{<:MultiMap}) = IndexLinear()
 Base.getindex(m::MultiMap, i::Int) = m.maps[i]
-Base.setindex!(m::MultiMap, v, i::Int) = (m.maps[i] = v)
 
-(mmap::MultiMap)(x::Tuple{Vector{<:Real}, Int}) = mmap.maps[x[2]](x[1])
+(mmap::MultiMap)(x::Location) = [mmap.maps[i](x) for i in eachindex(mmap)]
+(mmap::MultiMap)(x::Index) = mmap.maps[x[2]](x[1])
 
 """
 A general container to hold data and metadata of the search region.
@@ -98,12 +103,12 @@ res(map) = (map.ub .- map.lb) ./ (size(map) .- 1)
 Takes in a point in world-coordinates and a Map and returns a CartesianIndex for
 the underlying matrix.
 """
-pointToIndex(x, map) = CartesianIndex(Tuple(round.(Int, (x .- map.lb) ./ res(map)) .+ 1))
+pointToCell(x, map) = CartesianIndex(Tuple(round.(Int, (x .- map.lb) ./ res(map)) .+ 1))
 
 """
 Takes in a CartesianIndex and a Map and returns a point in world-coordinates.
 """
-indexToPoint(ci, map) = (collect(Tuple(ci)) .- 1) .* res(map) .+ map.lb
+cellToPoint(ci, map) = (collect(Tuple(ci)) .- 1) .* res(map) .+ map.lb
 
 
 abstract type GroundTruth end

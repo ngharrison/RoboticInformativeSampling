@@ -72,22 +72,26 @@ num_peaks = 3
 peaks = [Peak(rand(2).*(ub-lb) .+ lb, 0.02*I, rand())
             for i in 1:num_peaks]
 tggt = GaussGroundTruth(peaks)
-push!(prior_maps, Map(tggt(points), lb, ub))
+# push!(prior_maps, Map(tggt(points), lb, ub))
 
-visualize(groundTruth, prior_maps...)
+# visualize(groundTruth, prior_maps...)
+
+multiGroundTruth = MultiMap(groundTruth, Map(tggt(points), lb, ub))
 
 # sample sparsely from the prior maps
 # currently all data have the same sample numbers and locations
 n = (5,5) # number of samples in each dimension
 axs_sp = range.(lb, ub, n)
 points_sp = vec(collect.(Iterators.product(axs_sp...)))
-prior_samples = [Sample((x, i+1), d(x)) for (i, d) in enumerate(prior_maps) for x in points_sp]
+prior_samples = [Sample((x, i+length(multiGroundTruth)), d(x))
+                 for (i, d) in enumerate(prior_maps)
+                     for x in points_sp]
 
 # Calculate correlation coefficients
 [cor(groundTruth.(points_sp), d.(points_sp)) for d in prior_maps]
 
 
-region = Region(occupancy, MultiMap(groundTruth))
+region = Region(occupancy, multiGroundTruth)
 
 ## initialize alg values
 weights = [1, 6, 1, 1e-2] # mean, std, dist, prox
