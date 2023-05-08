@@ -83,7 +83,10 @@ function (S::PathCost)(x_goal)
         end
     end
 
-    error("no path found")
+    # this might be caused by pointToCell discretization errors,
+    # it could also be caused by cells with valid values but that are
+    # unconnected to other cells
+    return Inf
 end
 
 dist(x1, x2, weights) = norm(Tuple(x2 - x1) .* weights)

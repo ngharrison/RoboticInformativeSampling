@@ -45,7 +45,7 @@ Takes a matrix in the format created from an image, re-formats it, and returns a
 Map. Images view a matrix with its indexing top-down and left-right. Maps view a
 matrix with its indexing left-right and bottom-up.
 """
-imgToMap(img, lb, ub) = Map(permutedims(reverse(img, dims=1), (2,1)), lb, ub)
+imgToMap(img, lb=[0, 0], ub=[1, 1]) = Map(permutedims(reverse(img, dims=1), (2,1)), lb, ub)
 
 # make a map behave like an array
 Base.size(m::Map) = size(m.data)
