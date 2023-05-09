@@ -16,7 +16,8 @@ M3[M3 .== 99999] .= NaN
 
 australia = (202:258, 587:668)
 
-multiGroundTruth = MultiMap(imgToMap(normalize(M0[australia...])))
+groundTruth = imgToMap(normalize(M0[australia...]))
+multiGroundTruth = MultiMap(groundTruth)
 
 prior_maps = []
 
@@ -33,4 +34,4 @@ start_loc = [0.8, 0.6] # starting location
 
 num_samples = 50
 
-visualize(multiGroundTruth[1], prior_maps...)
+# visualize(multiGroundTruth.maps..., prior_maps...)

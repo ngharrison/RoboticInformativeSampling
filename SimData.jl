@@ -44,9 +44,9 @@ peaks = [Peak(rand(2).*(ub-lb) .+ lb, 0.02*I, rand())
 tggt = GaussGroundTruth(peaks)
 # push!(prior_maps, Map(tggt(points), lb, ub))
 
-# visualize(groundTruth, prior_maps...)
-
 multiGroundTruth = MultiMap(groundTruth, Map(tggt(points), lb, ub))
+
+# visualize(multiGroundTruth.maps..., prior_maps...)
 
 ## initialize alg values
 weights = [1, 6, 1, 1e-2] # mean, std, dist, prox

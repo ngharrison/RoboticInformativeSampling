@@ -29,7 +29,7 @@ lb = [0, 0]; ub = [1, 1]
 
 # initialize data
 # TODO make these into functions
-data_type = :real
+data_type = :sim
 if data_type === :sim
     include("SimData.jl")
 elseif data_type === :real
@@ -58,4 +58,4 @@ region = Region(occupancy, multiGroundTruth)
                                      visuals=true,
                                      sleep_time=0.0);
 
-@show correlations(beliefModel)
+@show correlations(beliefModel);

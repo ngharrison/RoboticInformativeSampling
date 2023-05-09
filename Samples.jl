@@ -70,7 +70,7 @@ Inputs:
     - sampleCost: a function from sample location to cost (x->cost(x))
 """
 function selectSampleLocation(sampleCost, lb, ub)
-    # TODO change this to be a full Sample with a fixed quantity id
+    # in future could optimize for measured quantity as well
     loc0 = (ub .- lb)./2 # I think this value doesn't matter for PSO
     opt = optimize(
         sampleCost,
