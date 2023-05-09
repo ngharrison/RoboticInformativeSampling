@@ -36,6 +36,8 @@ elseif data_type === :real
     include("RealData.jl")
 end
 
+ros_data = initRos()
+
 # sample sparsely from the prior maps
 # currently all data have the same sample numbers and locations
 n = (5,5) # number of samples in each dimension
@@ -55,6 +57,7 @@ region = Region(occupancy, multiGroundTruth)
 @time samples, beliefModel = explore(region, start_loc, weights;
                                      num_samples,
                                      prior_samples,
+                                     ros_data,
                                      visuals=true,
                                      sleep_time=0.0);
 

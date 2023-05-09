@@ -1,6 +1,7 @@
 module Exploration
 
 using DocStringExtensions
+using RobotOS
 
 using Samples
 using BeliefModels
@@ -37,6 +38,7 @@ function explore(region, start_loc, weights;
                  num_samples=20,
                  prior_samples=Sample[],
                  quantities=eachindex(region.groundTruth),
+                 ros_data=nothing,
                  visuals=false,
                  sleep_time=0)
     region.occupancy(start_loc) && error("start location is within obstacle")
@@ -49,14 +51,26 @@ function explore(region, start_loc, weights;
     for i in 1:num_samples
         println("Sample number $i")
 
-        # new sample
+        # new sample indices
         if beliefModel !== nothing # prior belief exists
             sampleCost = SampleCost(region.occupancy, samples, beliefModel, quantities, weights)
             new_loc = selectSampleLocation(sampleCost, lb, ub)
             sample_indices = [(new_loc, q) for q in quantities] # sample all quantities
         end
 
-        new_samples = takeSample.(sample_indices, region.groundTruth)
+        # sample values
+        new_samples = []
+        if ros_data !== nothing # ros stuff
+            # publish new location
+            publishNextLocation(ros_data.pub, new_loc)
+
+            # wait for sample values
+            spin() # wait for callbacks
+            new_samples = [Sample((new_loc, q), ros_data.values[q]) for q in quantities]
+        else
+            new_samples = takeSample.(sample_indices, region.groundTruth)
+        end
+
         append!(samples, new_samples)
 
         # new belief

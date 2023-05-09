@@ -4,56 +4,68 @@ module ROSInterface
 
 using RobotOS
 @rosimport std_msgs.msg: Float32Msg
-@rosimport geometry_msgs.msg: Pose2D
+@rosimport geometry_msgs.msg: Pose
 rostypegen(@__MODULE__)
 using .std_msgs.msg
 using .geometry_msgs.msg
 
+using Environment
+
 export main
 
-function callback(msg::Float32Msg, pub_obj::Publisher{Pose2D})
+const sub_nodes = [
+    "/GP_Data/avg_NDVI",
+    "/GP_Data/avg_crop_height",
+    "/GP_Data/cover_NDVI"
+]
+
+# needs
+# - data values combined so we can be sure we have all new values at once
+#   could be put into 3Vector on other side
+# - knowledge of new location or that the commanded location is reached
+# - similar interface between gazebo sim and swagbot code
+# - decide between message and service
+
+function callback(msg::Float32Msg)
     # new value received
 
     # check robot location
-    # TODO need to import something
-    loc = rospy.wait_for_message("/robot_location???", SystemState, timeout=5)
+    # TODO need to figure out the localization for swagbot
+    loc = rospy.wait_for_message("/robot_location???", Pose, timeout=5)
 
     # create sample
-    Sample(loc, msg)
+    # TODO get node_name
+    quantity = findfirst(==(node_name), sub_nodes)
 
-    # run adaptive sampling, publish next location
-    # TODO need to get other data accessible here, need to initialize
-    sampleCost = SampleCost(region.occupancy, samples, beliefModel, weights)
-    x_new = selectSampleLocation(sampleCost, lb, ub)
+    ros_data.values[quantity] = msg
+end
 
-    next_sample = Pose2D(x_new...)
+function publishNextLocation(pub_obj::Publisher{Pose}, new_loc::Location)
+    next_sample = Pose(next_loc...)
+
+    # for swagbot
+    msg_goalpose.position.x = new_loc[1];
+    msg_goalpose.position.y = new_loc[2];
+    msg_goalpose.position.z = 0;
+    # TODO need to actually set these as well, from the path
+    msg_goalpose.orientation.w = 0;
+    msg_goalpose.orientation.x = 0;
+    msg_goalpose.orientation.y = 0;
+    msg_goalpose.orientation.z = 0;
+
     publish(pub_obj, next_sample)
 end
 
-function main()
+function initRos()
     init_node("adaptive_sampling")
 
-    # see if there is some way to pass a Tuple{Vector, Int}
-    pub = Publisher{Pose2D}("next_sample", queue_size=10)
+    # this passes just the location, no quantity id
+    pub = Publisher{Pose}("latest_sample", queue_size=10)
 
-    # TODO location
-    sub = Subscriber{Pose2D}("/robot_location???", callback, (pub,), queue_size=10)
+    subs = [Subscriber{Float32Msg}(sub, callback, (ros_data,), queue_size=10)
+            for sub in sub_nodes]
 
-    # [pub_goalpose, msg_goalpose] = rospublisher('latest_sample','geometry_msgs/Pose');
-    # [pub_slowflag, msg_slowflag] = rospublisher('slow_swagbot','std_msgs/Bool');
-    # sub_fin = rossubscriber('sortie_finished','DataFormat','struct');
-    # [pub_fin, msg_fin] = rospublisher('sortie_finished','std_msgs/Bool');
-    # [pub_belief, msg_belief] = rospublisher('belief_fig','sensor_msgs/Image');
-
-
-    sub = Subscriber{Float32Msg}("/GP_Data/avg_NDVI", callback, (pub,), queue_size=10)
-
-    # values
-    sub = Subscriber{Float32Msg}("/GP_Data/avg_NDVI", callback, (pub,), queue_size=10)
-    sub = Subscriber{Float32Msg}("/GP_Data/avg_crop_height", callback, (pub,), queue_size=10)
-    sub = Subscriber{Float32Msg}("/GP_Data/cover_NDVI", callback, (pub,), queue_size=10)
-
-    spin() # wait for callbacks
+    return (; pub, subs, values)
 end
 
 if !isinteractive()
