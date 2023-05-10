@@ -15,7 +15,6 @@ Base.active_repl.options.iocontext[:displaysize] = (20, 70) # limit lines printe
 
 using LinearAlgebra
 using Statistics
-# using StaticArrays
 
 using Environment
 using Samples
@@ -29,7 +28,7 @@ lb = [0, 0]; ub = [1, 1]
 
 # initialize data
 # TODO make these into functions
-data_type = :sim
+data_type = :real
 if data_type === :sim
     include("SimData.jl")
 elseif data_type === :real
@@ -58,4 +57,5 @@ region = Region(occupancy, multiGroundTruth)
                                      visuals=true,
                                      sleep_time=0.0);
 
-@show correlations(beliefModel);
+println()
+println("Correlations: $(round.(correlations(beliefModel), digits=3))")

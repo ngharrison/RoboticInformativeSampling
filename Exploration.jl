@@ -5,6 +5,7 @@ using DocStringExtensions
 using Samples
 using BeliefModels
 using Visualization
+using Plots
 
 export explore
 
@@ -46,6 +47,9 @@ function explore(region, start_loc, weights;
     beliefModel = nothing
     sample_indices = [(start_loc, q) for q in quantities]
 
+    println("Mission started")
+    println()
+
     for i in 1:num_samples
         println("Sample number $i")
 
@@ -66,10 +70,11 @@ function explore(region, start_loc, weights;
         if visuals
             display(visualize(beliefModel, region, samples, 1))
         end
-        # @show correlations(beliefModel)
+        # println("Correlations: $(round.(correlations(beliefModel), digits=3))")
         sleep(sleep_time)
     end
 
+    println()
     println("Mission complete")
     return samples, beliefModel
 end
