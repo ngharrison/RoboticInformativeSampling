@@ -23,24 +23,6 @@ struct Sample
     y::Float64
 end
 
-struct D
-    x::Real
-end
-
-macro concrete(expr)
-    @assert expr.head == :struct
-    S = expr.args[2]
-    return quote
-        $(esc(expr))
-
-        for n in fieldnames($S)
-            if !isconcretetype(fieldtype($S, n))
-                error("field $n is not concrete")
-            end
-        end
-    end
-end
-
 """
 $SIGNATURES
 
