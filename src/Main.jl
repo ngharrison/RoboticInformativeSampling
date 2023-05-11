@@ -4,6 +4,7 @@
 # running the algorithm, and visualizing results.
 
 push!(LOAD_PATH, "./") # allows using modules defined in current directory
+
 using LinearAlgebra
 using Statistics
 
