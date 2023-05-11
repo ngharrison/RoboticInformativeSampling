@@ -3,16 +3,7 @@
 # system. The main parts are initializing data,
 # running the algorithm, and visualizing results.
 
-# using Debugger
-# using Profile
-# using ProfileView
-# using StatProfilerHTML
-
-using Revise
 push!(LOAD_PATH, "./") # allows using modules defined in current directory
-Base.active_repl.options.iocontext[:displaysize] = (20, 70) # limit lines printed out
-# Base.active_repl.options.iocontext[:displaysize] = displaysize(stdout) # set back to default
-
 using LinearAlgebra
 using Statistics
 
