@@ -18,7 +18,7 @@ git clone https://gitlab.acfr.usyd.edu.au/nhar0989/AdaptiveSampling.git
 #+end_src
 
 * Setup
-On a command line, outside the cloned repository, enter julia REPL by running =julia=. Then enter interactive Pkg REPL by typing =]= and run:
+On a command line, just outside the cloned repository, enter julia REPL by running =julia=. Then enter interactive Pkg REPL by typing =]= and run:
 #+begin_example
 (@v1.8) pkg> activate AdaptiveSampling
 Activating project at `~/AdaptiveSampling`
@@ -28,13 +28,10 @@ Activating project at `~/AdaptiveSampling`
   No Changes to `~/AdaptiveSampling/Manifest.toml`
 #+end_example
 
-These set up the environment and install all needed packages.
+These commands set up the environment and install all needed packages. The activate command takes a path to the directory that contains the =Project.toml= file, i.e. the root directory of the repository.
 
 * Quick Start
-To run the project in its current state, =cd= into the =AdaptiveSampling/src= directory, open the julia REPL, and run:
-#+begin_example
-julia> include("Main.jl")
-#+end_example
+To run the project in its current state, =cd= into the =AdaptiveSampling/src= directory and open the julia REPL. Run =]activate ..= to activate the project environment (if not already active). Then run =include("Main.jl")= to run the main file.
 
 * Parts and Usage Overview
 
