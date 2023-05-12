@@ -68,7 +68,6 @@ The easiest way to time code is simply by putting ~@time~ in front of a line of 
 To automate multiple runs of the code and get statistical information, use [[https://github.com/JuliaCI/BenchmarkTools.jl][BenchmarkTools.jl]] and the ~@benchmark~ or ~@btime~ macros.
 
 *** Profiling
-
 Reference: [[https://docs.julialang.org/en/v1/manual/profile/]]
 
 ~using Profile~
@@ -78,9 +77,15 @@ Same as timing, just put ~@profile~ before the code you want profiled. To see th
 I like using [[https://github.com/tkluck/StatProfilerHTML.jl][StatProfilerHTML.jl]] for viewing the output. Can also use [[https://github.com/timholy/ProfileView.jl][ProfileView.jl]]. They each have their own shortcut commands for profiling and viewing. See their pages.
 
 *** Debugging
-
 Reference: [[https://github.com/JuliaDebug/Debugger.jl]]
 
 ~using Debugger~
 
 Put ~@run~ or ~@enter~ before code to debug. Use the commands from the docs in the REPL.
+
+** Finding source module of object
+To get the module that an object comes from, you can use
+#+begin_src julia
+parentmodule(ImportedType) # will tell you which module a function or type comes from
+parentmodule(typeof(var)) # for the object a variable contains, get the type first
+#+end_src
