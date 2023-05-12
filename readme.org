@@ -9,7 +9,8 @@ Written in Julia for speed and code flexibility.
 Created by Nicholas Harrison.
 
 * Installation
-Download Julia and run installer: https://julialang.org/downloads/
+Download Julia and run installer: [[https://julialang.org/downloads/]]
+
 Recommended to add to path.
 
 Use git to clone repository to local directory:
@@ -28,7 +29,7 @@ Activating project at `~/AdaptiveSampling`
   No Changes to `~/AdaptiveSampling/Manifest.toml`
 #+end_example
 
-These commands set up the environment and install all needed packages. The activate command takes a path to the directory that contains the =Project.toml= file, i.e. the root directory of the repository.
+These commands set up the environment and install all needed packages. The =activate= command takes a path to the directory that contains the =Project.toml= file, i.e. the root directory of the repository.
 
 * Quick Start
 To run the project in its current state, =cd= into the =AdaptiveSampling/src= directory and open the julia REPL. Run =]activate ..= to activate the project environment (if not already active). Then run =include("Main.jl")= to run the main file.
@@ -50,6 +51,8 @@ Type backspace or ctrl-c to exit a mode.
 ** Compilation
 Julia code gets compiled the first time you run it. This means the first run will be slower and later ones much faster. This is also true when loading packages with ~using~ or ~import~. So the typical way to run julia code is through a REPL that is kept open between runs in order to not re-compile. If a script is run directly from the command line using the julia interpreter, it will be re-compiled every time. Running code within an IDE will typically keep a REPL open for you.
 
+Note: Julia 1.9 reduces the load and first-execution times considerably. Highly recommended.
+
 ** Revise.jl
 This is a great package to use when developing code (not needed when only running it). Normally to update methods and variables that have changed, you have to manually re-run the changed code in the REPL. This package tracks modules that you have included with ~using~ or ~import~ and automatically updates the running environment with any changes. Simply run ~using Revise~ /before/ ~using~ anything else (i.e. running the Main.jl file) and all your changes within the project will be tracked.
 
@@ -66,7 +69,7 @@ To automate multiple runs of the code and get statistical information, use [[htt
 
 *** Profiling
 
-Reference: https://docs.julialang.org/en/v1/manual/profile/
+Reference: [[https://docs.julialang.org/en/v1/manual/profile/]]
 
 ~using Profile~
 
@@ -76,7 +79,7 @@ I like using [[https://github.com/tkluck/StatProfilerHTML.jl][StatProfilerHTML.j
 
 *** Debugging
 
-Reference: https://github.com/JuliaDebug/Debugger.jl
+Reference: [[https://github.com/JuliaDebug/Debugger.jl]]
 
 ~using Debugger~
 
