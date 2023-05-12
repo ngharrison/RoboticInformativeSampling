@@ -5,14 +5,13 @@
 
 push!(LOAD_PATH, "./") # allows using modules defined in current directory
 
-using LinearAlgebra
-using Statistics
+using Statistics: cor
 
-using Environment
-using Samples
-using BeliefModels
-using Visualization
-using Exploration
+using Environment: Region
+using Samples: Sample
+using BeliefModels: correlations
+using Visualization: visualize
+using Exploration: explore
 
 ## initialize region
 

@@ -1,4 +1,6 @@
-using DelimitedFiles
+using DelimitedFiles: readdlm
+
+using Environment: imgToMap, MultiMap
 
 # have it run around australia
 

@@ -1,13 +1,10 @@
 module Exploration
 
-using DocStringExtensions
+using DocStringExtensions: SIGNATURES
 
-using Samples
-using BeliefModels
-using Visualization
-using Plots
-
-export explore
+using Samples: Sample, SampleCost, selectSampleLocation, takeSample
+using BeliefModels: generateBeliefModel
+using Visualization: visualize
 
 """
 $SIGNATURES

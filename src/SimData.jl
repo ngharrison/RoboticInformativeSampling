@@ -1,4 +1,7 @@
-using Images
+using LinearAlgebra: I
+using Images: load, imresize, Gray, gray
+
+using Environment: Map, imgToMap, GaussGroundTruth, MultiMap, Peak
 
 # read in elevation
 elev_img = load("maps/arthursleigh_shed_small.tif")

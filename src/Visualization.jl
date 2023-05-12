@@ -1,13 +1,11 @@
 module Visualization
 
-using Plots
-using DocStringExtensions
+using Plots: plot, heatmap, scatter!, @layout
+using DocStringExtensions: SIGNATURES
 
-using Environment
-using BeliefModels
-using Samples
-
-export visualize
+using Environment: Region, GroundTruth, Map, res
+using BeliefModels: BeliefModel
+using Samples: SampleCost
 
 # placeholders to avoid recomputing
 axes = nothing

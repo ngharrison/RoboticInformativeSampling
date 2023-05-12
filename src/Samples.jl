@@ -1,13 +1,11 @@
 module Samples
 
-using LinearAlgebra
-using Optim
-using DocStringExtensions
+using LinearAlgebra: norm
+using Optim: optimize, ParticleSwarm
+using DocStringExtensions: SIGNATURES
 
-using Environment
-using Paths
-
-export Sample, takeSample, selectSampleLocation, SampleCost
+using Environment: Index
+using Paths: PathCost
 
 """
 Usage: `Sample(x, y)`

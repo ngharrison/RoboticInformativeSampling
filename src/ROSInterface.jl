@@ -2,14 +2,12 @@
 
 module ROSInterface
 
-using RobotOS
-@rosimport std_msgs.msg: Float32Msg
+using RobotOS: @rosimport, rostypegen
+@rosimport std_msgs.msg: Float32
 @rosimport geometry_msgs.msg: Pose2D
 rostypegen(@__MODULE__)
 using .std_msgs.msg
 using .geometry_msgs.msg
-
-export main
 
 function callback(msg::Float32Msg, pub_obj::Publisher{Pose2D})
     # new value received

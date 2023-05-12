@@ -89,3 +89,5 @@ To get the module that an object comes from, you can use
 parentmodule(ImportedType) # will tell you which module a function or type comes from
 parentmodule(typeof(var)) # for the object a variable contains, get the type first
 #+end_src
+
+In this project all names used are explicitly imported at the top of the file to help new developers.

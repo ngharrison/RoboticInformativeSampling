@@ -1,12 +1,10 @@
 module Paths
 
-using LinearAlgebra
-using DataStructures
-using DocStringExtensions
+using LinearAlgebra: norm
+using DataStructures: PriorityQueue, dequeue!
+using DocStringExtensions: SIGNATURES
 
-using Environment
-
-export PathCost
+using Environment: Map, res, pointToCell
 
 """
 Struct for PathCost function data. Previous computations are kept track of in
@@ -83,9 +81,8 @@ function (S::PathCost)(x_goal)
         end
     end
 
-    # this might be caused by pointToCell discretization errors,
-    # it could also be caused by cells with valid values but that are
-    # unconnected to other cells
+    # this is likely caused by cells with valid values that are unconnected to
+    # other accessible cells
     return Inf
 end
 
