@@ -100,28 +100,27 @@ function realData()
 
     lb = [0, 0]; ub = [1, 1]
 
-    M0 = readdlm("maps/vege_720x360.csv", ',')
-    M1 = readdlm("maps/topo_720x360.csv", ',')
-    M2 = readdlm("maps/temp_720x360.csv", ',')
-    M3 = readdlm("maps/rain_720x360.csv", ',')
+    file_names = [
+        "maps/vege_720x360.csv",
+        "maps/topo_720x360.csv",
+        "maps/temp_720x360.csv",
+        "maps/rain_720x360.csv"
+    ]
 
-    M0[M0 .== 99999] .= NaN
-    M1[M1 .== 99999] .= NaN
-    M2[M2 .== 99999] .= NaN
-    M3[M3 .== 99999] .= NaN
+    images = readdlm.(file_names, ',')
+
+    for img in images
+        img[img .== 99999] .= NaN
+    end
 
     australia = (202:258, 587:668)
 
-    groundTruth = imgToMap(normalize(M0[australia...]), lb, ub)
+    groundTruth = imgToMap(normalize(images[1][australia...]), lb, ub)
     multiGroundTruth = MultiMap(groundTruth)
 
-    prior_maps = []
+    prior_maps = [imgToMap(normalize(img[australia...]), lb, ub) for img in images[2:end]]
 
-    push!(prior_maps, imgToMap(normalize(M1[australia...]), lb, ub))
-    push!(prior_maps, imgToMap(normalize(M2[australia...]), lb, ub))
-    push!(prior_maps, imgToMap(normalize(M3[australia...]), lb, ub))
-
-    occupancy = imgToMap(Matrix{Bool}(isnan.(M0[australia...])), lb, ub)
+    occupancy = imgToMap(Matrix{Bool}(isnan.(images[1][australia...])), lb, ub)
 
 
     ## initialize alg values
