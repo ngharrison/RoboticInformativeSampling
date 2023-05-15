@@ -1,6 +1,6 @@
 module Environment
 
-using Distributions: MvNormal
+using Distributions: MvNormal, pdf
 
 const Location = Vector{Float64}
 const Index = Tuple{Location, Int} # measurement index

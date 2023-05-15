@@ -1,4 +1,5 @@
 using DelimitedFiles: readdlm
+using Statistics: cor
 
 using Environment: imgToMap, MultiMap
 
@@ -33,7 +34,23 @@ occupancy = imgToMap(Matrix{Bool}(isnan.(M0[australia...])))
 ## initialize alg values
 weights = [1, 6, 1, 3e-3] # mean, std, dist, prox
 start_loc = [0.8, 0.6] # starting location
-
 num_samples = 50
 
-# visualize(multiGroundTruth.maps..., prior_maps...)
+
+# sample sparsely from the prior maps
+# currently all data have the same sample numbers and locations
+n = (5,5) # number of samples in each dimension
+axs_sp = range.(lb, ub, n)
+points_sp = vec(collect.(Iterators.product(axs_sp...)))
+prior_samples = [Sample((x, i+length(multiGroundTruth)), d(x))
+                 for (i, d) in enumerate(prior_maps)
+                     for x in points_sp if !isnan(d(x))]
+
+# Calculate correlation coefficients
+[cor(groundTruth.(points_sp), d.(points_sp)) for d in prior_maps]
+
+visualize(multiGroundTruth.maps..., prior_maps...;
+          titles=["Vegetation", "Elevation", "Ground Temperature", "Rainfall"],
+          samples=points_sp)
+
+region = Region(occupancy, multiGroundTruth)

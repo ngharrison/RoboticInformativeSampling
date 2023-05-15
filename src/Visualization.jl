@@ -1,6 +1,6 @@
 module Visualization
 
-using Plots: plot, heatmap, scatter!, @layout
+using Plots: plot, heatmap, scatter!, @layout, grid
 using DocStringExtensions: SIGNATURES
 
 using Environment: Region, GroundTruth, Map, res
