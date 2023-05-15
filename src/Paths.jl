@@ -92,4 +92,27 @@ end
 
 dist(x1, x2, weights) = norm(Tuple(x2 - x1) .* weights)
 
+"""
+$SIGNATURES
+
+Given a PathCost and a goal point, this function returns the angle of the
+direction from penultimate cell to goal cell, effectively the direction at the
+end of the path to the goal.
+"""
+function finalOrientation(S::PathCost, x_goal)
+    # start with the ending cell
+    goal = pointToCell(x_goal, S.costMap)
+    S.costMap[goal] |> isnan && error("a path has not yet been searched for this cell")
+    S.costMap[goal] |> isinf && error("this cell is unreachable")
+
+    # get the direction from the neighbor with the minimum cost, ignore NaNs
+    dif = argmin(CartesianIndex(i,j) for i in -1:1, j in -1:1 if !(i == j == 0)) do dif
+        val = S.costMap[goal - dif]
+        return (isnan(val) ? Inf : val)
+    end
+
+    # return the angle from the difference
+    return atan(dif[2], dif[1])
+end
+
 end
