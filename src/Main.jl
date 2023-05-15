@@ -5,22 +5,15 @@
 
 push!(LOAD_PATH, "./") # allows using modules defined in current directory
 
+using Initialization: simData, realData
 using BeliefModels: correlations
 using Visualization: visualize
 using Exploration: explore
 
 ## initialize region
 
-lb = [0, 0]; ub = [1, 1]
-
-# initialize data
-# TODO make these into functions
-data_type = :real
-if data_type === :sim
-    include("SimData.jl")
-elseif data_type === :real
-    include("RealData.jl")
-end
+# initialize data use simData or realData for this
+region, start_loc, weights, num_samples, prior_samples = realData()
 
 ## run search alg
 @time samples, beliefModel = explore(region, start_loc, weights;
