@@ -1,6 +1,6 @@
 module Visualization
 
-using Plots: plot, heatmap, scatter!, @layout, grid
+using Plots: plot, heatmap, scatter!, @layout, mm, grid
 using DocStringExtensions: SIGNATURES
 
 using Environment: Region, GroundTruth, Map, res
@@ -11,7 +11,11 @@ using Samples: SampleCost
 axes = nothing
 points = nothing
 
+# default properties for all plots
 default_res = [0.01, 0.01]
+default_size = (1200, 800)
+default_markersize = 4
+default_margin = 5mm
 sample_color = :green
 new_sample_color = :red
 
@@ -31,7 +35,9 @@ function visualize(beliefModel::BeliefModel, region::Region, samples, quantity)
         visualize(beliefModel, samples, region.occupancy, quantity),
         visualize(region.groundTruth[quantity], "Ground Truth"),
         visualize(region.occupancy, "Occupancy Map"),
-        layout=l
+        layout=l,
+        size=default_size,
+        margin=default_margin
     )
 end
 
@@ -42,10 +48,13 @@ Method to show a ground truth map and up to three other prior data maps.
 Pass each map in as its own argument.
 """
 function visualize(maps::Map...;
-                   titles=["Ground Truth"; ["Prior $i" for i in 1:length(maps)-1]])
+                   titles=["Ground Truth"; ["Prior $i" for i in 1:length(maps)-1]],
+                   samples=[])
     plot(
-        visualize.(maps, titles; clim=extrema(maps[1]))...,
-        layout=grid(2,2)
+        visualize.(maps, titles; samples, clim=extrema(maps[1]))...,
+        layout=grid(2,2),
+        size=default_size,
+        margin=default_margin
     )
 end
 
@@ -56,7 +65,7 @@ $SIGNATURES
 
 Method to show any Map data.
 """
-function visualize(map::Map, title="Map"; clim=nothing)
+function visualize(map::Map, title="Map"; samples=[], clim=nothing)
     axes = range.(map.lb, map.ub, size(map))
     heatmap(axes..., map';
             xlabel="x1",
@@ -64,6 +73,10 @@ function visualize(map::Map, title="Map"; clim=nothing)
             title,
             clim
             )
+    scatter!(first.(samples), last.(samples);
+             label="Samples",
+             color=sample_color,
+             markersize=default_markersize)
 end
 
 """
@@ -109,8 +122,10 @@ function visualize(beliefModel::BeliefModel, samples, occupancy, quantity)
              title="GP Mean",
              legend=nothing,
              color=sample_color,
-             markersize=2)
-    scatter!([x1[end]], [x2[end]], color=new_sample_color, markersize=2)
+             markersize=default_markersize)
+    scatter!([x1[end]], [x2[end]];
+             color=new_sample_color,
+             markersize=default_markersize)
 
     p2 = heatmap(axes..., err_map')
     scatter!(x1[begin:end-1], x2[begin:end-1];
@@ -119,8 +134,10 @@ function visualize(beliefModel::BeliefModel, samples, occupancy, quantity)
              title="GP Std",
              legend=nothing,
              color=sample_color,
-             markersize=2)
-    scatter!([x1[end]], [x2[end]], color=new_sample_color, markersize=2)
+             markersize=default_markersize)
+    scatter!([x1[end]], [x2[end]];
+             color=new_sample_color,
+             markersize=default_markersize)
 
     plot(p1, p2)
 end
@@ -146,8 +163,8 @@ function visualize(sampleCost::SampleCost, samples, map)
              title="Obj Function",
              legend=nothing,
              color=sample_color,
-             markersize=2)
-    scatter!([x1[end]], [x2[end]], color=new_sample_color, markersize=2)
+             markersize=default_markersize)
+    scatter!([x1[end]], [x2[end]], color=new_sample_color, markersize=default_markersize)
 end
 
 """
