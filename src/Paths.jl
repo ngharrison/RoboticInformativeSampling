@@ -10,6 +10,10 @@ using Environment: Map, res, pointToCell
 Struct for PathCost function data. Previous computations are kept track of in
 its data. Can be used multiple times for the same start cell, saving
 computation.
+
+The costMap's cells contain the distance to them from the start cell. NaN is a
+placeholder meaning no path has been calculated to that cell yet. Inf means
+that cell is not reachable from the start cell.
 """
 struct PathCost
     start
