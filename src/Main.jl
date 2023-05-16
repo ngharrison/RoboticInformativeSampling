@@ -3,7 +3,8 @@
 # system. The main parts are initializing data,
 # running the algorithm, and visualizing results.
 
-push!(LOAD_PATH, "./") # allows using modules defined in current directory
+# allows using modules defined in any file in project src directory
+push!(LOAD_PATH, dirname(Base.active_project()) * "/src")
 
 using Initialization: simData, realData
 using BeliefModels: correlations
