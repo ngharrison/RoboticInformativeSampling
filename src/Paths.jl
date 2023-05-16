@@ -9,13 +9,13 @@ Struct for PathCost function data. Previous computations are kept track of in
 its data. Can be used multiple times for the same start cell, saving
 computation.
 
-The costMap's cells contain the distance to them from the start cell. NaN is a
-placeholder meaning no path has been calculated to that cell yet. Inf means
-that cell is not reachable from the start cell.
+The cells of the costMatrix contain the distance to them from the start cell.
+NaN is a placeholder meaning no path has been calculated to that cell yet. Inf
+means that cell is not reachable from the start cell.
 """
 struct PathCost
     start
-    costMap
+    costMatrix
     resolution
     frontier
 end
@@ -34,13 +34,13 @@ Inputs:
 """
 function PathCost(start, occupancy, resolution)
     # initialize data structures with values for first cell
-    costMap = [occ ? Inf : NaN for occ in occupancy]
-    costMap[start] = 0.0
+    costMatrix = [occ ? Inf : NaN for occ in occupancy]
+    costMatrix[start] = 0.0
 
     frontier = PriorityQueue{CartesianIndex{2}, Float64}()
     frontier[start] = 0.0
 
-    PathCost(start, costMap, resolution, frontier)
+    PathCost(start, costMatrix, resolution, frontier)
 end
 
 """
@@ -51,16 +51,16 @@ Returns the path cost, which will be Inf if it is unreachable.
 If the cells of the path are desired, use the getPath function.
 """
 function (S::PathCost)(goal)
-    S.costMap[goal] |> !isnan && return S.costMap[goal]
+    S.costMatrix[goal] |> !isnan && return S.costMatrix[goal]
 
     # update the frontier for the new goal
     for cell in keys(S.frontier)
-        S.frontier[cell] = S.costMap[cell] + dist(cell, goal, S.resolution)
+        S.frontier[cell] = S.costMatrix[cell] + dist(cell, goal, S.resolution)
     end
 
     while !isempty(S.frontier)
         cell = dequeue!(S.frontier) # current cell to try
-        cost = S.costMap[cell] # get the cost of this cell from the matrix
+        cost = S.costMatrix[cell] # get the cost of this cell from the matrix
 
         # check if we've reached the goal
         cell == goal && return cost
@@ -70,13 +70,13 @@ function (S::PathCost)(goal)
             i == j == 0 && continue
 
             new_cell = cell + CartesianIndex(i,j)
-            checkbounds(Bool, S.costMap, new_cell) || continue
+            checkbounds(Bool, S.costMatrix, new_cell) || continue
 
-            new_cost = S.costMap[cell] + dist(cell, new_cell, S.resolution)
+            new_cost = S.costMatrix[cell] + dist(cell, new_cell, S.resolution)
 
-            if (S.costMap[new_cell] |> isnan ||
-                new_cell ∈ keys(S.frontier) && S.costMap[new_cell] > new_cost)
-                S.costMap[new_cell] = new_cost
+            if (S.costMatrix[new_cell] |> isnan ||
+                new_cell ∈ keys(S.frontier) && S.costMatrix[new_cell] > new_cost)
+                S.costMatrix[new_cell] = new_cost
                 # actual cost so far plus heuristic
                 S.frontier[new_cell] = new_cost + dist(new_cell, goal, S.resolution)
             end
@@ -90,10 +90,10 @@ end
 
 dist(x1, x2, weights) = norm(Tuple(x2 - x1) .* weights)
 
-function previousStep(current, costMap)
+function previousStep(current, costMatrix)
     # TODO will need bounds check and all Inf check too
     argmin(CartesianIndex(i,j) for i in -1:1, j in -1:1 if !(i == j == 0)) do dif
-        val = costMap[current - dif]
+        val = costMatrix[current - dif]
         return (isnan(val) ? Inf : val)
     end
 end
@@ -107,11 +107,11 @@ end of the path to the goal.
 """
 function finalOrientation(S::PathCost, goal)
     # start with the ending cell
-    S.costMap[goal] |> isnan && error("a path has not yet been searched for this cell")
-    S.costMap[goal] |> isinf && error("this cell is unreachable")
+    S.costMatrix[goal] |> isnan && error("a path has not yet been searched for this cell")
+    S.costMatrix[goal] |> isinf && error("this cell is unreachable")
 
     # get the step from the neighbor with the minimum cost, ignore NaNs
-    final_step = previousStep(goal, S.costMap)
+    final_step = previousStep(goal, S.costMatrix)
 
     # return the angle from the difference
     return atan(final_step[2], final_step[1])
@@ -126,15 +126,15 @@ object is called with the goal cell.
 """
 function getPath(S::PathCost, goal)
     # start with the ending cell
-    S.costMap[goal] |> isnan && error("a path has not yet been searched for this cell")
-    S.costMap[goal] |> isinf && error("this cell is unreachable")
+    S.costMatrix[goal] |> isnan && error("a path has not yet been searched for this cell")
+    S.costMatrix[goal] |> isinf && error("this cell is unreachable")
 
     cell = goal
     path = [cell]
 
     # go backwards step by step until start is reached
     while cell != S.start
-        cell -= previousStep(cell, S.costMap)
+        cell -= previousStep(cell, S.costMatrix)
         push!(path, cell)
     end
 
