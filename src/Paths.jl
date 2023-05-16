@@ -48,8 +48,7 @@ Search for a path to a desired goal cell using the A* algorithm.
 
 Returns the path cost, which will be Inf if it is unreachable.
 
-If the cells of the path are desired, use the backpath function
-(not yet implemented).
+If the cells of the path are desired, use the getPath function.
 """
 function (S::PathCost)(goal)
     S.costMap[goal] |> !isnan && return S.costMap[goal]
@@ -91,6 +90,14 @@ end
 
 dist(x1, x2, weights) = norm(Tuple(x2 - x1) .* weights)
 
+function previousStep(current, costMap)
+    # TODO will need bounds check and all Inf check too
+    argmin(CartesianIndex(i,j) for i in -1:1, j in -1:1 if !(i == j == 0)) do dif
+        val = costMap[current - dif]
+        return (isnan(val) ? Inf : val)
+    end
+end
+
 """
 $SIGNATURES
 
@@ -103,14 +110,35 @@ function finalOrientation(S::PathCost, goal)
     S.costMap[goal] |> isnan && error("a path has not yet been searched for this cell")
     S.costMap[goal] |> isinf && error("this cell is unreachable")
 
-    # get the direction from the neighbor with the minimum cost, ignore NaNs
-    dif = argmin(CartesianIndex(i,j) for i in -1:1, j in -1:1 if !(i == j == 0)) do dif
-        val = S.costMap[goal - dif]
-        return (isnan(val) ? Inf : val)
-    end
+    # get the step from the neighbor with the minimum cost, ignore NaNs
+    final_step = previousStep(goal, S.costMap)
 
     # return the angle from the difference
-    return atan(dif[2], dif[1])
+    return atan(final_step[2], final_step[1])
+end
+
+"""
+$SIGNATURES
+
+Given a PathCost and a goal point, this function returns the entire list of
+cells from the start to the goal. Only useful to be called after the PathCost
+object is called with the goal cell.
+"""
+function getPath(S::PathCost, goal)
+    # start with the ending cell
+    S.costMap[goal] |> isnan && error("a path has not yet been searched for this cell")
+    S.costMap[goal] |> isinf && error("this cell is unreachable")
+
+    cell = goal
+    path = [cell]
+
+    # go backwards step by step until start is reached
+    while cell != S.start
+        cell -= previousStep(cell, S.costMap)
+        push!(path, cell)
+    end
+
+    return reverse(path)
 end
 
 end
