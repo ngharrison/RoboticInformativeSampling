@@ -29,14 +29,20 @@ to hold them both.
 
 Inputs:
 
-    - x: a tuple of the location and index of quantity to sample
+    - loc: the location to sample
     - groundTruth: a function that returns ground truth values
+    - quantities: (optional) a vector of integers which represent which
+      quantities to sample, defaults to all of them
 
-Outputs a Sample containing location x and measurement y
+Outputs a vector of Samples containing index x and measurement y
 """
-function takeSample(x, groundTruth)
-    y = groundTruth(x) # get value of sample with location and quantity
-    return Sample(x, y)
+function takeSamples(loc, groundTruth)
+    Y = groundTruth(loc) # get values of samples with location and quantity
+    return [Sample((loc, q), y) for (q, y) in enumerate(Y)]
+end
+
+function takeSamples(loc, groundTruth, quantities)
+    return [Sample((loc, q), groundTruth((loc, q))) for q in quantities]
 end
 
 """
@@ -95,10 +101,11 @@ Has the form:
 cost = - w1 μ - w2 σ + w3 τ + w4 D
 """
 function (sc::SampleCost)(loc)
-    beliefs = (sc.beliefModel((loc, q)) for q in sc.quantities) # mean and standard deviation
+    beliefs = sc.beliefModel([(loc, q) for q in sc.quantities]) # means and standard deviations
     # TODO probably need to normalize before adding,
     # but requires generating belief over entire region
-    μ_tot, σ_tot = .+(beliefs...)
+    # or using the max so far
+    μ_tot, σ_tot = sum.(beliefs)
     τ = sc.pathCost(pointToCell(loc, sc.occupancy)) # distance to location
     radius = minimum(sc.occupancy.ub .- sc.occupancy.lb)/4
     dists = norm.(first.(getfield.(sc.samples, :x)) .- Ref(loc))

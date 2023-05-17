@@ -1,9 +1,8 @@
 module Exploration
 
 using DocStringExtensions: SIGNATURES
-using RobotOS
 
-using Samples: Sample, SampleCost, selectSampleLocation, takeSample
+using Samples: Sample, SampleCost, selectSampleLocation, takeSamples
 using BeliefModels: generateBeliefModel
 using Visualization: visualize
 
@@ -35,8 +34,6 @@ Outputs:
 function explore(region, start_loc, weights;
                  num_samples=20,
                  prior_samples=Sample[],
-                 quantities=eachindex(region.groundTruth),
-                 ros_data=nothing,
                  visuals=false,
                  sleep_time=0)
     region.occupancy(start_loc) && error("start location is within obstacle")
@@ -44,7 +41,8 @@ function explore(region, start_loc, weights;
     lb, ub = region.occupancy.lb, region.occupancy.ub
     samples = empty(prior_samples)
     beliefModel = nothing
-    sample_indices = [(start_loc, q) for q in quantities]
+    new_loc = start_loc
+    quantities=eachindex(region.groundTruth) # all current available quantities
 
     println("Mission started")
     println()
@@ -56,22 +54,10 @@ function explore(region, start_loc, weights;
         if beliefModel !== nothing # prior belief exists
             sampleCost = SampleCost(region.occupancy, samples, beliefModel, quantities, weights)
             new_loc = selectSampleLocation(sampleCost, lb, ub)
-            sample_indices = [(new_loc, q) for q in quantities] # sample all quantities
         end
 
-        # sample values
-        new_samples = []
-        if ros_data !== nothing # ros stuff
-            # publish new location
-            publishNextLocation(ros_data.pub, new_loc)
-
-            # wait for sample values
-            spin() # wait for callbacks
-            new_samples = [Sample((new_loc, q), ros_data.values[q]) for q in quantities]
-        else
-            new_samples = takeSample.(sample_indices, region.groundTruth)
-        end
-
+        # sample all quantities
+        new_samples = takeSamples(new_loc, region.groundTruth)
         append!(samples, new_samples)
 
         # new belief
