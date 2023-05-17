@@ -1,16 +1,14 @@
 module BeliefModels
 
-using LinearAlgebra
-using AbstractGPs
-using StatsFuns
-using Optim
-using ParameterHandling
-using DocStringExtensions
+using LinearAlgebra: I
+using AbstractGPs: GP, posterior, marginals, logpdf, with_lengthscale,
+                   SqExponentialKernel, IntrinsicCoregionMOKernel
+using Statistics: mean, std
+using Optim: optimize, Options, NelderMead
+using ParameterHandling: value_flatten
+using DocStringExtensions: SIGNATURES
 
-using Environment
-using Samples
-
-export BeliefModel, generateBeliefModel, fullyConnectedCovMat, fullyConnectedCovMat, correlations
+using Environment: Index
 
 abstract type BeliefModel end
 
@@ -104,7 +102,7 @@ function generateBeliefModel(samples, lb, ub; kernel=multiKernel)
     θ0 = initHyperparams(X, Y, lb, ub)
 
     # optimize hyperparameters (train)
-    θ, opt = optimize_loss(createLossFunc(X, Y, kernel), θ0)
+    θ, opt = optimizeLoss(createLossFunc(X, Y, kernel), θ0)
 
     # produce optimized gp belief model
     f = GP(kernel(θ)) # prior gp
@@ -138,8 +136,8 @@ Routine to optimize the lossFunc.
 Can pass in a different solver. NelderMead is picked as default for better speed
 with about the same performance as LFBGS.
 """
-function optimize_loss(lossFunc, θ0; solver=NelderMead, iterations=1_000)
-    options = Optim.Options(; iterations)
+function optimizeLoss(lossFunc, θ0; solver=NelderMead, iterations=1_000)
+    options = Options(; iterations)
 
     θ0_flat, unflatten = value_flatten(θ0)
     loss_flat = lossFunc ∘ unflatten

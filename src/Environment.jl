@@ -1,9 +1,6 @@
 module Environment
 
-using Distributions
-
-export Region, Map, imgToMap, pointToCell, cellToPoint, res, GroundTruth,
-GaussGroundTruth, Peak, MultiMap, Index
+using Distributions: MvNormal, pdf
 
 const Location = Vector{Float64}
 const Index = Tuple{Location, Int} # measurement index

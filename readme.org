@@ -7,3 +7,82 @@ Main focus on information gathering on a 2D surface.
 Written in Julia for speed and code flexibility.
 
 Created by Nicholas Harrison.
+
+* Installation
+Download Julia and run installer: [[https://julialang.org/downloads/]]
+
+Recommended to add to path.
+
+Use git to clone repository to local directory:
+#+begin_src shell
+git clone https://gitlab.acfr.usyd.edu.au/nhar0989/AdaptiveSampling.git
+#+end_src
+
+* Setup
+On a command line, just outside the cloned repository, enter the julia REPL by running =julia --project=AdaptiveSampling=. Then enter the interactive Pkg REPL by typing =]= and run the =instantiate= command.
+
+These commands set up the environment and install all needed packages.
+
+** Extra notes
+The =--project=<path>= flag activates the project environment on starting the REPL. You can run this manually by =]activate <path>= within the julia REPL. Both of these forms accept the path to the directory that contains the =Project.toml= file, i.e. the root directory of the repository. If you are within a project, you can also simply run =julia --project=@.= with the same effect.
+
+* Quick Start
+To run the project in its current state, after navigating into the =AdaptiveSampling/src= directory and starting a project REPL using =julia --project=@.=, run =include("Main.jl")= to run the main file.
+
+* Parts and Usage Overview
+
+* Julia Tips
+** Environment
+The main Julia development environment is VSCode with the Julia extension. It is supported by the Julia contributors and the community as a whole.
+
+** REPL
+Julia ships with a useful REPL that combines an interpreter, a documentation browser, a package manager, and a shell. The four modes are accessed by typing the following keys:
+- Interpreter: default mode
+- Help: =?=
+- Packages: =]=
+- Shell: =;=
+Type backspace or ctrl-c to exit a mode.
+
+** Compilation
+Julia code gets compiled the first time you run it. This means the first run will be slower and later ones much faster. This is also true when loading packages with ~using~ or ~import~. So the typical way to run julia code is through a REPL that is kept open between runs in order to not re-compile. If a script is run directly from the command line using the julia interpreter, it will be re-compiled every time. Running code within an IDE will typically keep a REPL open for you.
+
+Note: Julia 1.9 reduces the load and first-execution times considerably. Highly recommended.
+
+** Revise.jl
+This is a great package to use when developing code (not needed when only running it). Normally to update methods and variables that have changed, you have to manually re-run the changed code in the REPL. This package tracks modules that you have included with ~using~ or ~import~ and automatically updates the running environment with any changes. Simply run ~using Revise~ /before/ ~using~ anything else (i.e. running the Main.jl file) and all your changes within the project will be tracked.
+
+** Unchangeable stuff
+Julia doesn't allow changing type definitions. This means if you need to change what is within a ~struct~ or you need use the name of a function for something else, you will need to restart the REPL.
+
+** Timing, Profiling, and Debugging
+The following packages can be useful when developing and analyzing the code.
+
+*** Timing
+The easiest way to time code is simply by putting ~@time~ in front of a line of code. If you want to time multiple lines, put them inside a ~@time begin ... end~ block.
+
+To automate multiple runs of the code and get statistical information, use [[https://github.com/JuliaCI/BenchmarkTools.jl][BenchmarkTools.jl]] and the ~@benchmark~ or ~@btime~ macros.
+
+*** Profiling
+Reference: [[https://docs.julialang.org/en/v1/manual/profile/]]
+
+~using Profile~
+
+Same as timing, just put ~@profile~ before the code you want profiled. To see the output run ~Profile.print()~.
+
+I like using [[https://github.com/tkluck/StatProfilerHTML.jl][StatProfilerHTML.jl]] for viewing the output. Can also use [[https://github.com/timholy/ProfileView.jl][ProfileView.jl]]. They each have their own shortcut commands for profiling and viewing. See their pages.
+
+*** Debugging
+Reference: [[https://github.com/JuliaDebug/Debugger.jl]]
+
+~using Debugger~
+
+Put ~@run~ or ~@enter~ before code to debug. Use the commands from the docs in the REPL.
+
+** Finding source module of object
+To get the module that an object comes from, you can use
+#+begin_src julia
+parentmodule(ImportedType) # will tell you which module a function or type comes from
+parentmodule(typeof(var)) # for the object a variable contains, get the type first
+#+end_src
+
+In this project all names used are explicitly imported at the top of the file to help new developers.

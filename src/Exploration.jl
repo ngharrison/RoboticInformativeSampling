@@ -1,13 +1,11 @@
 module Exploration
 
-using DocStringExtensions
+using DocStringExtensions: SIGNATURES
 using RobotOS
 
-using Samples
-using BeliefModels
-using Visualization
-
-export explore
+using Samples: Sample, SampleCost, selectSampleLocation, takeSample
+using BeliefModels: generateBeliefModel
+using Visualization: visualize
 
 """
 $SIGNATURES
@@ -48,6 +46,9 @@ function explore(region, start_loc, weights;
     beliefModel = nothing
     sample_indices = [(start_loc, q) for q in quantities]
 
+    println("Mission started")
+    println()
+
     for i in 1:num_samples
         println("Sample number $i")
 
@@ -80,10 +81,11 @@ function explore(region, start_loc, weights;
         if visuals
             display(visualize(beliefModel, region, samples, 1))
         end
-        # @show correlations(beliefModel)
+        # println("Correlations: $(round.(correlations(beliefModel), digits=3))")
         sleep(sleep_time)
     end
 
+    println()
     println("Mission complete")
     return samples, beliefModel
 end

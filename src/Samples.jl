@@ -1,13 +1,11 @@
 module Samples
 
-using LinearAlgebra
-using Optim
-using DocStringExtensions
+using LinearAlgebra: norm
+using Optim: optimize, ParticleSwarm
+using DocStringExtensions: SIGNATURES
 
-using Environment
-using Paths
-
-export Sample, takeSample, selectSampleLocation, SampleCost
+using Environment: Index, pointToCell, res
+using Paths: PathCost
 
 """
 Usage: `Sample(x, y)`
@@ -21,24 +19,6 @@ Fields:
 struct Sample
     x::Index
     y::Float64
-end
-
-struct D
-    x::Real
-end
-
-macro concrete(expr)
-    @assert expr.head == :struct
-    S = expr.args[2]
-    return quote
-        $(esc(expr))
-
-        for n in fieldnames($S)
-            if !isconcretetype(fieldtype($S, n))
-                error("field $n is not concrete")
-            end
-        end
-    end
 end
 
 """
@@ -101,7 +81,8 @@ This object can then be called to get the cost of sampling at a location:
 sampleCost(x)
 """
 function SampleCost(occupancy, samples, beliefModel, quantities, weights)
-    pathCost = PathCost(samples[end].x[1], occupancy) # just looking at locations
+    start = pointToCell(samples[end].x[1], occupancy) # just looking at location
+    pathCost = PathCost(start, occupancy, res(occupancy))
     SampleCost(occupancy, samples, beliefModel, quantities, weights, pathCost)
 end
 
@@ -118,7 +99,7 @@ function (sc::SampleCost)(loc)
     # TODO probably need to normalize before adding,
     # but requires generating belief over entire region
     μ_tot, σ_tot = .+(beliefs...)
-    τ = sc.pathCost(loc) # distance to location
+    τ = sc.pathCost(pointToCell(loc, sc.occupancy)) # distance to location
     radius = minimum(sc.occupancy.ub .- sc.occupancy.lb)/4
     dists = norm.(first.(getfield.(sc.samples, :x)) .- Ref(loc))
     P = sum((radius./dists).^3) # proximity to other points
