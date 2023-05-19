@@ -2,7 +2,7 @@
 
 julia_version = "1.9.0"
 manifest_format = "2.0"
-project_hash = "d709640eb81240ddd3f1a1eb3df4708b667666b8"
+project_hash = "bad7c875275dc63c84189dcaae89a9290dc775bc"
 
 [[deps.AbstractFFTs]]
 deps = ["LinearAlgebra"]
@@ -1232,10 +1232,10 @@ uuid = "22415677-39a4-5241-a37a-00beabbbdae8"
 version = "0.7.2"
 
 [[deps.Rotations]]
-deps = ["LinearAlgebra", "Quaternions", "Random", "StaticArrays", "Statistics"]
-git-tree-sha1 = "72a6abdcd088764878b473102df7c09bbc0548de"
+deps = ["LinearAlgebra", "Quaternions", "Random", "StaticArrays"]
+git-tree-sha1 = "54ccb4dbab4b1f69beb255a2c0ca5f65a9c82f08"
 uuid = "6038ab10-8711-5258-84ad-4b1120ba62dc"
-version = "1.4.0"
+version = "1.5.1"
 
 [[deps.SHA]]
 uuid = "ea8e919c-243c-51af-8825-aaa63cd721ce"
