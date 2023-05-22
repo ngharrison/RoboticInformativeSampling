@@ -91,11 +91,21 @@ end
 dist(x1, x2, weights) = norm(Tuple(x2 - x1) .* weights)
 
 function previousStep(current, costMatrix)
-    # TODO will need bounds check and all Inf check too
-    argmin(CartesianIndex(i,j) for i in -1:1, j in -1:1 if !(i == j == 0)) do dif
-        val = costMatrix[current - dif]
-        return (isnan(val) ? Inf : val)
+    min_val = Inf
+    min_dif = CartesianIndex(0,0)
+    for i in -1:1, j in -1:1
+        i == j == 0 && continue # don't check current cell
+        dif = CartesianIndex(i,j)
+        cell = current - dif
+        checkbounds(Bool, costMatrix, cell) || continue
+        val = costMatrix[cell]
+        if !isnan(val) && val < min_val
+            min_val = val
+            min_dif = dif
+        end
     end
+    isinf(min_val) && error("this cell has no known accessible neighbors")
+    return min_dif
 end
 
 """
