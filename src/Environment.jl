@@ -65,7 +65,7 @@ struct MultiMap{T1<:Real}
 end
 
 MultiMap(maps::Map...) = MultiMap(maps)
-MultiMap(maps::AbstractVector{Map}) = MultiMap(Tuple(maps))
+MultiMap(maps::AbstractVector{<:Map}) = MultiMap(Tuple(maps))
 
 # make a multimap behave like an array
 Base.keys(m::MultiMap) = keys(m.maps)
