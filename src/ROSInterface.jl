@@ -1,5 +1,7 @@
 #!/usr/bin/env julia
 
+# ATTENTION: this is not functional yet
+
 module ROSInterface
 
 using RobotOS: std_msgs, geometry_msgs, rostypegen

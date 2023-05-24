@@ -13,23 +13,110 @@ Download Julia and run installer: [[https://julialang.org/downloads/]]
 
 Recommended to add to path.
 
-Use git to clone repository to local directory:
+Use git to clone the repository to a local directory:
 #+begin_src shell
 git clone https://gitlab.acfr.usyd.edu.au/nhar0989/AdaptiveSampling.git
 #+end_src
 
-* Setup
-On a command line, just outside the cloned repository, enter the julia REPL by running =julia --project=AdaptiveSampling=. Then enter the interactive Pkg REPL by typing =]= and run the =instantiate= command.
+This will create a directory called =AdaptiveSampling=.
 
-These commands set up the environment and install all needed packages.
+* Setup
+1. Navigate into the =AdaptiveSampling/src= directory on the command line
+2. Run =julia --project=@.= to enter the julia REPL and activate the project
+3. Run =]instantiate= to install all needed packages
+4. Exit the interactive Pkg mode by hitting backspace
 
 ** Extra notes
-The =--project=<path>= flag activates the project environment on starting the REPL. You can run this manually by =]activate <path>= within the julia REPL. Both of these forms accept the path to the directory that contains the =Project.toml= file, i.e. the root directory of the repository. If you are within a project, you can also simply run =julia --project=@.= with the same effect.
+The =--project=<path>= flag automatically activates a project environment after starting the REPL. You can run this manually by =]activate <path>= within the julia REPL. Both of these forms accept the path to the directory that contains the =Project.toml= file, e.g. the root directory of this repository. If you are already within a project directory, you can simply run the special form of =julia --project=@.= with the same effect.
 
 * Quick Start
-To run the project in its current state, after navigating into the =AdaptiveSampling/src= directory and starting a project REPL using =julia --project=@.=, run =include("Main.jl")= to run the main file.
+To run the project in its current state, run =include("Main.jl")= at the julia REPL. Important: this needs to be run within the =AdaptiveSampling/src= directory for the paths to be resolved correctly. For an easy way to navigate within the julia REPL, check out its [[*REPL][shell mode]]. Make sure the steps in [[*Setup][Setup]] have been taken too.
 
 * Parts and Usage Overview
+
+The code is divided up into files to contain pieces with similar purposes or concepts in the algorithm. Each file has its own single module for defining a namespace used when importing its names into other files. Unlike many Julia packages, no names are exported by default to maintain clarity in what is used and where it comes from.
+
+** Environment
+Types for holding and handling real and simulated data. Mainly used by [[*Initialization][Initialization]], but foundational for the other parts too. Its alias types ~Location~ and ~Index~ are fundamental pieces for Samples and BeliefModels.
+
+Main public types and functions:
+- ~Location~
+- ~Index~
+- ~Map~
+- ~MultiMap~
+- ~Region~
+- ~imgToMap~
+- ~res~
+- ~pointToCell~
+- ~GroundTruth~
+
+** Initialization
+Functions for initializing mission data.
+
+Main public types and functions:
+- ~simData~
+- ~realData~
+- ~rosData~
+
+** BeliefModels
+Everything to do with what is inferred about values in the environment. In practical terms: means, variances, and correlations. This is all built on Gaussian Processes.
+
+Main public types and functions:
+- ~generateBeliefModel~
+- ~correlations~
+
+** Samples
+Everything to do with sampling values in the environment.
+
+Main public types and functions:
+- ~Sample~
+- ~takeSamples~
+- ~selectSampleLocation~
+- ~SampleCost~
+
+** Paths
+Searching for paths on a 2D grid using A*. Its main use is to get the path cost (distance), but it can return the full path as well.
+
+Main public types and functions:
+- ~PathCost~
+- ~finalOrientation~
+- ~getPath~
+
+** Exploration
+Contains the function that runs the entire search mission. The entry-point to the actual adaptive sampling. This contains the main loop and most of the usage of Samples and BeliefModels.
+
+Main public types and functions:
+- ~explore~
+
+** Visualization
+Methods to visualize mission data. The form displayed is determined by what data types are passed in.
+
+Main public types and functions:
+- ~visualize~
+
+** ROSInterface
+The interface for passing data to and from other ROS nodes. It sets up an =adaptive_sampling= node and provides methods to handle the data. This is designed specifically for communication with Swagbot.
+
+** Main
+The general scripting area and launching point for running the parts of the system. The main steps are initializing data, running the exploration algorithm, and visualizing results.
+
+* Code Patterns
+
+** Naming
+The chosen naming conventions for the project:
+- Types (data structures) are ~UpperCamelCase~
+- Functions are ~lowerCamelCase~
+- Simple constants are ~CAPITAL_SNAKE_CASE~
+- All other variables are ~snake_case~
+
+** Data structures and functions
+A consistent pattern is followed for most data and functions in this repo using the Julia language feature of functors. A functor is a combination of a struct and a function. In many places in the code, you will find the following in order:
+1. a struct definition -- what data the functor contains
+2. zero to many constructor definitions -- how it is initialized
+3. zero to many method definitions -- what the functor does when it is called (possibly with arguments)
+
+
+A functor's methods are meant to be the primary purpose of that object. e.g. a BeliefModel returns the belief, a SampleCost returns the sample cost, etc. If an object's data are used in any secondary way, it will be its own separate function with its own name.
 
 * Julia Tips
 ** Environment
@@ -53,6 +140,23 @@ This is a great package to use when developing code (not needed when only runnin
 
 ** Unchangeable stuff
 Julia doesn't allow changing type definitions. This means if you need to change what is within a ~struct~ or you need use the name of a function for something else, you will need to restart the REPL.
+
+** Functions and Methods
+In Julia lingo, a function is a type given to a family of methods, which are all called with the given function name. The methods are specific implementations or instantiations of that function, which are based on the number and types of the arguments passed in.
+
+Example:
+#+begin_example
+julia> length # the function
+length (generic function with 226 methods)
+
+julia> ?length("text") # one method
+length(s::AbstractString) -> Int
+...continued...
+
+julia> ?length([1,2,3]) # a different method
+length(A::AbstractArray)
+...continued...
+#+end_example
 
 ** Timing, Profiling, and Debugging
 The following packages can be useful when developing and analyzing the code.

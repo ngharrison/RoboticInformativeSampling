@@ -1,8 +1,3 @@
-# This file is used as the general scripting area
-# and launching point for running the parts of the
-# system. The main parts are initializing data,
-# running the algorithm, and visualizing results.
-
 # allows using modules defined in any file in project src directory
 src_dir = dirname(Base.active_project()) * "/src"
 if src_dir ∉ LOAD_PATH

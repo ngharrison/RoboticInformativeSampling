@@ -12,6 +12,8 @@ using Samples: Sample
 # using ROSInterface: ROSConnection
 using Visualization: visualize
 
+# TODO make a MissionData struct and turn functions into constructors
+
 function simData()
 
     lb = [0, 0]; ub = [1, 1]

@@ -37,7 +37,7 @@ Inputs:
 Outputs a vector of Samples containing index x and measurement y
 """
 function takeSamples(loc, groundTruth)
-    Y = groundTruth(loc) # get values of samples with location and quantity
+    Y = groundTruth(loc) # get sample values at location for all quantities
     return [Sample((loc, q), y) for (q, y) in enumerate(Y)]
 end
 
