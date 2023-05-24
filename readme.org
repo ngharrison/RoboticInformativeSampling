@@ -8,10 +8,10 @@ Written in Julia for speed and code flexibility.
 
 Created by Nicholas Harrison.
 
-* Installation
+* Installation and Setup
 Download Julia and run installer: [[https://julialang.org/downloads/]]
 
-Recommended to add to path.
+Recommended to add julia to your path.
 
 Use git to clone the repository to a local directory:
 #+begin_src shell
@@ -20,7 +20,6 @@ git clone https://gitlab.acfr.usyd.edu.au/nhar0989/AdaptiveSampling.git
 
 This will create a directory called =AdaptiveSampling=.
 
-* Setup
 1. Navigate into the =AdaptiveSampling/src= directory on the command line
 2. Run =julia --project=@.= to enter the julia REPL and activate the project
 3. Run =]instantiate= to install all needed packages
@@ -30,11 +29,16 @@ This will create a directory called =AdaptiveSampling=.
 The =--project=<path>= flag automatically activates a project environment after starting the REPL. You can run this manually by =]activate <path>= within the julia REPL. Both of these forms accept the path to the directory that contains the =Project.toml= file, e.g. the root directory of this repository. If you are already within a project directory, you can simply run the special form of =julia --project=@.= with the same effect.
 
 * Quick Start
-To run the project in its current state, run =include("Main.jl")= at the julia REPL. Important: this needs to be run within the =AdaptiveSampling/src= directory for the paths to be resolved correctly. For an easy way to navigate within the julia REPL, check out its [[*REPL][shell mode]]. Make sure the steps in [[*Setup][Setup]] have been taken too.
+To run the project in its current state, run =include("Main.jl")= at the julia REPL after following the steps in [[*Installation and Setup][Installation and Setup]]. Important: this needs to be run within the =AdaptiveSampling/src= directory for the paths to be resolved correctly. For an easy way to navigate within the julia REPL, check out its [[*REPL][shell mode]].
 
-* Parts and Usage Overview
+That should be enough to get you started. Read on to understand more about the code and the Julia language in general.
+
+* Code Parts and Usage Overview
 
 The code is divided up into files to contain pieces with similar purposes or concepts in the algorithm. Each file has its own single module for defining a namespace used when importing its names into other files. Unlike many Julia packages, no names are exported by default to maintain clarity in what is used and where it comes from.
+
+** Main
+The general scripting area and launching point for running the parts of the system. The main steps are initializing data, running the exploration algorithm, and visualizing results.
 
 ** Environment
 Types for holding and handling real and simulated data. Mainly used by [[*Initialization][Initialization]], but foundational for the other parts too. Its alias types ~Location~ and ~Index~ are fundamental pieces for Samples and BeliefModels.
@@ -97,9 +101,6 @@ Main public types and functions:
 ** ROSInterface
 The interface for passing data to and from other ROS nodes. It sets up an =adaptive_sampling= node and provides methods to handle the data. This is designed specifically for communication with Swagbot.
 
-** Main
-The general scripting area and launching point for running the parts of the system. The main steps are initializing data, running the exploration algorithm, and visualizing results.
-
 * Code Patterns
 
 ** Naming
@@ -133,7 +134,7 @@ Type backspace or ctrl-c to exit a mode.
 ** Compilation
 Julia code gets compiled the first time you run it. This means the first run will be slower and later ones much faster. This is also true when loading packages with ~using~ or ~import~. So the typical way to run julia code is through a REPL that is kept open between runs in order to not re-compile. If a script is run directly from the command line using the julia interpreter, it will be re-compiled every time. Running code within an IDE will typically keep a REPL open for you.
 
-Note: Julia 1.9 reduces the load and first-execution times considerably. Highly recommended.
+Note: Julia 1.9 reduces the load and first-execution times considerably for modules that have not changed. Highly recommended.
 
 ** Revise.jl
 This is a great package to use when developing code (not needed when only running it). Normally to update methods and variables that have changed, you have to manually re-run the changed code in the REPL. This package tracks modules that you have included with ~using~ or ~import~ and automatically updates the running environment with any changes. Simply run ~using Revise~ /before/ ~using~ anything else (i.e. running the Main.jl file) and all your changes within the project will be tracked.
