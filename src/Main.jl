@@ -4,7 +4,10 @@
 # running the algorithm, and visualizing results.
 
 # allows using modules defined in any file in project src directory
-push!(LOAD_PATH, dirname(Base.active_project()) * "/src")
+src_dir = dirname(Base.active_project()) * "/src"
+if src_dir ∉ LOAD_PATH
+    push!(LOAD_PATH, src_dir)
+end
 
 using Initialization: simData, realData
 using BeliefModels: correlations
