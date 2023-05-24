@@ -101,15 +101,19 @@ Has the form:
 cost = - w1 μ - w2 σ + w3 τ + w4 D
 """
 function (sc::SampleCost)(loc)
+
     beliefs = sc.beliefModel([(loc, q) for q in sc.quantities]) # means and standard deviations
     # TODO probably need to normalize before adding,
     # but requires generating belief over entire region
     # or using the max so far
     μ_tot, σ_tot = sum.(beliefs)
+
     τ = sc.pathCost(pointToCell(loc, sc.occupancy)) # distance to location
+
     radius = minimum(sc.occupancy.ub .- sc.occupancy.lb)/4
     dists = norm.(first.(getfield.(sc.samples, :x)) .- Ref(loc))
     P = sum((radius./dists).^3) # proximity to other points
+
     vals = [-μ_tot, -σ_tot, τ, P]
     return sc.weights'*vals
 end
