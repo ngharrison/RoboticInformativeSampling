@@ -7,7 +7,7 @@ using Images: load, imresize, Gray, gray
 using DelimitedFiles: readdlm
 using Statistics: cor
 
-using Environment: Map, imgToMap, GaussGroundTruth, MultiMap, Peak, Region
+using Environment: Map, imgToMap, GaussGroundTruth, MultiMap, Peak, Region, pointToCell
 using Samples: Sample
 # using ROSInterface: ROSConnection
 using Visualization: visualize
@@ -153,6 +153,49 @@ function realData()
 
     return region, start_loc, weights, num_samples, prior_samples
 
+end
+
+function conradData()
+
+    file_names = [
+        "maps/weightMap1.csv",
+        "maps/weightMap2.csv",
+    ]
+
+    # need to drop the last point
+    data = [d[1:end-1,:] for d in readdlm.(file_names, ',')]
+
+    lb = minimum(minimum(d, dims=1)[1:2] for d in data)
+    ub = maximum(maximum(d, dims=1)[1:2] for d in data)
+
+    # scatter(data[1][:,1], data[1][:,2], marker_z=data[1][:,3])
+    # scatter(data[2][:,1], data[2][:,2], marker_z=data[2][:,3])
+
+    n = floor(Int, sqrt(maximum(size.(data, 1))))
+
+    groundTruths = [Map(zeros(n, n), lb, ub) for _ in 1:2]
+
+    for (x,y,z) in eachrow(data[1])
+        groundTruths[1][pointToCell([x,y], groundTruths[1])] = z
+    end
+    for (x,y,z) in eachrow(data[2])
+        groundTruths[2][pointToCell([x,y], groundTruths[2])] = z
+    end
+
+    multiGroundTruth = MultiMap(groundTruths)
+
+    ## initialize alg values
+    weights = [1, 6, 1, 3e-3] # mean, std, dist, prox
+    start_loc = [0.8, 0.6] # starting location
+    num_samples = 20
+
+    occupancy = Map(zeros(Bool, n, n), lb, ub)
+
+    region = Region(occupancy, multiGroundTruth)
+
+    prior_samples = []
+
+    return region, start_loc, weights, num_samples, prior_samples
 end
 
 # function rosData()
