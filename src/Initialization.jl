@@ -163,7 +163,7 @@ function conradData()
     ]
 
     # need to drop the last point
-    data = [d[1:end-1,:] for d in readdlm.(file_names, ',')]
+    data = readdlm.(file_names, ',')
 
     lb = minimum(minimum(d, dims=1)[1:2] for d in data)
     ub = maximum(maximum(d, dims=1)[1:2] for d in data)
