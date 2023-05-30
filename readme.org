@@ -121,7 +121,7 @@ A functor's methods are meant to be the primary purpose of that object. e.g. a B
 
 * Julia Tips
 ** Environment
-The main Julia development environment is VSCode with the Julia extension. It is supported by the Julia contributors and the community as a whole.
+The main Julia development environment is VSCode with the Julia extension. It is supported by the Julia contributors and the community as a whole. These instructions focus on getting started up just using the REPL and don't give direction on that, so you'll need to read their docs to know the standard workflows.
 
 ** REPL
 Julia ships with a useful REPL that combines an interpreter, a documentation browser, a package manager, and a shell. The four modes are accessed by typing the following keys:
