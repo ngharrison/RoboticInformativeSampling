@@ -70,6 +70,8 @@ MultiMap(maps::AbstractVector{<:Map}) = MultiMap(Tuple(maps))
 # make a multimap behave like an array
 Base.keys(m::MultiMap) = keys(m.maps)
 Base.length(m::MultiMap) = length(m.maps)
+Base.iterate(m::MultiMap) = iterate(m.maps)
+Base.iterate(m::MultiMap, i::Integer) = iterate(m.maps, i)
 Base.Broadcast.broadcastable(m::MultiMap) = Ref(m) # don't broadcast
 Base.IndexStyle(::Type{<:MultiMap}) = IndexLinear()
 Base.getindex(m::MultiMap, i::Int) = m.maps[i]
