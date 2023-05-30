@@ -87,7 +87,7 @@ Fields:
 """
 struct Region
     occupancy::Map{Bool}
-    groundTruth::MultiMap{Float64}
+    groundTruth
 end
 
 # helper methods used with maps

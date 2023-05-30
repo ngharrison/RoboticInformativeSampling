@@ -200,22 +200,23 @@ end
 
 # function rosData()
 #
-#     lb = [0, 0]; ub = [1, 1]
-#
-#     # read in elevation
-#     elev_img = load("maps/arthursleigh_shed_small.tif")
-#     elevMap = imgToMap(gray.(elev_img), lb, ub)
-#
-#     # read in obstacles
-#     obs_img = load("maps/obstacles_fieldsouth_220727.tif")
-#     obs_img_res = imresize(obs_img, size(elev_img))
-#     # the image we have has zeros for obstacles, need to flip
-#     occ_mat = Matrix{Bool}(Gray.(obs_img_res) .== 0')
-#     occupancy = imgToMap(occ_mat, lb, ub)
+#     # lb = [0, 0]; ub = [1, 1]
+#     #
+#     # # read in elevation
+#     # elev_img = load("maps/arthursleigh_shed_small.tif")
+#     # elevMap = imgToMap(gray.(elev_img), lb, ub)
+#     #
+#     # # read in obstacles
+#     # obs_img = load("maps/obstacles_fieldsouth_220727.tif")
+#     # obs_img_res = imresize(obs_img, size(elev_img))
+#     # # the image we have has zeros for obstacles, need to flip
+#     # occ_mat = Matrix{Bool}(Gray.(obs_img_res) .== 0')
+#     # occupancy = imgToMap(occ_mat, lb, ub)
+#     occupancy = Map(zeros(bool, 100, 100), lb, ub)
 #
 #     sub_nodes = [
 #         "/GP_Data/avg_NDVI",
-#         "/GP_Data/avg_crop_height",
+#         # "/GP_Data/avg_crop_height",
 #         "/GP_Data/cover_NDVI"
 #     ]
 #

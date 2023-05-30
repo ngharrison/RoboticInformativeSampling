@@ -4,14 +4,14 @@
 
 module ROSInterface
 
-using RobotOS: std_msgs, geometry_msgs, rostypegen
+using RobotOS
 @rosimport std_msgs.msg: Float32
 @rosimport geometry_msgs.msg: Pose, Point, Quaternion
 rostypegen(@__MODULE__)
 using .std_msgs.msg
 using .geometry_msgs.msg
 
-using Rotations: QuatRotation, RotZ
+using Rotations: QuatRotation, RotZ, params
 
 using Environment: Location, Index
 
@@ -98,9 +98,10 @@ Function to send the next location to Swagbot.
 """
 function publishNextLocation(pub_obj::Publisher{Pose}, new_loc::Location)
     # create Point and Quaternion and put them together
-    p = Point(new_loc)
-    orientation = finalOrientation(pathCost, new_loc)
-    q = Quaternion(QuatRotation(RotZ(orientation)))
+    p = Point([new_loc; 0]...)
+    # orientation = finalOrientation(pathCost, new_loc)
+    orientation = 0
+    q = Quaternion(params(QuatRotation(RotZ(orientation)))...)
     publish(pub_obj, Pose(p, q))
 end
 
