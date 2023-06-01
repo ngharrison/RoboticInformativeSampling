@@ -12,7 +12,7 @@ using Exploration: explore
 ## initialize region
 
 # initialize data use simData or realData for this
-region, start_loc, weights, num_samples, prior_samples = conradData()
+region, start_loc, weights, num_samples, prior_samples = realData()
 
 ## run search alg
 @time samples, beliefModel = explore(region, start_loc, weights;

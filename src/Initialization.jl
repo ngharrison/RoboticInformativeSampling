@@ -9,10 +9,10 @@ using Statistics: cor
 
 using Environment: Map, imgToMap, GaussGroundTruth, MultiMap, Peak, Region, pointToCell
 using Samples: Sample
-# using ROSInterface: ROSConnection
 using Visualization: visualize
 
-# TODO make a MissionData struct and turn functions into constructors
+# this errors without a working rospy installation
+using ROSInterface: ROSConnection
 
 function simData()
 
@@ -198,40 +198,41 @@ function conradData()
     return region, start_loc, weights, num_samples, prior_samples
 end
 
-# function rosData()
-#
-#     # lb = [0, 0]; ub = [1, 1]
-#     #
-#     # # read in elevation
-#     # elev_img = load("maps/arthursleigh_shed_small.tif")
-#     # elevMap = imgToMap(gray.(elev_img), lb, ub)
-#     #
-#     # # read in obstacles
-#     # obs_img = load("maps/obstacles_fieldsouth_220727.tif")
-#     # obs_img_res = imresize(obs_img, size(elev_img))
-#     # # the image we have has zeros for obstacles, need to flip
-#     # occ_mat = Matrix{Bool}(Gray.(obs_img_res) .== 0')
-#     # occupancy = imgToMap(occ_mat, lb, ub)
-#     occupancy = Map(zeros(bool, 100, 100), lb, ub)
-#
-#     sub_nodes = [
-#         "/GP_Data/avg_NDVI",
-#         # "/GP_Data/avg_crop_height",
-#         "/GP_Data/cover_NDVI"
-#     ]
-#
-#     multiGroundTruth = ROSConnection(sub_nodes)
-#
-#     region = Region(occupancy, multiGroundTruth)
-#
-#     ## initialize alg values
-#     weights = [1, 6, 1, 3e-3] # mean, std, dist, prox
-#     start_loc = [0.0, 0.0]
-#     num_samples = 50
-#
-#     prior_samples = []
-#
-#     return region, start_loc, weights, num_samples, prior_samples
-# end
+function rosData()
+
+    # lb = [0, 0]; ub = [1, 1]
+    #
+    # # read in elevation
+    # elev_img = load("maps/arthursleigh_shed_small.tif")
+    # elevMap = imgToMap(gray.(elev_img), lb, ub)
+    #
+    # # read in obstacles
+    # obs_img = load("maps/obstacles_fieldsouth_220727.tif")
+    # obs_img_res = imresize(obs_img, size(elev_img))
+    # # the image we have has zeros for obstacles, need to flip
+    # occ_mat = Matrix{Bool}(Gray.(obs_img_res) .== 0')
+    # occupancy = imgToMap(occ_mat, lb, ub)
+    occupancy = Map(zeros(bool, 100, 100), lb, ub)
+
+    # TODO switch these for swagbot nodes
+    sub_nodes = [
+        "/GP_Data/avg_NDVI",
+        "/GP_Data/avg_crop_height",
+        "/GP_Data/cover_NDVI"
+    ]
+
+    multiGroundTruth = ROSConnection(sub_nodes)
+
+    region = Region(occupancy, multiGroundTruth)
+
+    ## initialize alg values
+    weights = [1, 6, 1, 3e-3] # mean, std, dist, prox
+    start_loc = [0.0, 0.0]
+    num_samples = 50
+
+    prior_samples = []
+
+    return region, start_loc, weights, num_samples, prior_samples
+end
 
 end

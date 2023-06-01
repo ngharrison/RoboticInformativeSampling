@@ -28,6 +28,12 @@ This will create a directory called =AdaptiveSampling=.
 ** Extra notes
 The =--project=<path>= flag automatically activates a project environment after starting the REPL. You can run this manually by =]activate <path>= within the julia REPL. Both of these forms accept the path to the directory that contains the =Project.toml= file, e.g. the root directory of this repository. If you are already within a project directory, you can simply run the special form of =julia --project=@.= with the same effect.
 
+If you get: =Error: Unable to load the 'rospy' python package!=
+
+1. Run =ENV["PYTHON"] = "/usr/bin/python"= (or whatever the path to your python executable is, the one used with ros, having the rospy package installed)
+2. Run =]build PyCall=
+3. Restart the julia REPL
+
 * Quick Start
 To run the project in its current state, run =include("Main.jl")= at the julia REPL after following the steps in [[*Installation and Setup][Installation and Setup]]. Important: this needs to be run within the =AdaptiveSampling/src= directory for the paths to be resolved correctly. For an easy way to navigate within the julia REPL, check out its [[*REPL][shell mode]].
 

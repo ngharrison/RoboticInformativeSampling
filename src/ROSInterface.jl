@@ -5,11 +5,15 @@
 module ROSInterface
 
 using RobotOS
-@rosimport std_msgs.msg: Float32
+@rosimport std_msgs.msg: Bool, Float64
 @rosimport geometry_msgs.msg: Pose, Point, Quaternion
 rostypegen(@__MODULE__)
 using .std_msgs.msg
 using .geometry_msgs.msg
+
+using PyCall
+rospy = pyimport("rospy")
+std_msgs = pyimport("std_msgs.msg")
 
 using Rotations: QuatRotation, RotZ, params
 
@@ -18,7 +22,7 @@ using Environment: Location, Index
 """
 Stores information for communicating with Swagbot.
 """
-struct ROSConnection
+mutable struct ROSConnection
     sub_nodes
     publisher
     sortie_finished
@@ -38,7 +42,7 @@ function ROSConnection(sub_nodes)
     rosConnection = ROSConnection(sub_nodes, publisher, false)
 
     # subscriber to check if sortie is finished
-    sortie_sub = Subscriber{Float32Msg}("sortie_finished", saveVal,
+    sortie_sub = Subscriber{BoolMsg}("sortie_finished", saveFinished,
                                         (rosConnection,), queue_size=10)
 
     return rosConnection
@@ -54,13 +58,13 @@ Returns a vector of values from the sample location.
 function (R::ROSConnection)(new_loc::Location)
     publishNextLocation(R.publisher, new_loc)
 
-    # wait, TODO how to best implement?
+    # wait, check each second
     while !ros_data.sortie_finished
-        sleep(1) # choose the publishing rate
+        rossleep(1)
     end
 
     # get values
-    values = [wait_for_message(node, Float32Msg, timeout=5) for node in R.sub_nodes]
+    values = [rospy.wait_for_message(node, std_msgs.Float64, timeout=5) for node in R.sub_nodes]
 
     return values
 end
@@ -74,13 +78,13 @@ function (R::ROSConnection)(new_index::Index)
     loc, quantity = new_index
     publishNextLocation(R.publisher, loc)
 
-    # wait, TODO how to best implement?
+    # wait, check each second
     while !ros_data.sortie_finished
-        sleep(1) # choose the publishing rate
+        rossleep(1)
     end
 
     # get values
-    values = wait_for_message(R.sub_nodes[quantity], Float32Msg, timeout=5)
+    values = rospy.wait_for_message(R.sub_nodes[quantity], std_msgs.Float64, timeout=5)
 
     return values
 end
@@ -89,7 +93,7 @@ end
 Callback function to save the sortie_finished boolean into the rosConnection
 struct.
 """
-function saveVal(msg::Float32Msg, rosInterface)
+function saveFinished(msg::BoolMsg, rosInterface)
     rosInterface.sortie_finished = msg
 end
 
@@ -102,7 +106,7 @@ function publishNextLocation(pub_obj::Publisher{Pose}, new_loc::Location)
     # orientation = finalOrientation(pathCost, new_loc)
     orientation = 0
     q = Quaternion(params(QuatRotation(RotZ(orientation)))...)
-    publish(pub_obj, Pose(p, q))
+    publish(publisher, Pose(p, q))
 end
 
 end
