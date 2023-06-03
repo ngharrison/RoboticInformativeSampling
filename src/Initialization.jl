@@ -193,15 +193,15 @@ function conradData()
 
     region = Region(occupancy, multiGroundTruth)
 
-    prior_samples = []
+    prior_samples = Sample[]
 
     return region, start_loc, weights, num_samples, prior_samples
 end
 
 function rosData()
 
-    # lb = [0, 0]; ub = [1, 1]
-    #
+    lb = [0, 0]; ub = [1, 1]
+
     # # read in elevation
     # elev_img = load("maps/arthursleigh_shed_small.tif")
     # elevMap = imgToMap(gray.(elev_img), lb, ub)
@@ -212,12 +212,13 @@ function rosData()
     # # the image we have has zeros for obstacles, need to flip
     # occ_mat = Matrix{Bool}(Gray.(obs_img_res) .== 0')
     # occupancy = imgToMap(occ_mat, lb, ub)
-    occupancy = Map(zeros(bool, 100, 100), lb, ub)
+
+    occupancy = Map(zeros(Bool, 100, 100), lb, ub)
 
     # TODO switch these for swagbot nodes
     sub_nodes = [
         "/GP_Data/avg_NDVI",
-        "/GP_Data/avg_crop_height",
+        # "/GP_Data/avg_crop_height",
         "/GP_Data/cover_NDVI"
     ]
 
@@ -228,9 +229,9 @@ function rosData()
     ## initialize alg values
     weights = [1, 6, 1, 3e-3] # mean, std, dist, prox
     start_loc = [0.0, 0.0]
-    num_samples = 50
+    num_samples = 10
 
-    prior_samples = []
+    prior_samples = Sample[]
 
     return region, start_loc, weights, num_samples, prior_samples
 end
