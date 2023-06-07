@@ -47,8 +47,8 @@ imgToMap(img, lb=[0, 0], ub=[1, 1]) = Map(permutedims(reverse(img, dims=1), (2,1
 # make a map behave like an array
 Base.size(m::Map) = size(m.data)
 Base.IndexStyle(::Type{<:Map}) = IndexLinear()
-Base.getindex(m::Map, i::Int) = m.data[i]
-Base.setindex!(m::Map, v, i::Int) = (m.data[i] = v)
+Base.getindex(m::Map, i::Integer) = m.data[i]
+Base.setindex!(m::Map, v, i::Integer) = (m.data[i] = v)
 
 # accepts a single vector, returns a scalar
 (map::Map)(x::Location) = map[pointToCell(x, map)]
@@ -74,7 +74,7 @@ Base.iterate(m::MultiMap) = iterate(m.maps)
 Base.iterate(m::MultiMap, i::Integer) = iterate(m.maps, i)
 Base.Broadcast.broadcastable(m::MultiMap) = Ref(m) # don't broadcast
 Base.IndexStyle(::Type{<:MultiMap}) = IndexLinear()
-Base.getindex(m::MultiMap, i::Int) = m.maps[i]
+Base.getindex(m::MultiMap, i::Integer) = m.maps[i]
 
 (mmap::MultiMap)(x::Location) = [mmap.maps[i](x) for i in eachindex(mmap)]
 (mmap::MultiMap)(x::Index) = mmap.maps[x[2]](x[1])
