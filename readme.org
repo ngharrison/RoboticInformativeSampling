@@ -21,12 +21,12 @@ git clone https://gitlab.acfr.usyd.edu.au/nhar0989/AdaptiveSampling.git
 This will create a directory called =AdaptiveSampling=.
 
 1. Navigate into the =AdaptiveSampling/src= directory on the command line
-2. Run =julia --project=@.= to enter the julia REPL and activate the project
+2. Run =julia --project= to enter the julia REPL and activate the project
 3. Run =]instantiate= to install all needed packages
 4. Exit the interactive Pkg mode by hitting backspace
 
 ** Extra notes
-The =--project=<path>= flag automatically activates a project environment after starting the REPL. You can run this manually by =]activate <path>= within the julia REPL. Both of these forms accept the path to the directory that contains the =Project.toml= file, e.g. the root directory of this repository. If you are already within a project directory, you can simply run the special form of =julia --project=@.= with the same effect.
+The =--project=<path>= flag automatically activates a project environment after starting the REPL. You can run this manually by =]activate <path>= within the julia REPL. Both of these forms accept the path to the directory that contains the =Project.toml= file, e.g. the root directory of this repository. If you are already within a project directory, you can simply run it without a value (=julia --project=) with the same effect.
 
 If you get: =Error: Unable to load the 'rospy' python package!=
 
@@ -43,10 +43,10 @@ That should be enough to get you started. Read on to understand more about the c
 
 The code is divided up into files to contain pieces with similar purposes or concepts in the algorithm. Each file has its own single module for defining a namespace used when importing its names into other files. Unlike many Julia packages, no names are exported by default to maintain clarity in what is used and where it comes from.
 
-** Main
+** Main.jl
 The general scripting area and launching point for running the parts of the system. The main steps are initializing data, running the exploration algorithm, and visualizing results.
 
-** Environment
+** Environment.jl
 Types for holding and handling real and simulated data. Mainly used by [[*Initialization][Initialization]], but foundational for the other parts too. Its alias types ~Location~ and ~Index~ are fundamental pieces for Samples and BeliefModels.
 
 Main public types and functions:
@@ -60,7 +60,7 @@ Main public types and functions:
 - ~pointToCell~
 - ~GroundTruth~
 
-** Initialization
+** Initialization.jl
 Functions for initializing mission data.
 
 Main public types and functions:
@@ -68,14 +68,14 @@ Main public types and functions:
 - ~realData~
 - ~rosData~
 
-** BeliefModels
+** BeliefModels.jl
 Everything to do with what is inferred about values in the environment. In practical terms: means, variances, and correlations. This is all built on Gaussian Processes.
 
 Main public types and functions:
 - ~generateBeliefModel~
 - ~correlations~
 
-** Samples
+** Samples.jl
 Everything to do with sampling values in the environment.
 
 Main public types and functions:
@@ -84,7 +84,7 @@ Main public types and functions:
 - ~selectSampleLocation~
 - ~SampleCost~
 
-** Paths
+** Paths.jl
 Searching for paths on a 2D grid using A*. Its main use is to get the path cost (distance), but it can return the full path as well.
 
 Main public types and functions:
@@ -92,19 +92,19 @@ Main public types and functions:
 - ~finalOrientation~
 - ~getPath~
 
-** Exploration
+** Exploration.jl
 Contains the function that runs the entire search mission. The entry-point to the actual adaptive sampling. This contains the main loop and most of the usage of Samples and BeliefModels.
 
 Main public types and functions:
 - ~explore~
 
-** Visualization
+** Visualization.jl
 Methods to visualize mission data. The form displayed is determined by what data types are passed in.
 
 Main public types and functions:
 - ~visualize~
 
-** ROSInterface
+** ROSInterface.jl
 The interface for passing data to and from other ROS nodes. It sets up an =adaptive_sampling= node and provides methods to handle the data. This is designed specifically for communication with Swagbot.
 
 * Code Patterns
@@ -112,7 +112,7 @@ The interface for passing data to and from other ROS nodes. It sets up an =adapt
 ** Naming
 The chosen naming conventions for the project:
 - Types (data structures) are ~UpperCamelCase~
-- Functions are ~lowerCamelCase~
+- Functions (and functors) are ~lowerCamelCase~
 - Simple constants are ~CAPITAL_SNAKE_CASE~
 - All other variables are ~snake_case~
 
@@ -123,7 +123,7 @@ A consistent pattern is followed for most data and functions in this repo using 
 3. zero to many method definitions -- what the functor does when it is called (possibly with arguments)
 
 
-A functor's methods are meant to be the primary purpose of that object. e.g. a BeliefModel returns the belief, a SampleCost returns the sample cost, etc. If an object's data are used in any secondary way, it will be its own separate function with its own name.
+A functor's methods are meant to be the primary purpose of that object. e.g. a BeliefModel returns the belief, a SampleCost returns the sample cost, etc. If an object's data are used in any secondary way, it will be its own separate function with its own name, and the object will be passed in.
 
 * Julia Tips
 ** Environment
