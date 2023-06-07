@@ -27,18 +27,21 @@ visuals through their respective methods and lays them out in a grid. Currently
 shows the belief model, the ground truth, and the obstacles.
 
 Arguments pass through to the sub-methods that need them. res is the grid
-resolution plotting continuous-valued functions and defaults to $default_res.
+resolution when plotting continuous-valued functions and defaults to $default_res.
+
+If no ground truth is available, it is not plotted.
 """
 function visualize(beliefModel::BeliefModel, region::Region, samples, quantity)
+    a = visualize(beliefModel, samples, region.occupancy, quantity)
+    b = plot(legend=false, grid=false, foreground_color_subplot=:white) # blank plot
+    # TODO this will need to be updated to test for actual types
+    if hasmethod(getindex, Tuple{typeof(region.groundTruth), Integer})
+        # we actually have ground truth
+        b = visualize(region.groundTruth[quantity], "Ground Truth")
+    end
+    c = visualize(region.occupancy, "Occupancy Map")
     l = @layout [a ; b c]
-    plot(
-        visualize(beliefModel, samples, region.occupancy, quantity),
-        visualize(region.groundTruth[quantity], "Ground Truth"),
-        visualize(region.occupancy, "Occupancy Map"),
-        layout=l,
-        size=default_size,
-        margin=default_margin
-    )
+    plot(a, b, c, layout=l, size=default_size, margin=default_margin)
 end
 
 """

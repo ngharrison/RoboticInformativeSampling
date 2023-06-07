@@ -11,9 +11,6 @@ using Environment: Map, imgToMap, GaussGroundTruth, MultiMap, Peak, Region, poin
 using Samples: Sample
 using Visualization: visualize
 
-# this errors without a working rospy installation
-using ROSInterface: ROSConnection
-
 function simData()
 
     lb = [0, 0]; ub = [1, 1]
@@ -198,28 +195,19 @@ function conradData()
     return region, start_loc, weights, num_samples, prior_samples
 end
 
+# this requires a working rospy installation
+using ROSInterface: ROSConnection
+
 function rosData()
 
     lb = [0, 0]; ub = [1, 1]
-
-    # # read in elevation
-    # elev_img = load("maps/arthursleigh_shed_small.tif")
-    # elevMap = imgToMap(gray.(elev_img), lb, ub)
-    #
-    # # read in obstacles
-    # obs_img = load("maps/obstacles_fieldsouth_220727.tif")
-    # obs_img_res = imresize(obs_img, size(elev_img))
-    # # the image we have has zeros for obstacles, need to flip
-    # occ_mat = Matrix{Bool}(Gray.(obs_img_res) .== 0')
-    # occupancy = imgToMap(occ_mat, lb, ub)
 
     occupancy = Map(zeros(Bool, 100, 100), lb, ub)
 
     # TODO switch these for swagbot nodes
     sub_nodes = [
-        "/GP_Data/avg_NDVI",
-        # "/GP_Data/avg_crop_height",
-        "/GP_Data/cover_NDVI"
+        "/value1",
+        "/value2"
     ]
 
     multiGroundTruth = ROSConnection(sub_nodes)

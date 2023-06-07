@@ -20,9 +20,7 @@ Stores information for communicating with Swagbot.
 """
 mutable struct ROSConnection
     sub_nodes
-    pub_next_sample
-    pub_finished
-    sortie_finished
+    publisher
 end
 
 """
@@ -33,15 +31,10 @@ function ROSConnection(sub_nodes)
     init_node("adaptive_sampling")
 
     # this will pass the full goal pose, no quantity id
-    pub_next_sample = Publisher{Pose}("latest_sample", queue_size=10)
-    pub_finished = Publisher{BoolMsg}("sortie_finished", queue_size=10)
+    publisher = Publisher{Pose}("latest_sample", queue_size=1, latch=true)
 
     # create connection object
-    rosConnection = ROSConnection(sub_nodes, pub_next_sample, pub_finished, false)
-
-    # subscriber to check if sortie is finished
-    sortie_sub = Subscriber{BoolMsg}("sortie_finished", saveFinished,
-                                        (rosConnection,), queue_size=10)
+    rosConnection = ROSConnection(sub_nodes, publisher)
 
     return rosConnection
 end
@@ -54,19 +47,14 @@ Base.length(R::ROSConnection) = length(R.sub_nodes)
 Returns a vector of values from the sample location.
 """
 function (R::ROSConnection)(new_loc::Location)
-    publishNextLocation(R.pub_next_sample, new_loc)
+    publishNextLocation(R.publisher, new_loc)
 
-    # wait, check each second
-    while !(R.sortie_finished || is_shutdown())
-        rossleep(1)
-    end
-
-    # reset for next time
-    publish(R.pub_finished, BoolMsg(false))
-
-    # get values
     rospy = pyimport("rospy")
     std_msg = pyimport("std_msgs.msg")
+
+    rospy.wait_for_message("sortie_finished", std_msg.Bool) # a message means finished
+
+    # get values
     values = [rospy.wait_for_message(node, std_msg.Float64, timeout=5).data
               for node in R.sub_nodes]
 
@@ -80,30 +68,17 @@ Currently will be unused.
 """
 function (R::ROSConnection)(new_index::Index)
     loc, quantity = new_index
-    publishNextLocation(R.pub_next_sample, loc)
+    publishNextLocation(R.publisher, loc)
 
-    # wait, check each second
-    while !(R.sortie_finished || is_shutdown())
-        rossleep(1)
-    end
-
-    # reset for next time
-    publish(R.pub_finished, BoolMsg(false))
-
-    # get values
     rospy = pyimport("rospy")
     std_msg = pyimport("std_msgs.msg")
+
+    rospy.wait_for_message("sortie_finished", std_msg.Bool) # a message means finished
+
+    # get values
     values = rospy.wait_for_message(R.sub_nodes[quantity], std_msg.Float64, timeout=5)
 
     return values
-end
-
-"""
-Callback function to save the sortie_finished boolean into the rosConnection
-struct.
-"""
-function saveFinished(msg::BoolMsg, rosConnection)
-    rosConnection.sortie_finished = msg.data
 end
 
 """
@@ -112,6 +87,7 @@ Function to send the next location to Swagbot.
 function publishNextLocation(publisher::Publisher{Pose}, new_loc::Location)
     # create Point and Quaternion and put them together
     p = Point(new_loc..., 0)
+    # TODO use real orientation
     # orientation = finalOrientation(pathCost, new_loc)
     orientation = 0
     q = Quaternion(params(QuatRotation(RotZ(orientation)))...)

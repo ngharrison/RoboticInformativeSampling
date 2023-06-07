@@ -12,13 +12,13 @@ using Exploration: explore
 ## initialize region
 
 # initialize data use simData or realData for this
-region, start_loc, weights, num_samples, prior_samples = rosData()
+region, start_loc, weights, num_samples, prior_samples = simData()
 
 ## run search alg
 @time samples, beliefModel = explore(region, start_loc, weights;
                                      num_samples,
                                      prior_samples,
-                                     # visuals=true,
+                                     visuals=true,
                                      sleep_time=0.0);
 
 println()
