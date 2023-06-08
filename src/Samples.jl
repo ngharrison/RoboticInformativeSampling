@@ -108,6 +108,7 @@ function (sc::SampleCost)(loc)
     # or using the max so far
     μ_tot, σ_tot = sum.(beliefs)
 
+    # TODO normalize this too
     τ = sc.pathCost(pointToCell(loc, sc.occupancy)) # distance to location
 
     radius = minimum(sc.occupancy.ub .- sc.occupancy.lb)/4

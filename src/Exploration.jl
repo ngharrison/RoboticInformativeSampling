@@ -3,7 +3,7 @@ module Exploration
 using DocStringExtensions: SIGNATURES
 
 using Samples: Sample, SampleCost, selectSampleLocation, takeSamples
-using BeliefModels: generateBeliefModel
+using BeliefModels: BeliefModel
 using Visualization: visualize
 
 """
@@ -61,7 +61,7 @@ function explore(region, start_loc, weights;
         append!(samples, new_samples)
 
         # new belief
-        beliefModel = generateBeliefModel(samples, prior_samples, lb, ub)
+        beliefModel = BeliefModel(samples, prior_samples, lb, ub)
 
         # visualization
         if visuals

@@ -22,4 +22,5 @@ region, start_loc, weights, num_samples, prior_samples = simData()
                                      sleep_time=0.0);
 
 println()
-println("Correlations: $(round.(correlations(beliefModel), digits=3))")
+println("Correlations:")
+display(correlations(beliefModel))

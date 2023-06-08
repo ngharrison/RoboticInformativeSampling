@@ -8,7 +8,7 @@ using Optim: optimize, Options, NelderMead
 using ParameterHandling: value_flatten
 using DocStringExtensions: SIGNATURES
 
-using Environment: Index
+using Environment: Location, Index
 
 abstract type BeliefModel end
 
@@ -32,6 +32,49 @@ estimates.
 struct BeliefModelSplit <: BeliefModel
     current
     combined
+end
+
+"""
+$SIGNATURES
+
+Creates and returns a new BeliefModel. A BeliefModelSimple is returned if there
+are no prior_samples, and it is trained and conditioned on the given samples.
+Otherwise a BeliefModelSplit is returned, trained and conditioned on both the
+samples and prior_samples. Lower and upper bounds are used to initialize one of
+the hyperparameters.
+"""
+function BeliefModel(samples, prior_samples, lb, ub)
+    # simple
+    current = BeliefModel(samples, lb, ub)
+    isempty(prior_samples) && return current
+    # simple
+    combined = BeliefModel([prior_samples; samples], lb, ub)
+    # split is a combination of two simples
+    return BeliefModelSplit(current, combined)
+end
+
+"""
+$SIGNATURES
+
+Creates and returns a BeliefModelSimple with hyperparameters trained and
+conditioned on the the samples given.
+"""
+function BeliefModel(samples, lb, ub; kernel=multiKernel)
+    # set up training data
+    X = getfield.(samples, :x)
+    Y = getfield.(samples, :y)
+
+    θ0 = initHyperparams(X, Y, lb, ub)
+
+    # optimize hyperparameters (train)
+    θ, opt = optimizeLoss(createLossFunc(X, Y, kernel), θ0)
+
+    # produce optimized gp belief model
+    f = GP(kernel(θ)) # prior gp
+    fx = f(X, θ.σn^2+√eps())
+    f_post = posterior(fx, Y) # gp conditioned on training samples
+
+    return BeliefModelSimple(f_post, θ)
 end
 
 """
@@ -68,48 +111,6 @@ function (beliefModel::BeliefModelSplit)(X::Union{Index, Vector{Index}})
     μ, _ = beliefModel.combined(X)
     _, σ = beliefModel.current(X)
     return μ, σ
-end
-
-"""
-$SIGNATURES
-
-Creates and returns a new BeliefModel. A BeliefModelSimple is returned if there
-are no prior_samples, and it is trained and conditioned on the given samples.
-Otherwise a BeliefModelSplit is returned, trained and conditioned on both the
-samples and prior_samples. Lower and upper bounds are used to initialize one of
-the hyperparameters.
-"""
-function generateBeliefModel(samples, prior_samples, lb, ub)
-    # simple
-    current = generateBeliefModel(samples, lb, ub)
-    isempty(prior_samples) && return current
-    # split
-    combined = generateBeliefModel([prior_samples; samples], lb, ub)
-    return BeliefModelSplit(current, combined)
-end
-
-"""
-$SIGNATURES
-
-Creates and returns a BeliefModelSimple with hyperparameters trained and
-conditioned on the the samples given.
-"""
-function generateBeliefModel(samples, lb, ub; kernel=multiKernel)
-    # set up training data
-    X = getfield.(samples, :x)
-    Y = getfield.(samples, :y)
-
-    θ0 = initHyperparams(X, Y, lb, ub)
-
-    # optimize hyperparameters (train)
-    θ, opt = optimizeLoss(createLossFunc(X, Y, kernel), θ0)
-
-    # produce optimized gp belief model
-    f = GP(kernel(θ)) # prior gp
-    fx = f(X, θ.σn^2+√eps())
-    f_post = posterior(fx, Y) # gp conditioned on training samples
-
-    return BeliefModelSimple(f_post, θ)
 end
 
 """
@@ -180,6 +181,8 @@ end
 $SIGNATURES
 
 A simple squared exponential kernel for the GP with parameters θ.
+
+This function creates the kernel function used within the GP.
 """
 singleKernel(θ) = θ.σ^2 * with_lengthscale(SqExponentialKernel(), θ.ℓ^2)
 
@@ -189,6 +192,8 @@ $SIGNATURES
 A multi-task GP kernel, a variety of multi-output GP kernel based on the
 Intrinsic Coregionalization Model with a Squared Exponential base kernel and an
 output matrix formed from a lower triangular matrix.
+
+This function creates the kernel function used within the GP.
 """
 multiKernel(θ) = IntrinsicCoregionMOKernel(kernel=with_lengthscale(SqExponentialKernel(), θ.ℓ^2),
                                            B=fullyConnectedCovMat(θ.σ))
@@ -250,11 +255,12 @@ end
 """
 $SIGNATURES
 
-Gives the correlations between the first output and any outputs.
+Gives the correlation matrix between all output.
 """
 function correlations(beliefModel::BeliefModelSimple)
     cov_mat = fullyConnectedCovMat(beliefModel.θ.σ)
-    return [cov_mat[i,1]/√(cov_mat[1,1]*cov_mat[i,i]) for i in 2:size(cov_mat, 1)]
+    return [cov_mat[i,j]/√(cov_mat[j,j]*cov_mat[i,i])
+            for (i,j) in Tuple.(CartesianIndices(cov_mat))]
 end
 
 function correlations(beliefModel::BeliefModelSplit)

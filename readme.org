@@ -72,7 +72,7 @@ Main public types and functions:
 Everything to do with what is inferred about values in the environment. In practical terms: means, variances, and correlations. This is all built on Gaussian Processes.
 
 Main public types and functions:
-- ~generateBeliefModel~
+- ~BeliefModel~
 - ~correlations~
 
 ** Samples.jl
