@@ -26,11 +26,13 @@ This will create a directory called =AdaptiveSampling=.
 4. Exit the interactive Pkg mode by hitting backspace
 
 ** Extra notes
+*** Activating a project
 The =--project=<path>= flag automatically activates a project environment after starting the REPL. You can run this manually by =]activate <path>= within the julia REPL. Both of these forms accept the path to the directory that contains the =Project.toml= file, e.g. the root directory of this repository. If you are already within a project directory, you can simply run it without a value (=julia --project=) with the same effect.
 
+*** rospy error
 If you get: =Error: Unable to load the 'rospy' python package!=
 
-1. Run =ENV["PYTHON"] = "/usr/bin/python"= (or whatever the path to your python executable is, the one used with ros, having the rospy package installed)
+1. Run =ENV["PYTHON"] = "/usr/bin/python"= (or whatever the path is to the python executable that has the rospy package installed)
 2. Run =]build PyCall=
 3. Restart the julia REPL
 
@@ -123,11 +125,11 @@ A consistent pattern is followed for most data and functions in this repo using 
 3. zero to many method definitions -- what the functor does when it is called (possibly with arguments)
 
 
-A functor's methods are meant to be the primary purpose of that object. e.g. a BeliefModel returns the belief, a SampleCost returns the sample cost, etc. If an object's data are used in any secondary way, it will be its own separate function with its own name, and the object will be passed in.
+A functor's methods are meant to be the primary purpose of that object. e.g. a BeliefModel returns the belief, a SampleCost returns the sample cost, etc. If an object's data are used in any secondary way, it will be its own separate function with its own name, and the object will be passed in directly.
 
 * Julia Tips
 ** Environment
-The main Julia development environment is VSCode with the Julia extension. It is supported by the Julia contributors and the community as a whole. These instructions focus on getting started up just using the REPL and don't give direction on that, so you'll need to read their docs to know the standard workflows.
+These instructions focus on getting started up just using the REPL, which can be a sufficient set of tools. If you want to use an IDE, VSCode with the Julia extension is the main one recommended. It is supported by the Julia contributors and the community as a whole. You'll need to read their docs to learn how to use it.
 
 ** REPL
 Julia ships with a useful REPL that combines an interpreter, a documentation browser, a package manager, and a shell. The four modes are accessed by typing the following keys:
