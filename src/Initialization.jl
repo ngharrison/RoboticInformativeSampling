@@ -99,8 +99,6 @@ normalize(a) = a ./ maximum(filter(!isnan, a))
 function realData()
     # have it run around australia
 
-    lb = [0, 0]; ub = [1, 1]
-
     file_names = [
         "maps/vege_720x360.csv",
         "maps/topo_720x360.csv",
@@ -115,6 +113,8 @@ function realData()
     end
 
     australia = (202:258, 587:668)
+
+    lb = [0, 0]; ub = [1, 1]
 
     groundTruth = imgToMap(normalize(images[1][australia...]), lb, ub)
     multiGroundTruth = MultiMap(groundTruth)
@@ -195,22 +195,23 @@ function conradData()
     return region, start_loc, weights, num_samples, prior_samples
 end
 
-# this requires a working rospy installation
-using ROSInterface: ROSConnection
-
 function rosData()
+
+    @eval begin
+        # TODO switch these for swagbot nodes
+        sub_nodes = [
+            "/value1",
+            "/value2"
+        ]
+
+        # this requires a working rospy installation
+        using ROSInterface: ROSConnection
+        multiGroundTruth = ROSConnection(sub_nodes)
+    end
 
     lb = [0, 0]; ub = [1, 1]
 
     occupancy = Map(zeros(Bool, 100, 100), lb, ub)
-
-    # TODO switch these for swagbot nodes
-    sub_nodes = [
-        "/value1",
-        "/value2"
-    ]
-
-    multiGroundTruth = ROSConnection(sub_nodes)
 
     region = Region(occupancy, multiGroundTruth)
 
