@@ -6,12 +6,14 @@ using LinearAlgebra: I
 using Images: load, imresize, Gray, gray
 using DelimitedFiles: readdlm
 using Statistics: cor
+using Random: seed!
 
 using Environment: Map, imgToMap, GaussGroundTruth, MultiMap, Peak, Region, pointToCell
 using Samples: Sample
 using Visualization: visualize
 
 function simData()
+    seed!(1) # make random values deterministic
 
     lb = [0, 0]; ub = [1, 1]
 
