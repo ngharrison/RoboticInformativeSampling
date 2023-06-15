@@ -16,11 +16,7 @@ samples is collected.
 
 Inputs:
 
-    - region: the search region
-    - start_loc: the starting location
-    - weights: weights for picking the next sample location
-    - num_samples: the number of samples to collect in one run (default 20)
-    - prior_samples: any samples taken previously (default empty)
+    - md: the mission data struct
     - visuals: true or false to cause map plots to be shown or not
     - sleep_time: the amount of time to wait after each iteration, useful for
       visualizations
@@ -31,43 +27,39 @@ Outputs:
     - beliefModel: the probabilistic representation of the quantities being
       searched for
 """
-function explore(region, start_loc, weights;
-                 num_samples=20,
-                 prior_samples=Sample[],
-                 visuals=false,
-                 sleep_time=0)
-    region.occupancy(start_loc) && error("start location is within obstacle")
+function explore(md; visuals=false, sleep_time=0)
+    md.occupancy(md.start_loc) && error("start location is within obstacle")
 
-    lb, ub = region.occupancy.lb, region.occupancy.ub
-    samples = empty(prior_samples)
+    lb, ub = md.occupancy.lb, md.occupancy.ub
     beliefModel = nothing
-    new_loc = start_loc
-    quantities=eachindex(region.groundTruth) # all current available quantities
+    new_loc = md.start_loc
+    quantities = eachindex(md.groundTruth) # all current available quantities
+    samples = copy(md.samples)
 
     println("Mission started")
     println()
 
-    for i in 1:num_samples
+    for i in 1:md.num_samples
         println("Sample number $i")
 
         # new sample indices
         if beliefModel !== nothing # prior belief exists
-            sampleCost = SampleCost(region.occupancy, samples, beliefModel, quantities, weights)
+            sampleCost = SampleCost(md.occupancy, samples, beliefModel, quantities, md.weights)
             new_loc = selectSampleLocation(sampleCost, lb, ub)
         end
 
         # sample all quantities
-        new_samples = takeSamples(new_loc, region.groundTruth)
+        new_samples = takeSamples(new_loc, md.groundTruth)
         append!(samples, new_samples)
 
         # new belief
-        beliefModel = BeliefModel(samples, prior_samples, lb, ub)
+        beliefModel = BeliefModel(samples, md.prior_samples, lb, ub)
 
         # visualization
         if visuals
-            display(visualize(beliefModel, region, samples, 1))
+            display(visualize(md, beliefModel, samples, quantity=1))
         end
-        # println("Correlations: $(round.(correlations(beliefModel), digits=3))")
+        # println("Output correlations: $(round.(outputCorMat(beliefModel), digits=3))")
         sleep(sleep_time)
     end
 

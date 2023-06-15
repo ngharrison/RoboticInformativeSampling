@@ -3,7 +3,7 @@ module Visualization
 using Plots: plot, heatmap, scatter!, @layout, mm, grid
 using DocStringExtensions: SIGNATURES
 
-using Environment: Region, GroundTruth, Map, res
+using Environment: GroundTruth, Map, res
 using BeliefModels: BeliefModel
 using Samples: SampleCost
 
@@ -31,15 +31,15 @@ resolution when plotting continuous-valued functions and defaults to $default_re
 
 If no ground truth is available, it is not plotted.
 """
-function visualize(beliefModel::BeliefModel, region::Region, samples, quantity)
-    a = visualize(beliefModel, samples, region.occupancy, quantity)
+function visualize(md, beliefModel::BeliefModel, samples; quantity)
+    a = visualize(beliefModel, samples, md.occupancy, quantity)
     b = plot(legend=false, grid=false, foreground_color_subplot=:white) # blank plot
     # TODO this will need to be updated to test for actual types
-    if hasmethod(getindex, Tuple{typeof(region.groundTruth), Integer})
+    if hasmethod(getindex, Tuple{typeof(md.groundTruth), Integer})
         # we actually have ground truth
-        b = visualize(region.groundTruth[quantity], "Ground Truth")
+        b = visualize(md.groundTruth[quantity], "Ground Truth")
     end
-    c = visualize(region.occupancy, "Occupancy Map")
+    c = visualize(md.occupancy, "Occupancy Map")
     l = @layout [a ; b c]
     plot(a, b, c, layout=l, size=default_size, margin=default_margin)
 end

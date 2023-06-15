@@ -8,12 +8,32 @@ using DelimitedFiles: readdlm
 using Statistics: cor
 using Random: seed!
 
-using Environment: Map, imgToMap, GaussGroundTruth, MultiMap, Peak, Region, pointToCell
+using Environment: Map, imgToMap, GaussGroundTruth, MultiMap, Peak, pointToCell
 using Samples: Sample
 using Visualization: visualize
 
+"""
+Inputs:
+    - occupancy: an occupancy map, true in cells that are occupied
+    - groundTruth: a function that returns a measurement value at any point
+    - start_loc: the starting location
+    - weights: weights for picking the next sample location
+    - num_samples: the number of samples to collect in one run (default 20)
+    - prior_samples: any samples taken previously (default empty)
+    - samples: any samples taken already during the current mission (default empty)
+"""
+@kwdef struct MissionData
+    occupancy
+    groundTruth
+    start_loc
+    weights
+    num_samples
+    prior_samples = Sample[]
+    samples = Sample[]
+end
+
 function simData()
-    seed!(1) # make random values deterministic
+    seed!(2) # make random values deterministic
 
     lb = [0, 0]; ub = [1, 1]
 
@@ -36,7 +56,7 @@ function simData()
     ggt = GaussGroundTruth(peaks)
     axs = range.(lb, ub, size(elev_img))
     points = collect.(Iterators.product(axs...))
-    groundTruth = Map(ggt(points), lb, ub)
+    subGroundTruth = Map(ggt(points), lb, ub)
 
     ## Create prior prior_samples
 
@@ -44,17 +64,17 @@ function simData()
     prior_maps = []
 
     # additive
-    push!(prior_maps, Map(abs.(groundTruth .+ 0.1 .* randn(size(groundTruth))), lb, ub))
+    push!(prior_maps, Map(abs.(subGroundTruth .+ 0.1 .* randn(size(subGroundTruth))), lb, ub))
 
     # multiplicative
-    push!(prior_maps, Map(abs.(groundTruth .* randn()), lb, ub))
+    push!(prior_maps, Map(abs.(subGroundTruth .* randn()), lb, ub))
 
     # # both
-    # push!(prior_maps, Map(abs.(groundTruth .* randn() + 0.1 .* randn(size(groundTruth))), lb, ub))
+    # push!(prior_maps, Map(abs.(subGroundTruth .* randn() + 0.1 .* randn(size(subGroundTruth))), lb, ub))
 
     # # spatial shift
     # t = rand(1:7)
-    # push!(prior_maps, [zeros(size(groundTruth,1),t) groundTruth[:,1:end-t]]) # shift
+    # push!(prior_maps, [zeros(size(subGroundTruth,1),t) subGroundTruth[:,1:end-t]]) # shift
 
     # purely random
     num_peaks = 3
@@ -63,7 +83,7 @@ function simData()
     tggt = GaussGroundTruth(peaks)
     # push!(prior_maps, Map(tggt(points), lb, ub))
 
-    multiGroundTruth = MultiMap(groundTruth, Map(tggt(points), lb, ub))
+    groundTruth = MultiMap(subGroundTruth, Map(tggt(points), lb, ub))
 
 
     ## initialize alg values
@@ -77,20 +97,23 @@ function simData()
     n = (5,5) # number of samples in each dimension
     axs_sp = range.(lb, ub, n)
     points_sp = vec(collect.(Iterators.product(axs_sp...)))
-    prior_samples = [Sample((x, i+length(multiGroundTruth)), d(x))
+    prior_samples = [Sample((x, i+length(groundTruth)), d(x))
                      for (i, d) in enumerate(prior_maps)
                          for x in points_sp if !isnan(d(x))]
 
     # Calculate correlation coefficients
-    [cor(groundTruth.(points_sp), d.(points_sp)) for d in prior_maps]
+    [cor(subGroundTruth.(points_sp), d.(points_sp)) for d in prior_maps]
 
-    visualize(multiGroundTruth.maps..., prior_maps...;
+    visualize(groundTruth.maps..., prior_maps...;
               titles=["Ground Truth 1", "Ground Truth 2", "Prior 1", "Prior 2"],
               samples=points_sp)
 
-    region = Region(occupancy, multiGroundTruth)
-
-    return region, start_loc, weights, num_samples, prior_samples
+    return MissionData(; occupancy,
+                       groundTruth,
+                       start_loc,
+                       weights,
+                       num_samples,
+                       prior_samples)
 
 end
 
@@ -118,8 +141,8 @@ function realData()
 
     lb = [0, 0]; ub = [1, 1]
 
-    groundTruth = imgToMap(normalize(images[1][australia...]), lb, ub)
-    multiGroundTruth = MultiMap(groundTruth)
+    subGroundTruth = imgToMap(normalize(images[1][australia...]), lb, ub)
+    groundTruth = MultiMap(subGroundTruth)
 
     prior_maps = [imgToMap(normalize(img[australia...]), lb, ub) for img in images[2:end]]
 
@@ -137,20 +160,23 @@ function realData()
     n = (5,5) # number of samples in each dimension
     axs_sp = range.(lb, ub, n)
     points_sp = vec(collect.(Iterators.product(axs_sp...)))
-    prior_samples = [Sample((x, i+length(multiGroundTruth)), d(x))
+    prior_samples = [Sample((x, i+length(groundTruth)), d(x))
                      for (i, d) in enumerate(prior_maps)
                          for x in points_sp if !isnan(d(x))]
 
     # Calculate correlation coefficients
-    [cor(groundTruth.(points_sp), d.(points_sp)) for d in prior_maps]
+    [cor(subGroundTruth.(points_sp), d.(points_sp)) for d in prior_maps]
 
-    visualize(multiGroundTruth.maps..., prior_maps...;
+    visualize(groundTruth.maps..., prior_maps...;
               titles=["Vegetation", "Elevation", "Ground Temperature", "Rainfall"],
               samples=points_sp)
 
-    region = Region(occupancy, multiGroundTruth)
-
-    return region, start_loc, weights, num_samples, prior_samples
+    return MissionData(; occupancy,
+                       groundTruth,
+                       start_loc,
+                       weights,
+                       num_samples,
+                       prior_samples)
 
 end
 
@@ -181,7 +207,7 @@ function conradData()
         groundTruths[2][pointToCell([x,y], groundTruths[2])] = z
     end
 
-    multiGroundTruth = MultiMap(groundTruths)
+    groundTruth = MultiMap(groundTruths)
 
     ## initialize alg values
     weights = [1, 6, 1, 3e-3] # mean, std, dist, prox
@@ -190,11 +216,11 @@ function conradData()
 
     occupancy = Map(zeros(Bool, n, n), lb, ub)
 
-    region = Region(occupancy, multiGroundTruth)
-
-    prior_samples = Sample[]
-
-    return region, start_loc, weights, num_samples, prior_samples
+    return MissionData(; occupancy,
+                       groundTruth,
+                       start_loc,
+                       weights,
+                       num_samples)
 end
 
 function rosData()
@@ -212,25 +238,23 @@ function rosData()
             "/value2"
         ]
 
-        # this requires a working rospy installation
-        using ROSInterface: ROSConnection
-        multiGroundTruth = ROSConnection(sub_nodes)
+        groundTruth = ROSConnection(sub_nodes)
     end
 
     lb = [0, 0]; ub = [1, 1]
 
     occupancy = Map(zeros(Bool, 100, 100), lb, ub)
 
-    region = Region(occupancy, multiGroundTruth)
-
     ## initialize alg values
     weights = [1, 6, 1, 3e-3] # mean, std, dist, prox
     start_loc = [0.0, 0.0]
     num_samples = 10
 
-    prior_samples = Sample[]
-
-    return region, start_loc, weights, num_samples, prior_samples
+    return MissionData(; occupancy,
+                       groundTruth,
+                       start_loc,
+                       weights,
+                       num_samples)
 end
 
 end

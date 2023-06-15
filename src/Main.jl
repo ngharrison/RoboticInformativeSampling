@@ -12,14 +12,10 @@ using Exploration: explore
 ## initialize region
 
 # initialize data use simData or realData for this
-region, start_loc, weights, num_samples, prior_samples = simData()
+missionData = simData()
 
 ## run search alg
-@time samples, beliefModel = explore(region, start_loc, weights;
-                                     num_samples,
-                                     prior_samples,
-                                     visuals=true,
-                                     sleep_time=0.0);
+@time samples, beliefModel = explore(missionData; visuals=true);
 
 println()
 println("Output correlations:")
