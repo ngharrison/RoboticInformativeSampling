@@ -1,7 +1,7 @@
 module BeliefModels
 
 using LinearAlgebra: I
-using AbstractGPs: GP, posterior, mean_and_var, logpdf, with_lengthscale,
+using AbstractGPs: GP, posterior, mean_and_var, mean_and_cov, logpdf, with_lengthscale,
                    SqExponentialKernel, IntrinsicCoregionMOKernel
 using Statistics: mean, std
 using Optim: optimize, Options, NelderMead
@@ -81,31 +81,37 @@ end
 Inputs:
 
     - X: a single sample index or an array of multiple
+    - full_cov: (optional) if this is true, returns the full covariance matrix
+      in place of the vector of variances
 
 Outputs:
 
     - μ, σ: a pair of expected value(s) and uncertainty(s) for the given point(s)
 """
-function (beliefModel::BeliefModelSimple)(x::Index)
-    return only.(mean_and_var(beliefModel.gp, [x]))
+function (beliefModel::BeliefModelSimple)(x::Index; full_cov=false)
+    func = full_cov ? mean_and_cov : mean_and_var
+    return only.(func(beliefModel.gp, [x]))
 end
 
-function (beliefModel::BeliefModelSimple)(X::Vector{Index})
-    return mean_and_var(beliefModel.gp, X)
+function (beliefModel::BeliefModelSimple)(X::Vector{Index}; full_cov=false)
+    func = full_cov ? mean_and_cov : mean_and_var
+    return func(beliefModel.gp, X)
 end
 
 """
 Inputs:
 
     - X: a single sample index or an array of multiple
+    - full_cov: (optional) if this is true, returns the full covariance matrix
+      in place of the vector of variances
 
 Outputs:
 
     - μ, σ: a pair of expected value(s) and uncertainty(s) for the given point(s)
 """
-function (beliefModel::BeliefModelSplit)(X::Union{Index, Vector{Index}})
-    μ, _ = beliefModel.combined(X)
-    _, σ = beliefModel.current(X)
+function (beliefModel::BeliefModelSplit)(X::Union{Index, Vector{Index}}; full_cov=false)
+    μ, _ = beliefModel.combined(X; full_cov)
+    _, σ = beliefModel.current(X; full_cov)
     return μ, σ
 end
 
