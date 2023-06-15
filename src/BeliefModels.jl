@@ -1,7 +1,7 @@
 module BeliefModels
 
 using LinearAlgebra: I
-using AbstractGPs: GP, posterior, marginals, logpdf, with_lengthscale,
+using AbstractGPs: GP, posterior, mean_and_var, logpdf, with_lengthscale,
                    SqExponentialKernel, IntrinsicCoregionMOKernel
 using Statistics: mean, std
 using Optim: optimize, Options, NelderMead
@@ -44,12 +44,12 @@ samples and prior_samples. Lower and upper bounds are used to initialize one of
 the hyperparameters.
 """
 function BeliefModel(samples, prior_samples, lb, ub)
-    # simple
+    # create a simple belief model for the current samples
     current = BeliefModel(samples, lb, ub)
     isempty(prior_samples) && return current
-    # simple
+    # create a simple belief model for the prior current samples combined
     combined = BeliefModel([prior_samples; samples], lb, ub)
-    # split is a combination of two simples
+    # split is a combination of the two
     return BeliefModelSplit(current, combined)
 end
 
@@ -87,15 +87,11 @@ Outputs:
     - μ, σ: a pair of expected value(s) and uncertainty(s) for the given point(s)
 """
 function (beliefModel::BeliefModelSimple)(x::Index)
-    pred = only(marginals(beliefModel.gp([x])))
-    return pred.μ, pred.σ
+    return only.(mean_and_var(beliefModel.gp, [x]))
 end
 
 function (beliefModel::BeliefModelSimple)(X::Vector{Index})
-    pred = marginals(beliefModel.gp(X))
-    μ = getfield.(pred, :μ)
-    σ = getfield.(pred, :σ)
-    return μ, σ
+    return mean_and_var(beliefModel.gp, X)
 end
 
 """
@@ -257,14 +253,14 @@ $SIGNATURES
 
 Gives the correlation matrix between all output.
 """
-function correlations(beliefModel::BeliefModelSimple)
+function outputCorMat(beliefModel::BeliefModelSimple)
     cov_mat = fullyConnectedCovMat(beliefModel.θ.σ)
     return [cov_mat[i,j]/√(cov_mat[j,j]*cov_mat[i,i])
             for (i,j) in Tuple.(CartesianIndices(cov_mat))]
 end
 
-function correlations(beliefModel::BeliefModelSplit)
-    return correlations(beliefModel.combined)
+function outputCorMat(beliefModel::BeliefModelSplit)
+    return outputCorMat(beliefModel.combined)
 end
 
 end

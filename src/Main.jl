@@ -5,7 +5,7 @@ if src_dir ∉ LOAD_PATH
 end
 
 using Initialization: simData, realData, conradData, rosData
-using BeliefModels: correlations
+using BeliefModels: outputCorMat
 using Visualization: visualize
 using Exploration: explore
 
@@ -22,5 +22,5 @@ region, start_loc, weights, num_samples, prior_samples = simData()
                                      sleep_time=0.0);
 
 println()
-println("Correlations:")
-display(correlations(beliefModel))
+println("Output correlations:")
+display(outputCorMat(beliefModel))

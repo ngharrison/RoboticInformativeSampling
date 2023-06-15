@@ -75,7 +75,7 @@ Everything to do with what is inferred about values in the environment. In pract
 
 Main public types and functions:
 - ~BeliefModel~
-- ~correlations~
+- ~outputCorMat~
 
 ** Samples.jl
 Everything to do with sampling values in the environment.
