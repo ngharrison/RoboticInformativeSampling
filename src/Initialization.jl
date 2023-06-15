@@ -199,7 +199,13 @@ end
 
 function rosData()
 
+    # this allows loading a module from within this function
+    # it runs this block in the global namespace of this module
+    # the benefit is that it only gets used if this function is run
     @eval begin
+        # this requires a working rospy installation
+        using ROSInterface: ROSConnection
+
         # TODO switch these for swagbot nodes
         sub_nodes = [
             "/value1",
