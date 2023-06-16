@@ -35,7 +35,7 @@ end
 function simData()
     seed!(2) # make random values deterministic
 
-    lb = [0, 0]; ub = [1, 1]
+    lb = [0.0, 0.0]; ub = [1.0, 1.0]
 
     # read in elevation
     elev_img = load("maps/arthursleigh_shed_small.tif")
@@ -139,7 +139,7 @@ function realData()
 
     australia = (202:258, 587:668)
 
-    lb = [0, 0]; ub = [1, 1]
+    lb = [0.0, 0.0]; ub = [1.0, 1.0]
 
     subGroundTruth = imgToMap(normalize(images[1][australia...]), lb, ub)
     groundTruth = MultiMap(subGroundTruth)
@@ -241,7 +241,7 @@ function rosData()
         groundTruth = ROSConnection(sub_nodes)
     end
 
-    lb = [0, 0]; ub = [1, 1]
+    lb = [0.0, 0.0]; ub = [1.0, 1.0]
 
     occupancy = Map(zeros(Bool, 100, 100), lb, ub)
 

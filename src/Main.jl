@@ -9,9 +9,7 @@ using BeliefModels: outputCorMat
 using Visualization: visualize
 using Exploration: explore
 
-## initialize region
-
-# initialize data use simData or realData for this
+## initialize data for mission
 missionData = simData()
 
 ## run search alg
