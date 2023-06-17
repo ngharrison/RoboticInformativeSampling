@@ -3,7 +3,7 @@ module Samples
 using Optim: optimize, ParticleSwarm
 using DocStringExtensions: SIGNATURES
 
-using Environment: Index
+using Environment: SampleInput, SampleOutput
 
 """
 Usage: `Sample(x, y)`
@@ -15,8 +15,8 @@ Fields:
     - y: the output or observation, a scalar
 """
 struct Sample
-    x::Index
-    y::Float64
+    x::SampleInput
+    y::SampleOutput
 end
 
 """
@@ -28,19 +28,19 @@ to hold them both.
 Inputs:
 
     - loc: the location to sample
-    - groundTruth: a function that returns ground truth values
+    - sampler: a function that returns ground truth values
     - quantities: (optional) a vector of integers which represent which
       quantities to sample, defaults to all of them
 
 Outputs a vector of Samples containing index x and measurement y
 """
-function takeSamples(loc, groundTruth)
-    Y = groundTruth(loc) # get sample values at location for all quantities
+function takeSamples(loc, sampler)
+    Y = sampler(loc) # get sample values at location for all quantities
     return [Sample((loc, q), y) for (q, y) in enumerate(Y)]
 end
 
-function takeSamples(loc, groundTruth, quantities)
-    return [Sample((loc, q), groundTruth((loc, q))) for q in quantities]
+function takeSamples(loc, sampler, quantities)
+    return [Sample((loc, q), sampler((loc, q))) for q in quantities]
 end
 
 """

@@ -15,7 +15,7 @@ using Visualization: visualize
 """
 Inputs:
     - occupancy: an occupancy map, true in cells that are occupied
-    - groundTruth: a function that returns a measurement value at any point
+    - sampler: a function that returns a measurement value at any point
     - start_loc: the starting location
     - weights: weights for picking the next sample location
     - num_samples: the number of samples to collect in one run (default 20)
@@ -24,7 +24,7 @@ Inputs:
 """
 @kwdef struct MissionData
     occupancy
-    groundTruth
+    sampler
     start_loc
     weights
     num_samples
@@ -56,7 +56,7 @@ function simData()
     ggt = GaussGroundTruth(peaks)
     axs = range.(lb, ub, size(elev_img))
     points = collect.(Iterators.product(axs...))
-    subGroundTruth = Map(ggt(points), lb, ub)
+    map0 = Map(ggt(points), lb, ub)
 
     ## Create prior prior_samples
 
@@ -64,17 +64,17 @@ function simData()
     prior_maps = []
 
     # additive
-    push!(prior_maps, Map(abs.(subGroundTruth .+ 0.1 .* randn(size(subGroundTruth))), lb, ub))
+    push!(prior_maps, Map(abs.(map0 .+ 0.1 .* randn(size(map0))), lb, ub))
 
     # multiplicative
-    push!(prior_maps, Map(abs.(subGroundTruth .* randn()), lb, ub))
+    push!(prior_maps, Map(abs.(map0 .* randn()), lb, ub))
 
     # # both
-    # push!(prior_maps, Map(abs.(subGroundTruth .* randn() + 0.1 .* randn(size(subGroundTruth))), lb, ub))
+    # push!(prior_maps, Map(abs.(map0 .* randn() + 0.1 .* randn(size(map0))), lb, ub))
 
     # # spatial shift
     # t = rand(1:7)
-    # push!(prior_maps, [zeros(size(subGroundTruth,1),t) subGroundTruth[:,1:end-t]]) # shift
+    # push!(prior_maps, [zeros(size(map0,1),t) map0[:,1:end-t]]) # shift
 
     # purely random
     num_peaks = 3
@@ -83,7 +83,7 @@ function simData()
     tggt = GaussGroundTruth(peaks)
     # push!(prior_maps, Map(tggt(points), lb, ub))
 
-    groundTruth = MultiMap(subGroundTruth, Map(tggt(points), lb, ub))
+    sampler = MultiMap(map0, Map(tggt(points), lb, ub))
 
     ## initialize alg values
     weights = (; μ=17, σ=1.5, τ=7)
@@ -96,19 +96,19 @@ function simData()
     n = (5,5) # number of samples in each dimension
     axs_sp = range.(lb, ub, n)
     points_sp = vec(collect.(Iterators.product(axs_sp...)))
-    prior_samples = [Sample((x, i+length(groundTruth)), d(x))
+    prior_samples = [Sample((x, i+length(sampler)), d(x))
                      for (i, d) in enumerate(prior_maps)
                          for x in points_sp if !isnan(d(x))]
 
     # Calculate correlation coefficients
-    [cor(subGroundTruth.(points_sp), d.(points_sp)) for d in prior_maps]
+    [cor(map0.(points_sp), d.(points_sp)) for d in prior_maps]
 
-    visualize(groundTruth.maps..., prior_maps...;
+    visualize(sampler.maps..., prior_maps...;
               titles=["Ground Truth 1", "Ground Truth 2", "Prior 1", "Prior 2"],
               samples=points_sp)
 
     return MissionData(; occupancy,
-                       groundTruth,
+                       sampler,
                        start_loc,
                        weights,
                        num_samples,
@@ -140,8 +140,8 @@ function realData()
 
     lb = [0.0, 0.0]; ub = [1.0, 1.0]
 
-    subGroundTruth = imgToMap(normalize(images[1][australia...]), lb, ub)
-    groundTruth = MultiMap(subGroundTruth)
+    map0 = imgToMap(normalize(images[1][australia...]), lb, ub)
+    sampler = MultiMap(map0)
 
     prior_maps = [imgToMap(normalize(img[australia...]), lb, ub) for img in images[2:end]]
 
@@ -159,19 +159,19 @@ function realData()
     n = (5,5) # number of samples in each dimension
     axs_sp = range.(lb, ub, n)
     points_sp = vec(collect.(Iterators.product(axs_sp...)))
-    prior_samples = [Sample((x, i+length(groundTruth)), d(x))
+    prior_samples = [Sample((x, i+length(sampler)), d(x))
                      for (i, d) in enumerate(prior_maps)
                          for x in points_sp if !isnan(d(x))]
 
     # Calculate correlation coefficients
-    [cor(subGroundTruth.(points_sp), d.(points_sp)) for d in prior_maps]
+    [cor(map0.(points_sp), d.(points_sp)) for d in prior_maps]
 
-    visualize(groundTruth.maps..., prior_maps...;
+    visualize(sampler.maps..., prior_maps...;
               titles=["Vegetation", "Elevation", "Ground Temperature", "Rainfall"],
               samples=points_sp)
 
     return MissionData(; occupancy,
-                       groundTruth,
+                       sampler,
                        start_loc,
                        weights,
                        num_samples,
@@ -197,16 +197,16 @@ function conradData()
 
     n = floor(Int, sqrt(maximum(size.(data, 1))))
 
-    groundTruths = [Map(zeros(n, n), lb, ub) for _ in 1:2]
+    maps = [Map(zeros(n, n), lb, ub) for _ in 1:2]
 
     for (x,y,z) in eachrow(data[1])
-        groundTruths[1][pointToCell([x,y], groundTruths[1])] = z
+        maps[1][pointToCell([x,y], maps[1])] = z
     end
     for (x,y,z) in eachrow(data[2])
-        groundTruths[2][pointToCell([x,y], groundTruths[2])] = z
+        maps[2][pointToCell([x,y], maps[2])] = z
     end
 
-    groundTruth = MultiMap(groundTruths)
+    sampler = MultiMap(maps)
 
     ## initialize alg values
     weights = [1, 6, 1, 3e-3] # mean, std, dist, prox
@@ -216,7 +216,7 @@ function conradData()
     occupancy = Map(zeros(Bool, n, n), lb, ub)
 
     return MissionData(; occupancy,
-                       groundTruth,
+                       sampler,
                        start_loc,
                        weights,
                        num_samples)
@@ -237,7 +237,7 @@ function rosData()
             "/value2"
         ]
 
-        groundTruth = ROSConnection(sub_nodes)
+        sampler = ROSConnection(sub_nodes)
     end
 
     lb = [0.0, 0.0]; ub = [1.0, 1.0]
@@ -250,7 +250,7 @@ function rosData()
     num_samples = 10
 
     return MissionData(; occupancy,
-                       groundTruth,
+                       sampler,
                        start_loc,
                        weights,
                        num_samples)

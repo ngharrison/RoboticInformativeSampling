@@ -35,9 +35,9 @@ function visualize(md, beliefModel::BeliefModel, sampleCost, samples; quantity)
     a = visualize(beliefModel, samples, md.occupancy, quantity)
     b = plot(legend=false, grid=false, foreground_color_subplot=:white) # blank plot
     # TODO this will need to be updated to test for actual types
-    if hasmethod(getindex, Tuple{typeof(md.groundTruth), Integer})
+    if hasmethod(getindex, Tuple{typeof(md.sampler), Integer})
         # we actually have ground truth
-        b = visualize(md.groundTruth[quantity], "Ground Truth")
+        b = visualize(md.sampler[quantity], "Ground Truth")
     end
     c = visualize(sampleCost, samples, md.occupancy)
     l = @layout [a ; b c]
@@ -87,9 +87,9 @@ $SIGNATURES
 
 Method to show ground truth data.
 """
-function visualize(groundTruth::GroundTruth, map)
+function visualize(sampler::GroundTruth, map)
     axes, points = getAxes(map)
-    data = groundTruth(points)
+    data = sampler(points)
     heatmap(axes..., data';
             xlabel="x1",
             ylabel="x2",

@@ -8,7 +8,7 @@ using Optim: optimize, Options, NelderMead
 using ParameterHandling: value_flatten
 using DocStringExtensions: SIGNATURES
 
-using Environment: Location, Index
+using Environment: Location, SampleInput
 
 abstract type BeliefModel end
 
@@ -88,12 +88,12 @@ Outputs:
 
     - μ, σ: a pair of expected value(s) and uncertainty(s) for the given point(s)
 """
-function (beliefModel::BeliefModelSimple)(x::Index; full_cov=false)
+function (beliefModel::BeliefModelSimple)(x::SampleInput; full_cov=false)
     func = full_cov ? mean_and_cov : mean_and_var
     return only.(func(beliefModel.gp, [x]))
 end
 
-function (beliefModel::BeliefModelSimple)(X::Vector{Index}; full_cov=false)
+function (beliefModel::BeliefModelSimple)(X::Vector{SampleInput}; full_cov=false)
     func = full_cov ? mean_and_cov : mean_and_var
     return func(beliefModel.gp, X)
 end
@@ -109,7 +109,7 @@ Outputs:
 
     - μ, σ: a pair of expected value(s) and uncertainty(s) for the given point(s)
 """
-function (beliefModel::BeliefModelSplit)(X::Union{Index, Vector{Index}}; full_cov=false)
+function (beliefModel::BeliefModelSplit)(X::Union{SampleInput, Vector{SampleInput}}; full_cov=false)
     μ, _ = beliefModel.combined(X; full_cov)
     _, σ = beliefModel.current(X; full_cov)
     return μ, σ

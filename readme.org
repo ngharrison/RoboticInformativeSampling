@@ -49,11 +49,11 @@ The code is divided up into files to contain pieces with similar purposes or con
 The general scripting area and launching point for running the parts of the system. The main steps are initializing data, running the exploration algorithm, and visualizing results.
 
 ** Environment.jl
-Types for holding and handling real and simulated data. Mainly used by [[*Initialization][Initialization]], but foundational for the other parts too. Its alias types ~Location~ and ~Index~ are fundamental pieces for Samples and BeliefModels.
+Types for holding and handling real and simulated data. Mainly used by [[*Initialization][Initialization]], but foundational for the other parts too. Its alias types ~Location~ and ~SampleInput~ are fundamental pieces for Samples and BeliefModels.
 
 Main public types and functions:
 - ~Location~
-- ~Index~
+- ~SampleInput~
 - ~Map~
 - ~MultiMap~
 - ~Region~

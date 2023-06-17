@@ -34,7 +34,7 @@ function explore(md; visuals=false, sleep_time=0)
     # initialize
     lb, ub = md.occupancy.lb, md.occupancy.ub
     new_loc = md.start_loc
-    quantities = eachindex(md.groundTruth) # all current available quantities
+    quantities = eachindex(md.sampler) # all current available quantities
     samples = copy(md.samples)
 
     beliefModel = nothing
@@ -57,7 +57,7 @@ function explore(md; visuals=false, sleep_time=0)
         end
 
         # sample all quantities
-        new_samples = takeSamples(new_loc, md.groundTruth)
+        new_samples = takeSamples(new_loc, md.sampler)
         append!(samples, new_samples)
 
         # new belief

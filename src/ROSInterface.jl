@@ -13,7 +13,7 @@ using PyCall
 
 using Rotations: QuatRotation, RotZ, params
 
-using Environment: Location, Index
+using Environment: Location, SampleInput
 
 """
 Stores information for communicating with Swagbot.
@@ -66,7 +66,7 @@ Returns a single value from the sample location of the chosen quantity.
 
 Currently will be unused.
 """
-function (R::ROSConnection)(new_index::Index)
+function (R::ROSConnection)(new_index::SampleInput)
     loc, quantity = new_index
     publishNextLocation(R.publisher, loc)
 

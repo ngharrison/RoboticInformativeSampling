@@ -13,7 +13,7 @@ using Exploration: explore
 missionData = simData()
 
 ## run search alg
-@time samples, beliefModel = explore(missionData; visuals=true);
+@time samples, beliefModel = explore(missionData; visuals=true, sleep_time=.5);
 
 println()
 println("Output correlations:")

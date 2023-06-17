@@ -3,7 +3,8 @@ module Environment
 using Distributions: MvNormal, pdf
 
 const Location = Vector{Float64}
-const Index = Tuple{Location, Int} # measurement index
+const SampleInput = Tuple{Location, Int}
+const SampleOutput = Float64
 
 """
 A general type for holding 2D data along with associated map bounds. It's main
@@ -77,7 +78,7 @@ Base.IndexStyle(::Type{<:MultiMap}) = IndexLinear()
 Base.getindex(m::MultiMap, i::Integer) = m.maps[i]
 
 (mmap::MultiMap)(x::Location) = [mmap.maps[i](x) for i in eachindex(mmap)]
-(mmap::MultiMap)(x::Index) = mmap.maps[x[2]](x[1])
+(mmap::MultiMap)(x::SampleInput) = mmap.maps[x[2]](x[1])
 
 """
 A general container to hold data and metadata of the search region.
@@ -85,11 +86,11 @@ A general container to hold data and metadata of the search region.
 Fields:
 
     - occupancy: occupancy map
-    - groundTruth: ground truth map
+    - sampler: ground truth map
 """
 struct Region
     occupancy::Map{Bool}
-    groundTruth
+    sampler
 end
 
 # helper methods used with maps
@@ -134,9 +135,9 @@ Each probability distribution component is divided by its own peak height and
 the highest of all the peaks before being added into the total. This causes the
 entire ground truth map to have a max value of (about) 1.
 """
-function (groundTruth::GaussGroundTruth)(X)
-    h_max = maximum(p.h for p in groundTruth.peaks)
-    return sum(p.h*pdf(p.distr, X)/pdf(p.distr, p.distr.μ)/h_max for p in groundTruth.peaks)
+function (sampler::GaussGroundTruth)(X)
+    h_max = maximum(p.h for p in sampler.peaks)
+    return sum(p.h*pdf(p.distr, X)/pdf(p.distr, p.distr.μ)/h_max for p in sampler.peaks)
 end
 
 """
