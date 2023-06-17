@@ -125,7 +125,7 @@ function initHyperparams(X, Y, lb, ub)
     n = fullyConnectedCovNum(T)
     # TODO may change to all just 0.5
     σ = (length(Y)>1 ? std(Y) : 0.5)/sqrt(2) * ones(n)
-    a = mean(mean([lb, ub]))
+    a = mean(ub .- lb)
     ℓ = length(X)==1 ? a : a/length(X) + mean(std(first.(X)))*(1-1/length(X))
     σn = 0.001
     return (; σ, ℓ, σn)

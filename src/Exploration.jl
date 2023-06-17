@@ -2,7 +2,8 @@ module Exploration
 
 using DocStringExtensions: SIGNATURES
 
-using Samples: Sample, SampleCost, selectSampleLocation, takeSamples
+using Samples: Sample, selectSampleLocation, takeSamples
+using SampleCosts: SampleCost, BasicSampleCost, NormedSampleCost, values
 using BeliefModels: BeliefModel
 using Visualization: visualize
 
@@ -30,11 +31,17 @@ Outputs:
 function explore(md; visuals=false, sleep_time=0)
     md.occupancy(md.start_loc) && error("start location is within obstacle")
 
+    # initialize
     lb, ub = md.occupancy.lb, md.occupancy.ub
-    beliefModel = nothing
     new_loc = md.start_loc
     quantities = eachindex(md.groundTruth) # all current available quantities
     samples = copy(md.samples)
+
+    beliefModel = nothing
+    if !isempty(samples)
+        beliefModel = BeliefModel(samples, md.prior_samples, lb, ub)
+    end
+    sampleCost = nothing
 
     println("Mission started")
     println()
@@ -44,8 +51,9 @@ function explore(md; visuals=false, sleep_time=0)
 
         # new sample indices
         if beliefModel !== nothing # prior belief exists
-            sampleCost = SampleCost(md.occupancy, samples, beliefModel, quantities, md.weights)
+            sampleCost = NormedSampleCost(md, samples, beliefModel, quantities)
             new_loc = selectSampleLocation(sampleCost, lb, ub)
+            # @show values(sampleCost, new_loc)
         end
 
         # sample all quantities
@@ -57,7 +65,7 @@ function explore(md; visuals=false, sleep_time=0)
 
         # visualization
         if visuals
-            display(visualize(md, beliefModel, samples, quantity=1))
+            display(visualize(md, beliefModel, sampleCost, samples, quantity=1))
         end
         # println("Output correlations: $(round.(outputCorMat(beliefModel), digits=3))")
         sleep(sleep_time)

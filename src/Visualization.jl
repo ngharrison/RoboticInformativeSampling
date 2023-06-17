@@ -5,7 +5,7 @@ using DocStringExtensions: SIGNATURES
 
 using Environment: GroundTruth, Map, res
 using BeliefModels: BeliefModel
-using Samples: SampleCost
+using SampleCosts: SampleCost
 
 # placeholders to avoid recomputing
 axes = nothing
@@ -31,7 +31,7 @@ resolution when plotting continuous-valued functions and defaults to $default_re
 
 If no ground truth is available, it is not plotted.
 """
-function visualize(md, beliefModel::BeliefModel, samples; quantity)
+function visualize(md, beliefModel::BeliefModel, sampleCost, samples; quantity)
     a = visualize(beliefModel, samples, md.occupancy, quantity)
     b = plot(legend=false, grid=false, foreground_color_subplot=:white) # blank plot
     # TODO this will need to be updated to test for actual types
@@ -39,7 +39,7 @@ function visualize(md, beliefModel::BeliefModel, samples; quantity)
         # we actually have ground truth
         b = visualize(md.groundTruth[quantity], "Ground Truth")
     end
-    c = visualize(md.occupancy, "Occupancy Map")
+    c = visualize(sampleCost, samples, md.occupancy)
     l = @layout [a ; b c]
     plot(a, b, c, layout=l, size=default_size, margin=default_margin)
 end
@@ -151,9 +151,14 @@ $SIGNATURES
 
 Method to show sample cost values.
 """
-function visualize(sampleCost::SampleCost, samples, map)
-    axes, points = getAxes(map)
+function visualize(sampleCost, samples, occupancy)
+    isnothing(sampleCost) && return plot()
+
+    axes, points = getAxes(occupancy)
     data = -sampleCost.(points)
+
+    # blocked points
+    data[occupancy] .= NaN
 
     xp = first.(getfield.(samples, :x))
     x1 = getindex.(xp, 1)

@@ -40,7 +40,7 @@ function ROSConnection(sub_nodes)
 end
 
 # give it a length and indices
-Base.keys(R::ROSConnection) = keys(R.sub_nodes)
+Base.eachindex(R::ROSConnection) = eachindex(R.sub_nodes)
 Base.length(R::ROSConnection) = length(R.sub_nodes)
 
 """

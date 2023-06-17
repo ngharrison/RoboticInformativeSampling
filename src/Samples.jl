@@ -1,11 +1,9 @@
 module Samples
 
-using LinearAlgebra: norm
 using Optim: optimize, ParticleSwarm
 using DocStringExtensions: SIGNATURES
 
-using Environment: Index, pointToCell, res
-using Paths: PathCost
+using Environment: Index
 
 """
 Usage: `Sample(x, y)`
@@ -64,59 +62,6 @@ function selectSampleLocation(sampleCost, lb, ub)
         ParticleSwarm(; lower=lb, upper=ub, n_particles=20)
     )
     return opt.minimizer
-end
-
-"""
-The cost function used for choosing a new sample location.
-"""
-struct SampleCost
-    occupancy
-    samples
-    beliefModel
-    quantities
-    weights
-    pathCost
-end
-
-"""
-$SIGNATURES
-
-A pathCost is constructed automatically from the other arguments.
-
-This object can then be called to get the cost of sampling at a location:
-sampleCost(x)
-"""
-function SampleCost(occupancy, samples, beliefModel, quantities, weights)
-    start = pointToCell(samples[end].x[1], occupancy) # just looking at location
-    pathCost = PathCost(start, occupancy, res(occupancy))
-    SampleCost(occupancy, samples, beliefModel, quantities, weights, pathCost)
-end
-
-"""
-Cost to take a new sample at a location.
-Combines belief mean and standard deviation, travel distance,
-and sample proximity.
-
-Has the form:
-cost = - w1 μ - w2 σ + w3 τ + w4 D
-"""
-function (sc::SampleCost)(loc)
-
-    beliefs = sc.beliefModel([(loc, q) for q in sc.quantities]) # means and standard deviations
-    # TODO probably need to normalize before adding,
-    # but requires generating belief over entire region
-    # or using the max so far
-    μ_tot, σ_tot = sum.(beliefs)
-
-    # TODO normalize this too
-    τ = sc.pathCost(pointToCell(loc, sc.occupancy)) # distance to location
-
-    radius = minimum(sc.occupancy.ub .- sc.occupancy.lb)/4
-    dists = norm.(first.(getfield.(sc.samples, :x)) .- Ref(loc))
-    P = sum((radius./dists).^3) # proximity to other points
-
-    vals = [-μ_tot, -σ_tot, τ, P]
-    return sc.weights'*vals
 end
 
 end
