@@ -51,8 +51,18 @@ Base.IndexStyle(::Type{<:Map}) = IndexLinear()
 Base.getindex(m::Map, i::Integer) = m.data[i]
 Base.setindex!(m::Map, v, i::Integer) = (m.data[i] = v)
 
+"""
+Function emits error if location is outside of map bounds.
+"""
+function checkBounds(x::Location, map::Map)
+    all(map.lb .<= x .<= map.ub) || error("location $x is out of map bounds: ($(map.lb), $(map.ub))")
+end
+
 # accepts a single vector, returns a scalar
-(map::Map)(x::Location) = map[pointToCell(x, map)]
+function (map::Map)(x::Location)
+    checkBounds(x, map)
+    map[pointToCell(x, map)]
+end
 
 """
 Handles samples of the form (location, quantity) to give the value from the
