@@ -37,7 +37,7 @@ If you get: =Error: Unable to load the 'rospy' python package!=
 3. Restart the julia REPL
 
 * Quick Start
-To run the project in its current state, run =include("Main.jl")= at the julia REPL after following the steps in [[*Installation and Setup][Installation and Setup]]. Important: this needs to be run within the =AdaptiveSampling/src= directory for the paths to be resolved correctly. For an easy way to navigate within the julia REPL, check out its [[*REPL][shell mode]].
+To run the project in its current state, run =include("Main.jl")= at the julia REPL after following the steps in [[*Installation and Setup][Installation and Setup]].
 
 That should be enough to get you started. Read on to understand more about the code and the Julia language in general.
 
