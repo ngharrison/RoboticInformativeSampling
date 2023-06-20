@@ -231,7 +231,7 @@ function rosData()
         # this requires a working rospy installation
         using ROSInterface: ROSConnection
 
-        # TODO switch these for swagbot nodes
+        # NOTE switch these for swagbot nodes
         sub_nodes = [
             "/value1",
             "/value2"
