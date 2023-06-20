@@ -1,6 +1,4 @@
-
 module Initialization
-
 
 using LinearAlgebra: I
 using Images: load, imresize, Gray, gray
@@ -11,6 +9,8 @@ using Random: seed!
 using Environment: Map, imgToMap, GaussGroundTruth, MultiMap, Peak, pointToCell
 using Samples: Sample
 using Visualization: visualize
+
+const maps_dir = dirname(Base.active_project()) * "/maps/"
 
 """
 Inputs:
@@ -38,11 +38,11 @@ function simData()
     lb = [0.0, 0.0]; ub = [1.0, 1.0]
 
     # read in elevation
-    elev_img = load("../maps/arthursleigh_shed_small.tif")
+    elev_img = load(maps_dir * "arthursleigh_shed_small.tif")
     elevMap = imgToMap(gray.(elev_img), lb, ub)
 
     # read in obstacles
-    obs_img = load("../maps/obstacles_fieldsouth_220727.tif")
+    obs_img = load(maps_dir * "obstacles_fieldsouth_220727.tif")
     obs_img_res = imresize(obs_img, size(elev_img))
     # the image we have has zeros for obstacles, need to flip
     occ_mat = Matrix{Bool}(Gray.(obs_img_res) .== 0')
@@ -124,13 +124,13 @@ function realData()
     # have it run around australia
 
     file_names = [
-        "../maps/vege_720x360.csv",
-        "../maps/topo_720x360.csv",
-        "../maps/temp_720x360.csv",
-        "../maps/rain_720x360.csv"
+        "vege_720x360.csv",
+        "topo_720x360.csv",
+        "temp_720x360.csv",
+        "rain_720x360.csv"
     ]
 
-    images = readdlm.(file_names, ',')
+    images = readdlm.(maps_dir .* file_names, ',')
 
     for img in images
         img[img .== 99999] .= NaN
@@ -187,7 +187,7 @@ function conradData()
     ]
 
     # need to drop the last point
-    data = readdlm.(file_names, ',')
+    data = readdlm.(maps_dir .* file_names, ',')
 
     lb = minimum(minimum(d, dims=1)[1:2] for d in data)
     ub = maximum(maximum(d, dims=1)[1:2] for d in data)
