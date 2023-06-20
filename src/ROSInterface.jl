@@ -18,7 +18,7 @@ using Environment: Location, SampleInput
 """
 Stores information for communicating with Swagbot.
 """
-mutable struct ROSConnection
+struct ROSConnection
     sub_nodes
     publisher
 end
