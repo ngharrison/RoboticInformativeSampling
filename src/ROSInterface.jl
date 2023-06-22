@@ -19,14 +19,14 @@ using Environment: Location, SampleInput
 Stores information for communicating with Swagbot.
 """
 struct ROSConnection
-    sub_nodes
+    sub_topics
     publisher
 end
 
 """
 Constructor.
 """
-function ROSConnection(sub_nodes)
+function ROSConnection(sub_topics)
     # initialize this node with its name
     init_node("adaptive_sampling")
 
@@ -34,14 +34,14 @@ function ROSConnection(sub_nodes)
     publisher = Publisher{Pose}("latest_sample", queue_size=1, latch=true)
 
     # create connection object
-    rosConnection = ROSConnection(sub_nodes, publisher)
+    rosConnection = ROSConnection(sub_topics, publisher)
 
     return rosConnection
 end
 
 # give it a length and indices
-Base.eachindex(R::ROSConnection) = eachindex(R.sub_nodes)
-Base.length(R::ROSConnection) = length(R.sub_nodes)
+Base.eachindex(R::ROSConnection) = eachindex(R.sub_topics)
+Base.length(R::ROSConnection) = length(R.sub_topics)
 
 """
 Returns a vector of values from the sample location.
@@ -56,7 +56,7 @@ function (R::ROSConnection)(new_loc::Location)
 
     # get values
     values = [rospy.wait_for_message(node, std_msg.Float64, timeout=5).data
-              for node in R.sub_nodes]
+              for node in R.sub_topics]
 
     return values
 end
@@ -76,7 +76,7 @@ function (R::ROSConnection)(new_index::SampleInput)
     rospy.wait_for_message("sortie_finished", std_msg.Bool) # a message means finished
 
     # get values
-    values = rospy.wait_for_message(R.sub_nodes[quantity], std_msg.Float64, timeout=5)
+    values = rospy.wait_for_message(R.sub_topics[quantity], std_msg.Float64, timeout=5)
 
     return values
 end
