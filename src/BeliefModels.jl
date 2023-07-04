@@ -167,7 +167,7 @@ function createLossFunc(X, Y, kernel)
             # for PosDefException
             # this seems to happen when θ.σ is extremely large and θ.ℓ is
             # much bigger than the search region dimensions
-            println(); println("Error: $e"); @show(θ, X, Y); println()
+            @error e θ X Y
 
             f = GP(kernel(θ))
             fx = f(X, θ.σn^2+√eps()+1e-1*θ.σ) # fix by making diagonal a little bigger

@@ -4,7 +4,7 @@ using DocStringExtensions: SIGNATURES
 
 using Samples: Sample, selectSampleLocation, takeSamples
 using SampleCosts: SampleCost, BasicSampleCost, NormedSampleCost, values
-using BeliefModels: BeliefModel
+using BeliefModels: BeliefModel, outputCorMat
 using Visualization: visualize
 
 """
@@ -53,7 +53,9 @@ function explore(md; visuals=false, sleep_time=0)
         if beliefModel !== nothing # prior belief exists
             sampleCost = NormedSampleCost(md, samples, beliefModel, quantities)
             new_loc = selectSampleLocation(sampleCost, lb, ub)
-            # @show values(sampleCost, new_loc)
+            @debug "new location: $new_loc"
+            @debug "cost function terms: $(Tuple(values(sampleCost, new_loc)) .* Tuple(md.weights))"
+            @debug "cost function value: $(sampleCost(new_loc))"
         end
 
         # sample all quantities
@@ -67,7 +69,7 @@ function explore(md; visuals=false, sleep_time=0)
         if visuals
             display(visualize(md, beliefModel, sampleCost, samples, quantity=1))
         end
-        # println("Output correlations: $(round.(outputCorMat(beliefModel), digits=3))")
+        @debug "output correlations: $(round.(outputCorMat(beliefModel), digits=3))"
         sleep(sleep_time)
     end
 

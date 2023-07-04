@@ -4,6 +4,10 @@ if src_dir ∉ LOAD_PATH
     push!(LOAD_PATH, src_dir)
 end
 
+# set the logging level: Info or Debug
+using Logging
+global_logger(ConsoleLogger(stderr, Logging.Info))
+
 using Initialization: simData, realData, conradData, rosData
 using BeliefModels: outputCorMat
 using Visualization: visualize
