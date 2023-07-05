@@ -302,6 +302,8 @@ function (M::Mission)(; samples=Sample[], visuals=false, sleep_time=0)
     println("Mission started")
     println()
 
+    beliefs = BeliefModel[]
+
     for i in 1:M.num_samples
         println("Sample number $i")
 
@@ -320,6 +322,7 @@ function (M::Mission)(; samples=Sample[], visuals=false, sleep_time=0)
 
         # new belief
         beliefModel = BeliefModel(samples, M.prior_samples, lb, ub)
+        push!(beliefs, beliefModel)
 
         # visualization
         if visuals
@@ -331,7 +334,7 @@ function (M::Mission)(; samples=Sample[], visuals=false, sleep_time=0)
 
     println()
     println("Mission complete")
-    return samples, beliefModel
+    return samples, beliefs
 end
 
 end
