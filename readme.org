@@ -56,7 +56,6 @@ Main public types and functions:
 - ~SampleInput~
 - ~Map~
 - ~MultiMap~
-- ~Region~
 - ~imgToMap~
 - ~res~
 - ~pointToCell~

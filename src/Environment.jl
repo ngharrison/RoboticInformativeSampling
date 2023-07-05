@@ -90,19 +90,6 @@ Base.getindex(m::MultiMap, i::Integer) = m.maps[i]
 (mmap::MultiMap)(x::Location) = [mmap.maps[i](x) for i in eachindex(mmap)]
 (mmap::MultiMap)(x::SampleInput) = mmap.maps[x[2]](x[1])
 
-"""
-A general container to hold data and metadata of the search region.
-
-Fields:
-
-    - occupancy: occupancy map
-    - sampler: ground truth map
-"""
-struct Region
-    occupancy::Map{Bool}
-    sampler
-end
-
 # helper methods used with maps
 """
 Returns the resolution for each dimension of the given Map as a vector.
