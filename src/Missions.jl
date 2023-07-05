@@ -19,7 +19,7 @@ const maps_dir = dirname(Base.active_project()) * "/maps/"
 """
 Inputs:
     - occupancy: an occupancy map, true in cells that are occupied
-    - sampler: a function that returns a measurement value at any point
+    - sampler: a function that returns a measurement value for any input
     - start_loc: the starting location
     - weights: weights for picking the next sample location
     - num_samples: the number of samples to collect in one run (default 20)
@@ -305,7 +305,7 @@ function (M::Mission)(; samples=Sample[], visuals=false, sleep_time=0)
     for i in 1:M.num_samples
         println("Sample number $i")
 
-        # new sample indices
+        # new sample location
         if beliefModel !== nothing # prior belief exists
             sampleCost = NormedSampleCost(M, samples, beliefModel, quantities)
             new_loc = selectSampleLocation(sampleCost, lb, ub)

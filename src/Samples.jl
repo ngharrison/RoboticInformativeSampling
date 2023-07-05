@@ -10,9 +10,8 @@ Usage: `Sample(x, y)`
 
 Fields:
 
-    - x: a tuple of the location and the index of measured quantity
-         also called the sample index
-    - y: the output or observation, a scalar
+    - x: the sample input, usually a location and sensor id
+    - y: the sample output or observation, a scalar
 """
 struct Sample
     x::SampleInput
@@ -32,7 +31,7 @@ Inputs:
     - quantities: (optional) a vector of integers which represent which
       quantities to sample, defaults to all of them
 
-Outputs a vector of Samples containing index x and measurement y
+Outputs a vector of Samples containing input x and measurement y
 """
 function takeSamples(loc, sampler)
     Y = sampler(loc) # get sample values at location for all quantities

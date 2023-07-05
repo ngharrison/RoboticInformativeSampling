@@ -80,7 +80,7 @@ end
 """
 Inputs:
 
-    - X: a single sample index or an array of multiple
+    - X: a single sample input or an array of multiple
     - full_cov: (optional) if this is true, returns the full covariance matrix
       in place of the vector of variances
 
@@ -101,7 +101,7 @@ end
 """
 Inputs:
 
-    - X: a single sample index or an array of multiple
+    - X: a single sample input or an array of multiple
     - full_cov: (optional) if this is true, returns the full covariance matrix
       in place of the vector of variances
 
