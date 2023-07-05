@@ -8,7 +8,7 @@ using Optim: optimize, Options, NelderMead
 using ParameterHandling: value_flatten
 using DocStringExtensions: SIGNATURES
 
-using Environment: Location, SampleInput
+using Maps: Location, SampleInput
 
 abstract type BeliefModel end
 

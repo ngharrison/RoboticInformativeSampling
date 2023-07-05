@@ -3,7 +3,7 @@ module Visualization
 using Plots: plot, heatmap, scatter!, @layout, mm, grid
 using DocStringExtensions: SIGNATURES
 
-using Environment: GroundTruth, Map, res
+using Maps: GroundTruth, Map, res
 using BeliefModels: BeliefModel
 using SampleCosts: SampleCost
 

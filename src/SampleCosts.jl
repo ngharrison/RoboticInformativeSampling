@@ -4,7 +4,7 @@ using LinearAlgebra: norm
 using Statistics: mean
 using DocStringExtensions: SIGNATURES
 
-using Environment: pointToCell, cellToPoint, res
+using Maps: pointToCell, cellToPoint, res
 using Paths: PathCost
 
 abstract type SampleCost end

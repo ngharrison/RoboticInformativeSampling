@@ -1,13 +1,17 @@
-module Initialization
+module Missions
 
 using LinearAlgebra: I
 using Images: load, imresize, Gray, gray
 using DelimitedFiles: readdlm
 using Statistics: cor
 using Random: seed!
+using DocStringExtensions: SIGNATURES
 
-using Environment: Map, imgToMap, GaussGroundTruth, MultiMap, Peak, pointToCell
-using Samples: Sample
+using Maps: Map, imgToMap, GaussGroundTruth, MultiMap, Peak, pointToCell
+using Samples: Sample, selectSampleLocation, takeSamples
+using SampleCosts: SampleCost, values, BasicSampleCost,
+                   NormedSampleCost, MIPTSampleCost, EIGFSampleCost
+using BeliefModels: BeliefModel, outputCorMat
 using Visualization: visualize
 
 const maps_dir = dirname(Base.active_project()) * "/maps/"
@@ -22,17 +26,17 @@ Inputs:
     - prior_samples: any samples taken previously (default empty)
     - samples: any samples taken already during the current mission (default empty)
 """
-@kwdef struct MissionData
+@kwdef struct Mission
     occupancy
     sampler
     start_loc
     weights
     num_samples
     prior_samples = Sample[]
-    samples = Sample[]
 end
 
-function simData()
+# Constructors for Mission data
+function simMission()
     seed!(2) # make random values deterministic
 
     lb = [0.0, 0.0]; ub = [1.0, 1.0]
@@ -110,7 +114,7 @@ function simData()
               titles=["Ground Truth 1", "Ground Truth 2", "Prior 1", "Prior 2"],
               samples=points_sp)
 
-    return MissionData(; occupancy,
+    return Mission(; occupancy,
                        sampler,
                        start_loc,
                        weights,
@@ -123,7 +127,7 @@ end
 normalize(a) = a ./ maximum(filter(!isnan, a))
 
 
-function realData()
+function ausMission()
     # have it run around australia
 
     file_names = [
@@ -173,7 +177,7 @@ function realData()
               titles=["Vegetation", "Elevation", "Ground Temperature", "Rainfall"],
               samples=points_sp)
 
-    return MissionData(; occupancy,
+    return Mission(; occupancy,
                        sampler,
                        start_loc,
                        weights,
@@ -182,7 +186,7 @@ function realData()
 
 end
 
-function conradData()
+function conradMission()
 
     file_names = [
         "../maps/weightMap1.csv",
@@ -218,14 +222,14 @@ function conradData()
 
     occupancy = Map(zeros(Bool, n, n), lb, ub)
 
-    return MissionData(; occupancy,
+    return Mission(; occupancy,
                        sampler,
                        start_loc,
                        weights,
                        num_samples)
 end
 
-function rosData()
+function rosMission()
 
     # this allows loading a module from within this function
     # it runs this block in the global namespace of this module
@@ -252,11 +256,82 @@ function rosData()
     start_loc = [0.0, 0.0]
     num_samples = 10
 
-    return MissionData(; occupancy,
+    return Mission(; occupancy,
                        sampler,
                        start_loc,
                        weights,
                        num_samples)
+end
+
+"""
+$SIGNATURES
+
+The main function that runs the adaptive sampling routine. For each iteration, a
+sample location is selected, a sample is collected, the belief model is updated,
+and visuals are possibly shown. The run finishes when the designated number of
+samples is collected.
+
+Inputs:
+
+    - samples: a vector of samples, this can be used to jump-start a mission or
+      resume a previous mission (default empty)
+    - visuals: true or false to cause map plots to be shown or not (default false)
+    - sleep_time: the amount of time to wait after each iteration, useful for
+      visualizations (default 0)
+
+Outputs:
+
+    - samples: the new samples collected
+    - beliefModel: the probabilistic representation of the quantities being
+      searched for
+"""
+function (M::Mission)(; samples=Sample[], visuals=false, sleep_time=0)
+    M.occupancy(M.start_loc) && error("start location is within obstacle")
+
+    # initialize
+    lb, ub = M.occupancy.lb, M.occupancy.ub
+    new_loc = M.start_loc
+    quantities = eachindex(M.sampler) # all current available quantities
+
+    beliefModel = nothing
+    if !isempty(samples)
+        beliefModel = BeliefModel(samples, M.prior_samples, lb, ub)
+    end
+    sampleCost = nothing
+
+    println("Mission started")
+    println()
+
+    for i in 1:M.num_samples
+        println("Sample number $i")
+
+        # new sample indices
+        if beliefModel !== nothing # prior belief exists
+            sampleCost = NormedSampleCost(M, samples, beliefModel, quantities)
+            new_loc = selectSampleLocation(sampleCost, lb, ub)
+            @debug "new location: $new_loc"
+            @debug "cost function terms: $(Tuple(values(sampleCost, new_loc)) .* Tuple(M.weights))"
+            @debug "cost function value: $(sampleCost(new_loc))"
+        end
+
+        # sample all quantities
+        new_samples = takeSamples(new_loc, M.sampler)
+        append!(samples, new_samples)
+
+        # new belief
+        beliefModel = BeliefModel(samples, M.prior_samples, lb, ub)
+
+        # visualization
+        if visuals
+            display(visualize(M, beliefModel, sampleCost, samples, quantity=1))
+        end
+        @debug "output correlations: $(round.(outputCorMat(beliefModel), digits=3))"
+        sleep(sleep_time)
+    end
+
+    println()
+    println("Mission complete")
+    return samples, beliefModel
 end
 
 end

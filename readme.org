@@ -48,12 +48,13 @@ The code is divided up into files to contain pieces with similar purposes or con
 ** Main.jl
 The general scripting area and launching point for running the parts of the system. The main steps are initializing data, running the exploration algorithm, and visualizing results.
 
-** Environment.jl
-Types for holding and handling real and simulated data. Mainly used by [[*Initialization][Initialization]], but foundational for the other parts too. Its alias types ~Location~ and ~SampleInput~ are fundamental pieces for Samples and BeliefModels.
+** Maps.jl
+Types for holding and handling real and simulated data. Mainly used by [[*Missions][Missions]], but foundational for the other parts too. Its alias types ~Location~ and ~SampleInput~ are fundamental pieces for Samples and BeliefModels.
 
 Main public types and functions:
 - ~Location~
 - ~SampleInput~
+- ~SampleOutput~
 - ~Map~
 - ~MultiMap~
 - ~imgToMap~
@@ -61,13 +62,13 @@ Main public types and functions:
 - ~pointToCell~
 - ~GroundTruth~
 
-** Initialization.jl
-Functions for initializing mission data.
+** Missions.jl
+Functions for initializing mission data and the function for running the entire search mission. The entry-point to the actual adaptive sampling. This contains the main loop and most of the usage of Samples and BeliefModels.
 
 Main public types and functions:
-- ~simData~
-- ~realData~
-- ~rosData~
+- ~simMission~
+- ~ausMission~
+- ~rosMission~
 
 ** BeliefModels.jl
 Everything to do with what is inferred about values in the environment. In practical terms: means, variances, and correlations. This is all built on Gaussian Processes.
@@ -85,6 +86,17 @@ Main public types and functions:
 - ~selectSampleLocation~
 - ~SampleCost~
 
+** SampleCosts.jl
+Holds a variety of SampleCost functions used by [[*Samples.jl][Samples.jl]] in selecting a new sample location.
+
+Main public types and functions:
+- ~SampleCost~
+- ~values~
+- ~BasicSampleCost~
+- ~NormedSampleCost~
+- ~MIPTSampleCost~
+- ~EIGFSampleCost~
+
 ** Paths.jl
 Searching for paths on a 2D grid using A*. Its main use is to get the path cost (distance), but it can return the full path as well.
 
@@ -92,12 +104,6 @@ Main public types and functions:
 - ~PathCost~
 - ~finalOrientation~
 - ~getPath~
-
-** Exploration.jl
-Contains the function that runs the entire search mission. The entry-point to the actual adaptive sampling. This contains the main loop and most of the usage of Samples and BeliefModels.
-
-Main public types and functions:
-- ~explore~
 
 ** Visualization.jl
 Methods to visualize mission data. The form displayed is determined by what data types are passed in.
@@ -127,7 +133,7 @@ A consistent pattern is followed for most data and functions in this repo using 
 A functor's methods are meant to be the primary purpose of that object. e.g. a BeliefModel returns the belief, a SampleCost returns the sample cost, etc. If an object's data are used in any secondary way, it will be its own separate function with its own name, and the object will be passed in directly.
 
 * Julia Tips
-** Environment
+** Maps
 These instructions focus on getting started up just using the REPL, which can be a sufficient set of tools. If you want to use an IDE, VSCode with the Julia extension is the main one recommended. It is supported by the Julia contributors and the community as a whole. You'll need to read their docs to learn how to use it.
 
 ** REPL

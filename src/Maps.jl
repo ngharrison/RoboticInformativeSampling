@@ -1,4 +1,4 @@
-module Environment
+module Maps
 
 using Distributions: MvNormal, pdf
 

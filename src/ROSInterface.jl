@@ -13,7 +13,7 @@ using PyCall
 
 using Rotations: QuatRotation, RotZ, params
 
-using Environment: Location, SampleInput
+using Maps: Location, SampleInput
 
 """
 Stores information for communicating with Swagbot.

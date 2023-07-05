@@ -3,7 +3,7 @@ module Samples
 using Optim: optimize, ParticleSwarm
 using DocStringExtensions: SIGNATURES
 
-using Environment: SampleInput, SampleOutput
+using Maps: SampleInput, SampleOutput
 
 """
 Usage: `Sample(x, y)`
