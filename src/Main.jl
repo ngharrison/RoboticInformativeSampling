@@ -8,22 +8,26 @@ end
 using Logging
 global_logger(ConsoleLogger(stderr, Logging.Info))
 
-# for saving output
-using JLD2: jldsave
-using Dates: now, year, month, day, hour, minute, second
-const output_dir = dirname(Base.active_project()) * "/output/"
-
 using Missions: simMission, ausMission, conradMission, rosMission
 using BeliefModels: outputCorMat
 using Visualization: visualize
 
 ## initialize data for mission
-mission = simMission()
+mission = ausMission()
 
 ## run search alg
 @time samples, beliefs = mission(visuals=true, sleep_time=0.0);
 
+println()
+println("Output correlations:")
+display(outputCorMat(beliefs[end]))
+
+const output_dir = dirname(Base.active_project()) * "/output/"
+
+## extra output saving
 save_output = false
+using JLD2: jldsave
+using Dates: now, year, month, day, hour, minute, second
 if save_output
     mkpath(output_dir)
     dt = now() # current DateTime
@@ -32,6 +36,11 @@ if save_output
     jldsave(mission_file; mission, samples, beliefs)
 end
 
-println()
-println("Output correlations:")
-display(outputCorMat(beliefModel))
+save_animation = false
+using Plots
+if save_animation
+    animation = @animate for i in eachindex(beliefs)
+        visualize(beliefs[i], samples[begin:i], mission.occupancy, 1)
+    end
+    mp4(animation, output_dir * "output.mp4"; fps=1)
+end
