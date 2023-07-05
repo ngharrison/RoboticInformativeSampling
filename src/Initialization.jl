@@ -86,7 +86,10 @@ function simData()
     sampler = MultiMap(map0, Map(tggt(points), lb, ub))
 
     ## initialize alg values
-    weights = (; μ=17, σ=1.5, τ=7)
+    # weights = (; μ=17, σ=1.5, τ=7)
+    weights = (; μ=3, σ=1, τ=.5, d=1)
+    # weights = (; μ=1, σ=1, τ=1, d=1)
+    # weights = (; μ=1, σ=1, τ=.1, d=1)
     start_loc = [0.5, 0.2] # starting location
     num_samples = 20
 

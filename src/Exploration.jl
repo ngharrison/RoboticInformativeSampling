@@ -3,7 +3,8 @@ module Exploration
 using DocStringExtensions: SIGNATURES
 
 using Samples: Sample, selectSampleLocation, takeSamples
-using SampleCosts: SampleCost, BasicSampleCost, NormedSampleCost, values
+using SampleCosts: SampleCost, values,
+                   BasicSampleCost, NormedSampleCost, MIPTSampleCost, EIGFSampleCost
 using BeliefModels: BeliefModel, outputCorMat
 using Visualization: visualize
 
