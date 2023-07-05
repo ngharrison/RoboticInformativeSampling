@@ -67,7 +67,7 @@ function BeliefModel(samples, lb, ub; kernel=multiKernel)
     θ0 = initHyperparams(X, Y, lb, ub)
 
     # optimize hyperparameters (train)
-    θ, opt = optimizeLoss(createLossFunc(X, Y, kernel), θ0)
+    θ, _ = optimizeLoss(createLossFunc(X, Y, kernel), θ0)
 
     # produce optimized gp belief model
     f = GP(kernel(θ)) # prior gp
