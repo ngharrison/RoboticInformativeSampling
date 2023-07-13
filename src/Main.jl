@@ -24,7 +24,7 @@ display(outputCorMat(beliefs[end]))
 
 const output_dir = dirname(Base.active_project()) * "/output/"
 
-## extra output saving
+## save output
 save_output = false
 using JLD2: jldsave
 using Dates: now, year, month, day, hour, minute, second
@@ -36,6 +36,7 @@ if save_output
     jldsave(mission_file; mission, samples, beliefs)
 end
 
+## save animation
 save_animation = false
 using Plots
 if save_animation
@@ -44,3 +45,4 @@ if save_animation
     end
     mp4(animation, output_dir * "output.mp4"; fps=1)
 end
+

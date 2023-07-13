@@ -275,17 +275,19 @@ Inputs:
 
     - samples: a vector of samples, this can be used to jump-start a mission or
       resume a previous mission (default empty)
+    - beliefs: a vector of beliefs, this pairs with the previous argument
+      (default empty)
     - visuals: true or false to cause map plots to be shown or not (default false)
     - sleep_time: the amount of time to wait after each iteration, useful for
       visualizations (default 0)
 
 Outputs:
 
-    - samples: the new samples collected
-    - beliefModel: the probabilistic representation of the quantities being
-      searched for
+    - samples: a vector of new samples collected
+    - beliefs: a vector of probabilistic representations of the quantities being
+      searched for, one for each sample collection
 """
-function (M::Mission)(; samples=Sample[], visuals=false, sleep_time=0)
+function (M::Mission)(; samples=Sample[], beliefs=BeliefModel[], visuals=false, sleep_time=0)
     M.occupancy(M.start_loc) && error("start location is within obstacle")
 
     # initialize
@@ -301,8 +303,6 @@ function (M::Mission)(; samples=Sample[], visuals=false, sleep_time=0)
 
     println("Mission started")
     println()
-
-    beliefs = BeliefModel[]
 
     for i in 1:M.num_samples
         println("Sample number $i")
