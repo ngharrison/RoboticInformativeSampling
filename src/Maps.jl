@@ -36,6 +36,14 @@ struct Map{T1<:Real, M<:AbstractMatrix{T1}, T2<:Real} <: AbstractMatrix{T1}
     ub::Vector{T2}
 end
 
+function Base.show(io::IO, map::Map{T1}) where T1
+    print(io, "Map{$T1} [$(map.lb), $(map.ub)]")
+end
+function Base.show(io::IO, ::MIME"text/plain", map::Map{T1}) where T1
+    print(io, "Map{$T1} [$(map.lb), $(map.ub)]:\n")
+    show(io, "text/plain", map.data)
+end
+
 Map(data::AbstractMatrix{<:Real}) = Map(data, [0.0, 0.0], [1.0, 1.0])
 
 """
@@ -73,6 +81,13 @@ argument.
 """
 struct MultiMap{T1<:Real}
     maps::Tuple{Vararg{Map{T1}}}
+end
+
+function Base.show(io::IO, mmap::MultiMap{T1}) where T1
+    print(io, "MultiMap{$T1}:")
+    for map in mmap.maps
+        print("\n\t", map)
+    end
 end
 
 MultiMap(maps::Map...) = MultiMap(maps)

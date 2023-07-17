@@ -23,6 +23,13 @@ struct BeliefModelSimple <: BeliefModel
     θ
 end
 
+function Base.show(io::IO, bm::BeliefModelSimple)
+    print(io, "BeliefModelSimple")
+end
+function Base.show(io::IO, ::MIME"text/plain", bm::BeliefModelSimple)
+    print(io, "BeliefModelSimple:\n\tθ = $(bm.θ)")
+end
+
 """
 A combination of two BeliefModelSimples. One is trained on current samples and
 the other is trained on current and previous samples. The main purpose for this
@@ -32,6 +39,15 @@ estimates.
 struct BeliefModelSplit <: BeliefModel
     current
     combined
+end
+
+function Base.show(io::IO, bm::BeliefModelSplit)
+    print(io, "BeliefModelSplit")
+end
+function Base.show(io::IO, ::MIME"text/plain", bm::BeliefModelSplit)
+    println(io, "BeliefModelSplit")
+    println("\tcurrent::BeliefModelSimple")
+    println("\tcombined::BeliefModelSimple")
 end
 
 """
