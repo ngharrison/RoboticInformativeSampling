@@ -18,9 +18,7 @@ mission = ausMission()
 ## run search alg
 @time samples, beliefs = mission(visuals=true, sleep_time=0.0);
 
-println()
-println("Output correlations:")
-display(outputCorMat(beliefs[end]))
+@debug "output correlation matrix:" outputCorMat(beliefs[end])
 
 const output_dir = dirname(Base.active_project()) * "/output/"
 

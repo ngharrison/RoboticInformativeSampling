@@ -328,7 +328,7 @@ function (M::Mission)(; samples=Sample[], beliefs=BeliefModel[], visuals=false, 
         if visuals
             display(visualize(M, beliefModel, sampleCost, samples, quantity=1))
         end
-        @debug "output correlations: $(round.(outputCorMat(beliefModel), digits=3))"
+        @debug "output correlation matrix:" outputCorMat(beliefs[end])
         sleep(sleep_time)
     end
 
