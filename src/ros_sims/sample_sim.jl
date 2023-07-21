@@ -3,7 +3,7 @@
 # this file is just used for testing ROSInterface.jl
 
 using Pkg
-Pkg.activate("..")
+Pkg.activate("../..")
 
 using RobotOS
 @rosimport std_msgs.msg: Float64
