@@ -12,6 +12,7 @@ using Missions: simMission, ausMission, conradMission, rosMission
 using BeliefModels: outputCorMat
 using Visualization: visualize
 using Metrics: calcMetrics
+using Outputs: saveOutputs
 
 ## initialize data for mission
 mission = ausMission()
@@ -24,26 +25,5 @@ mission = ausMission()
 ## calculate errors
 metrics = calcMetrics(mission, samples, beliefs)
 
-## save output
-const output_dir = dirname(Base.active_project()) * "/output/"
-
-save_output = false
-using JLD2: jldsave
-using Dates: now, year, month, day, hour, minute, second
-if save_output
-    mkpath(output_dir)
-    dt = now() # current DateTime
-    parts = (year, month, day, hour, minute, second)
-    mission_file = output_dir * join(lpad.(dt .|> parts, 2, '0'), "-") * ".jdl2"
-    jldsave(mission_file; mission, samples, beliefs, metrics)
-end
-
-save_animation = false
-using Plots
-if save_animation
-    animation = @animate for i in eachindex(beliefs)
-        visualize(beliefs[i], samples[begin:i], mission.occupancy, 1)
-    end
-    mp4(animation, output_dir * "output.mp4"; fps=1)
-end
-
+## save outputs
+# saveOutputs(mission, samples, beliefs, metrics; save_animation=true)
