@@ -81,11 +81,7 @@ function NormedSampleCost(md, samples, beliefModel, quantities)
 
     # using the max values from the current belief
     locs = [cellToPoint(ci, md.occupancy) for ci in vec(CartesianIndices(md.occupancy))]
-    μ = zeros(quantities); σ = zeros(quantities)
-    for q in quantities
-        μ[q], σ[q] = maximum.(beliefModel(tuple.(locs, q)))
-    end
-    belief_max = (; μ, σ)
+    belief_max = [maximum(first(beliefModel(tuple.(locs, q)))) for q in quantities]
 
     NormedSampleCost(md.occupancy, samples, beliefModel,
                      quantities, md.weights, belief_max, pathCost)
@@ -93,16 +89,12 @@ end
 
 function values(sc::NormedSampleCost, loc)
     beliefs = sc.beliefModel([(loc, q) for q in sc.quantities]) # means and standard deviations
-    μ_ave, σ_ave = mean.(beliefs ./ Tuple(sc.belief_max))
+    μ_norm, σ_norm = mean.(belief ./ sc.belief_max for belief in beliefs) # normed and averaged
 
     τ = sc.pathCost(pointToCell(loc, sc.occupancy)) # distance to location
+    τ_norm = τ / mean(sc.occupancy.ub .- sc.occupancy.lb) # normalized
 
-    # this value is now ignored thanks to log(σ)
-    # radius = minimum(sc.occupancy.ub .- sc.occupancy.lb)/4
-    # dists = norm.(sample.x[1] - loc for sample in sc.samples)
-    # P = sum((radius./dists).^3) # proximity to other points
-
-    return (-μ_ave, -log(σ_ave), τ, 0.0)
+    return (-μ_norm, -log(σ_norm), τ_norm, 0.0)
 end
 
 struct MIPTSampleCost <: SampleCost
@@ -121,21 +113,18 @@ function MIPTSampleCost(md, samples, beliefModel, quantities)
 
     # using the max values from the current belief
     locs = [cellToPoint(ci, md.occupancy) for ci in vec(CartesianIndices(md.occupancy))]
-    μ = zeros(quantities); σ = zeros(quantities)
-    for q in quantities
-        μ[q], σ[q] = maximum.(beliefModel(tuple.(locs, q)))
-    end
-    belief_max = (; μ, σ)
+    belief_max = [maximum(first(beliefModel(tuple.(locs, q)))) for q in quantities]
 
     MIPTSampleCost(md.occupancy, samples, beliefModel,
                      quantities, md.weights, belief_max, pathCost)
 end
 
 function values(sc::MIPTSampleCost, loc)
-    # τ = sc.occupancy(loc) ? Inf : 0.0
-    τ = sc.pathCost(pointToCell(loc, sc.occupancy)) # distance to location
+    τ = sc.occupancy(loc) ? Inf : 0.0
+    # τ = sc.pathCost(pointToCell(loc, sc.occupancy)) # distance to location
+    # τ_norm = τ / mean(sc.occupancy.ub .- sc.occupancy.lb)
     d = minimum(norm(sample.x[1] - loc) for sample in sc.samples)
-    return (0.0, 0.0, τ, -d)
+    return (0.0, 0.0, τ_norm, -d)
 end
 
 struct EIGFSampleCost <: SampleCost
@@ -147,18 +136,14 @@ struct EIGFSampleCost <: SampleCost
     belief_max
     pathCost
 end
-
+MIPTSampleCost
 function EIGFSampleCost(md, samples, beliefModel, quantities)
     start = pointToCell(samples[end].x[1], md.occupancy) # just looking at location
     pathCost = PathCost(start, md.occupancy, res(md.occupancy))
 
     # using the max values from the current belief
     locs = [cellToPoint(ci, md.occupancy) for ci in vec(CartesianIndices(md.occupancy))]
-    μ = zeros(quantities); σ = zeros(quantities)
-    for q in quantities
-        μ[q], σ[q] = maximum.(beliefModel(tuple.(locs, q)))
-    end
-    belief_max = (; μ, σ)
+    belief_max = [maximum(first(beliefModel(tuple.(locs, q)))) for q in quantities]
 
     EIGFSampleCost(md.occupancy, samples, beliefModel,
                      quantities, md.weights, belief_max, pathCost)
@@ -166,16 +151,17 @@ end
 
 function values(sc::EIGFSampleCost, loc)
     beliefs = sc.beliefModel([(loc, q) for q in sc.quantities]) # means and standard deviations
-    μ_ave, σ_ave = mean.(beliefs ./ Tuple(sc.belief_max))
+    μ_norm, σ_norm = mean.(belief ./ sc.belief_max for belief in beliefs)
 
-    # τ = sc.occupancy(loc) ? Inf : 0.0
-    τ = sc.pathCost(pointToCell(loc, sc.occupancy)) # distance to location
+    τ = sc.occupancy(loc) ? Inf : 0.0
+    # τ = sc.pathCost(pointToCell(loc, sc.occupancy)) # distance to location
+    # τ_norm = τ / mean(sc.occupancy.ub .- sc.occupancy.lb)
 
     closest_sample = argmin(sample -> norm(sample.x[1] - loc), sc.samples)
 
-    μ_err = μ_ave - closest_sample.y
+    μ_err = μ_norm - closest_sample.y
 
-    return (-μ_err^2, -σ_ave^2, τ, 0.0)
+    return (-μ_err^2, -σ_norm^2, τ_norm, 0.0)
 end
 
 struct MEPESampleCost <: SampleCost
@@ -194,11 +180,7 @@ function MEPESampleCost(md, samples, beliefModel, quantities)
 
     # using the max values from the current belief
     locs = [cellToPoint(ci, md.occupancy) for ci in vec(CartesianIndices(md.occupancy))]
-    μ = zeros(quantities); σ = zeros(quantities)
-    for q in quantities
-        μ[q], σ[q] = maximum.(beliefModel(tuple.(locs, q)))
-    end
-    belief_max = (; μ, σ)
+    belief_max = [maximum(first(beliefModel(tuple.(locs, q)))) for q in quantities]
 
     MEPESampleCost(md.occupancy, samples, beliefModel,
                      quantities, md.weights, belief_max, pathCost)
@@ -211,7 +193,7 @@ end
 function (sc::MEPESampleCost)(loc)
     # Not implemented yet, would need to look at their paper
     beliefs = sc.beliefModel([(loc, q) for q in sc.quantities]) # means and standard deviations
-    μ_ave, σ_ave = mean.(beliefs ./ Tuple(sc.belief_max))
+    μ_norm, σ_norm = mean.(belief ./ sc.belief_max for belief in beliefs)
 
     d = minimum(norm(sample.x[1] - loc) for sample in sc.samples)
 
