@@ -11,6 +11,7 @@ global_logger(ConsoleLogger(stderr, Logging.Info))
 using Missions: simMission, ausMission, conradMission, rosMission
 using BeliefModels: outputCorMat
 using Visualization: visualize
+using Metrics: calcMetrics
 
 ## initialize data for mission
 mission = ausMission()
@@ -20,9 +21,12 @@ mission = ausMission()
 
 @debug "output correlation matrix:" outputCorMat(beliefs[end])
 
-const output_dir = dirname(Base.active_project()) * "/output/"
+## calculate errors
+metrics = calcMetrics(mission, samples, beliefs)
 
 ## save output
+const output_dir = dirname(Base.active_project()) * "/output/"
+
 save_output = false
 using JLD2: jldsave
 using Dates: now, year, month, day, hour, minute, second
@@ -31,10 +35,9 @@ if save_output
     dt = now() # current DateTime
     parts = (year, month, day, hour, minute, second)
     mission_file = output_dir * join(lpad.(dt .|> parts, 2, '0'), "-") * ".jdl2"
-    jldsave(mission_file; mission, samples, beliefs)
+    jldsave(mission_file; mission, samples, beliefs, metrics)
 end
 
-## save animation
 save_animation = false
 using Plots
 if save_animation
