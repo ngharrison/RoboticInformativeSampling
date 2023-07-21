@@ -24,7 +24,6 @@ Inputs:
     - weights: weights for picking the next sample location
     - num_samples: the number of samples to collect in one run (default 20)
     - prior_samples: any samples taken previously (default empty)
-    - samples: any samples taken already during the current mission (default empty)
 """
 @kwdef struct Mission
     occupancy
