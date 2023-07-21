@@ -20,17 +20,20 @@ const maps_dir = dirname(Base.active_project()) * "/maps/"
 Inputs:
     - occupancy: an occupancy map, true in cells that are occupied
     - sampler: a function that returns a measurement value for any input
-    - start_loc: the starting location
+    - num_samples: the number of samples to collect in one run
+    - sampleCostType: a constructor for the function that returns the (negated)
+      value of taking a sample
     - weights: weights for picking the next sample location
-    - num_samples: the number of samples to collect in one run (default 20)
+    - start_loc: the starting location
     - prior_samples: any samples taken previously (default empty)
 """
 @kwdef struct Mission
     occupancy
     sampler
-    start_loc
-    weights
     num_samples
+    sampleCostType
+    weights
+    start_loc
     prior_samples = Sample[]
 end
 
@@ -88,6 +91,8 @@ function simMission()
 
     sampler = MultiMap(map0, Map(tggt(points), lb, ub))
 
+    sampleCostType = NormedSampleCost
+
     ## initialize alg values
     # weights = (; μ=17, σ=1.5, τ=7)
     weights = (; μ=3, σ=1, τ=.5, d=1)
@@ -114,11 +119,12 @@ function simMission()
               samples=points_sp)
 
     return Mission(; occupancy,
-                       sampler,
-                       start_loc,
-                       weights,
-                       num_samples,
-                       prior_samples)
+                   sampler,
+                   num_samples,
+                   sampleCostType,
+                   weights,
+                   start_loc,
+                   prior_samples)
 
 end
 
@@ -154,10 +160,12 @@ function ausMission()
     occupancy = imgToMap(Matrix{Bool}(isnan.(images[1][australia...])), lb, ub)
 
 
+    sampleCostType = NormedSampleCost
+
     ## initialize alg values
-    weights = [1, 6, 1, 3e-3] # mean, std, dist, prox
+    weights = [1e-1, 6, 5e-1, 3e-3] # mean, std, dist, prox
     start_loc = [0.8, 0.6] # starting location
-    num_samples = 50
+    num_samples = 30
 
 
     # sample sparsely from the prior maps
@@ -177,11 +185,12 @@ function ausMission()
               samples=points_sp)
 
     return Mission(; occupancy,
-                       sampler,
-                       start_loc,
-                       weights,
-                       num_samples,
-                       prior_samples)
+                   sampler,
+                   num_samples,
+                   sampleCostType,
+                   weights,
+                   start_loc,
+                   prior_samples)
 
 end
 
@@ -214,6 +223,8 @@ function conradMission()
 
     sampler = MultiMap(maps)
 
+    sampleCostType = NormedSampleCost
+
     ## initialize alg values
     weights = [1, 6, 1, 3e-3] # mean, std, dist, prox
     start_loc = [0.8, 0.6] # starting location
@@ -222,10 +233,11 @@ function conradMission()
     occupancy = Map(zeros(Bool, n, n), lb, ub)
 
     return Mission(; occupancy,
-                       sampler,
-                       start_loc,
-                       weights,
-                       num_samples)
+                   sampler,
+                   num_samples,
+                   sampleCostType,
+                   weights,
+                   start_loc)
 end
 
 function rosMission()
@@ -250,16 +262,19 @@ function rosMission()
 
     occupancy = Map(zeros(Bool, 100, 100), lb, ub)
 
+    sampleCostType = NormedSampleCost
+
     ## initialize alg values
     weights = [1, 6, 1, 3e-3] # mean, std, dist, prox
     start_loc = [0.0, 0.0]
     num_samples = 10
 
     return Mission(; occupancy,
-                       sampler,
-                       start_loc,
-                       weights,
-                       num_samples)
+                   sampler,
+                   num_samples,
+                   sampleCostType,
+                   weights,
+                   start_loc)
 end
 
 """
@@ -308,7 +323,7 @@ function (M::Mission)(; samples=Sample[], beliefs=BeliefModel[], visuals=false, 
 
         # new sample location
         if beliefModel !== nothing # prior belief exists
-            sampleCost = NormedSampleCost(M, samples, beliefModel, quantities)
+            sampleCost = M.sampleCostType(M, samples, beliefModel, quantities)
             new_loc = selectSampleLocation(sampleCost, lb, ub)
             @debug "new location: $new_loc"
             @debug "cost function terms: $(Tuple(values(sampleCost, new_loc)) .* Tuple(M.weights))"
