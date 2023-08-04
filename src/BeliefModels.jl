@@ -273,12 +273,12 @@ end
 """
 $SIGNATURES
 
-Gives the correlation matrix between all output.
+Gives the correlation matrix between all outputs.
 """
 function outputCorMat(beliefModel::BeliefModelSimple)
     cov_mat = fullyConnectedCovMat(beliefModel.θ.σ)
-    return [cov_mat[i,j]/√(cov_mat[j,j]*cov_mat[i,i])
-            for (i,j) in Tuple.(CartesianIndices(cov_mat))]
+    vars = diag(cov_mat)
+    return @. cov_mat / √(vars * vars') # broadcast shorthand
 end
 
 function outputCorMat(beliefModel::BeliefModelSplit)
