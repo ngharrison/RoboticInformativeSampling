@@ -73,6 +73,14 @@ function (map::Map)(x::Location)
 end
 
 """
+Generates a random point in the map. Returns the location and its value.
+"""
+function Base.rand(map::Map)
+    x = map.lb .+ rand(2).*(map.ub .- map.lb)
+    return x, map(x)
+end
+
+"""
 Handles samples of the form (location, quantity) to give the value from the
 right map. Internally a list of maps.
 
