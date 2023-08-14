@@ -51,6 +51,8 @@ Inputs:
 
     - occupancy: a map containing upper and lower bounds
     - sampleCost: a function from sample location to cost (x->cost(x))
+
+Returns the sample location, a vector
 """
 function selectSampleLocation(sampleCost, lb, ub)
     # in future could optimize for measured quantity as well
