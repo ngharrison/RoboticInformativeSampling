@@ -14,16 +14,23 @@ using Visualization: visualize
 using Metrics: calcMetrics
 using Outputs: saveOutputs
 
-## initialize data for mission
-mission = ausMission()
+mission_peaks = [1,2]
+num_runs = 2
+metrics = Array{Any, 2}(undef, (length(mission_peaks), num_runs))
 
-## run search alg
-@time samples, beliefs = mission(visuals=true, sleep_time=0.0);
+for (i, num_peaks) in enumerate(mission_peaks)
+    ## initialize data for mission
+    mission = simMission(; num_peaks, seed_val=i)
+    for j in 1:num_runs
+        ## run search alg
+        @time samples, beliefs = mission(seed_val=j, visuals=false, sleep_time=0.0);
 
-@debug "output correlation matrix:" outputCorMat(beliefs[end])
+        @debug "output correlation matrix:" outputCorMat(beliefs[end])
 
-## calculate errors
-metrics = calcMetrics(mission, samples, beliefs)
+        ## calculate errors
+        metrics[i,j] = calcMetrics(mission, samples, beliefs)
+    end
+end
 
 ## save outputs
 # saveOutputs(mission, samples, beliefs, metrics; save_animation=true)

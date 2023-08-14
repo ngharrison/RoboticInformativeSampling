@@ -1,13 +1,13 @@
 module Missions
 
-using LinearAlgebra: I
+using LinearAlgebra: I, norm
 using Images: load, imresize, Gray, gray
 using DelimitedFiles: readdlm
 using Statistics: cor
 using Random: seed!
 using DocStringExtensions: SIGNATURES
 
-using Maps: Map, imgToMap, GaussGroundTruth, MultiMap, Peak, pointToCell
+using Maps: Map, imgToMap, GaussGroundTruth, MultiMap, Peak, pointToCell, cellToPoint
 using Samples: Sample, selectSampleLocation, takeSamples
 using SampleCosts: SampleCost, values, BasicSampleCost,
                    NormedSampleCost, MIPTSampleCost, EIGFSampleCost
@@ -38,8 +38,8 @@ Inputs:
 end
 
 # Constructors for Mission data
-function simMission()
-    seed!(2) # make random values deterministic
+function simMission(; num_peaks=3, seed_val=0)
+    seed!(seed_val) # make random values deterministic
 
     lb = [0.0, 0.0]; ub = [1.0, 1.0]
 
@@ -57,8 +57,8 @@ function simMission()
     ## initialize ground truth
 
     # simulated
-    peaks = [Peak([0.3, 0.3], 0.03*I, 1.0),
-             Peak([0.8, 0.7], 0.008*I, 0.4)]
+    peaks = [Peak(rand(2).*(ub-lb) .+ lb, 0.05*rand()*I, rand())
+             for i in 1:num_peaks]
     ggt = GaussGroundTruth(peaks)
     axs = range.(lb, ub, size(elev_img))
     points = collect.(Iterators.product(axs...))
@@ -83,7 +83,6 @@ function simMission()
     # push!(prior_maps, [zeros(size(map0,1),t) map0[:,1:end-t]]) # shift
 
     # purely random
-    num_peaks = 3
     peaks = [Peak(rand(2).*(ub-lb) .+ lb, 0.02*I, rand())
              for i in 1:num_peaks]
     tggt = GaussGroundTruth(peaks)
@@ -114,9 +113,9 @@ function simMission()
     # Calculate correlation coefficients
     [cor(map0.(points_sp), d.(points_sp)) for d in prior_maps]
 
-    visualize(sampler.maps..., prior_maps...;
+    display(visualize(sampler.maps..., prior_maps...;
               titles=["Ground Truth 1", "Ground Truth 2", "Prior 1", "Prior 2"],
-              samples=points_sp)
+              samples=points_sp))
 
     return Mission(; occupancy,
                    sampler,
@@ -170,9 +169,24 @@ function ausMission()
 
     # sample sparsely from the prior maps
     # currently all data have the same sample numbers and locations
-    n = (5,5) # number of samples in each dimension
-    axs_sp = range.(lb, ub, n)
-    points_sp = vec(collect.(Iterators.product(axs_sp...)))
+
+    # # grid of samples
+    # n = (5,5) # number of samples in each dimension
+    # axs_sp = range.(lb, ub, n)
+    # points_sp = vec(collect.(Iterators.product(axs_sp...)))
+    # prior_samples = [Sample((x, i+length(sampler)), d(x))
+    #                  for (i, d) in enumerate(prior_maps)
+    #                      for x in points_sp if !isnan(d(x))]
+
+    # maximize minimum distance between samples
+    points_sp = Vector{Float64}[]
+    sampleCost = x -> occupancy(x) ? Inf : -minimum(norm(loc - x) for loc in points_sp; init=Inf)
+    for _ in 1:25
+        x = selectSampleLocation(sampleCost, occupancy.lb, occupancy.ub)
+        push!(points_sp, x)
+        # x, v = rand(occupancy)
+        # !v && push!(points_sp, x)
+    end
     prior_samples = [Sample((x, i+length(sampler)), d(x))
                      for (i, d) in enumerate(prior_maps)
                          for x in points_sp if !isnan(d(x))]
@@ -180,9 +194,9 @@ function ausMission()
     # Calculate correlation coefficients
     [cor(map0.(points_sp), d.(points_sp)) for d in prior_maps]
 
-    visualize(sampler.maps..., prior_maps...;
+    display(visualize(sampler.maps..., prior_maps...;
               titles=["Vegetation", "Elevation", "Ground Temperature", "Rainfall"],
-              samples=points_sp)
+              samples=points_sp))
 
     return Mission(; occupancy,
                    sampler,
@@ -301,10 +315,11 @@ Outputs:
     - beliefs: a vector of probabilistic representations of the quantities being
       searched for, one for each sample collection
 """
-function (M::Mission)(; samples=Sample[], beliefs=BeliefModel[], visuals=false, sleep_time=0)
+function (M::Mission)(; samples=Sample[], beliefs=BeliefModel[], seed_val=0, visuals=false, sleep_time=0)
     M.occupancy(M.start_loc) && error("start location is within obstacle")
 
     # initialize
+    seed!(seed_val)
     lb, ub = M.occupancy.lb, M.occupancy.ub
     new_loc = M.start_loc
     quantities = eachindex(M.sampler) # all current available quantities
