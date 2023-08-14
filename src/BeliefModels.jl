@@ -1,6 +1,6 @@
 module BeliefModels
 
-using LinearAlgebra: I
+using LinearAlgebra: I, diag
 using AbstractGPs: GP, posterior, mean_and_var, mean_and_cov, logpdf, with_lengthscale,
                    SqExponentialKernel, IntrinsicCoregionMOKernel
 using Statistics: mean, std
