@@ -335,7 +335,7 @@ function (M::Mission)(; samples=Sample[], beliefs=BeliefModel[], visuals=false, 
         append!(samples, new_samples)
 
         # new belief
-        beliefModel = BeliefModel(samples, M.prior_samples, lb, ub)
+        beliefModel = BeliefModel([M.prior_samples; samples], lb, ub)
         push!(beliefs, beliefModel)
 
         # visualization
