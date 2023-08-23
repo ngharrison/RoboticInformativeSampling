@@ -120,9 +120,9 @@ function MIPTSampleCost(md, samples, beliefModel, quantities)
 end
 
 function values(sc::MIPTSampleCost, loc)
-    τ = sc.occupancy(loc) ? Inf : 0.0
     # τ = sc.pathCost(pointToCell(loc, sc.occupancy)) # distance to location
     # τ_norm = τ / mean(sc.occupancy.ub .- sc.occupancy.lb)
+    τ_norm = sc.occupancy(loc) ? Inf : 0.0
     d = minimum(norm(sample.x[1] - loc) for sample in sc.samples)
     return (0.0, 0.0, τ_norm, -d)
 end
@@ -136,7 +136,7 @@ struct EIGFSampleCost <: SampleCost
     belief_max
     pathCost
 end
-MIPTSampleCost
+
 function EIGFSampleCost(md, samples, beliefModel, quantities)
     start = pointToCell(samples[end].x[1], md.occupancy) # just looking at location
     pathCost = PathCost(start, md.occupancy, res(md.occupancy))
@@ -153,9 +153,9 @@ function values(sc::EIGFSampleCost, loc)
     beliefs = sc.beliefModel([(loc, q) for q in sc.quantities]) # means and standard deviations
     μ_norm, σ_norm = mean.(belief ./ sc.belief_max for belief in beliefs)
 
-    τ = sc.occupancy(loc) ? Inf : 0.0
     # τ = sc.pathCost(pointToCell(loc, sc.occupancy)) # distance to location
     # τ_norm = τ / mean(sc.occupancy.ub .- sc.occupancy.lb)
+    τ_norm = sc.occupancy(loc) ? Inf : 0.0
 
     closest_sample = argmin(sample -> norm(sample.x[1] - loc), sc.samples)
 
