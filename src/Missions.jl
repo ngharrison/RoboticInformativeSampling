@@ -38,29 +38,31 @@ Inputs:
 end
 
 # Constructors for Mission data
-function simMission(; num_peaks=3, seed_val=0)
+function simMission(; seed_val=0, num_peaks=3, priors=Bool[0,0,0])
     seed!(seed_val) # make random values deterministic
 
     lb = [0.0, 0.0]; ub = [1.0, 1.0]
 
-    # read in elevation
-    elev_img = load(maps_dir * "arthursleigh_shed_small.tif")
-    elevMap = imgToMap(gray.(elev_img), lb, ub)
+    # # read in elevation
+    # elev_img = load(maps_dir * "arthursleigh_shed_small.tif")
+    # elevMap = imgToMap(gray.(elev_img), lb, ub)
 
-    # read in obstacles
-    obs_img = load(maps_dir * "obstacles_fieldsouth_220727.tif")
-    obs_img_res = imresize(obs_img, size(elev_img))
-    # the image we have has zeros for obstacles, need to flip
-    occ_mat = Matrix{Bool}(Gray.(obs_img_res) .== 0')
-    occupancy = imgToMap(occ_mat, lb, ub)
+    # # read in obstacles
+    # obs_img = load(maps_dir * "obstacles_fieldsouth_220727.tif")
+    # obs_img_res = imresize(obs_img, size(elev_img))
+    # # the image we have has zeros for obstacles, need to flip
+    # occ_mat = Matrix{Bool}(Gray.(obs_img_res) .== 0')
+    # occupancy = imgToMap(occ_mat, lb, ub)
+
+    occupancy = Map(zeros(Bool, 100, 100), lb, ub)
 
     ## initialize ground truth
 
     # simulated
-    peaks = [Peak(rand(2).*(ub-lb) .+ lb, 0.05*rand()*I, rand())
+    peaks = [Peak(rand(2).*(ub-lb) .+ lb, 0.02*rand()*I, rand())
              for i in 1:num_peaks]
     ggt = GaussGroundTruth(peaks)
-    axs = range.(lb, ub, size(elev_img))
+    axs = range.(lb, ub, size(occupancy))
     points = collect.(Iterators.product(axs...))
     map0 = Map(ggt(points), lb, ub)
 
@@ -69,11 +71,13 @@ function simMission(; num_peaks=3, seed_val=0)
     # none -- leave uncommented
     prior_maps = []
 
-    # additive
-    push!(prior_maps, Map(abs.(map0 .+ 0.1 .* randn(size(map0))), lb, ub))
-
     # multiplicative
-    push!(prior_maps, Map(abs.(map0 .* randn()), lb, ub))
+    m = Map(abs.(map0 .* randn()), lb, ub)
+    push!(prior_maps, m)
+
+    # additive
+    m = Map(abs.(map0 .+ 0.2 .* randn(size(map0))), lb, ub)
+    push!(prior_maps, m)
 
     # # both
     # push!(prior_maps, Map(abs.(map0 .* randn() + 0.1 .* randn(size(map0))), lb, ub))
@@ -82,23 +86,29 @@ function simMission(; num_peaks=3, seed_val=0)
     # t = rand(1:7)
     # push!(prior_maps, [zeros(size(map0,1),t) map0[:,1:end-t]]) # shift
 
-    # purely random
-    peaks = [Peak(rand(2).*(ub-lb) .+ lb, 0.02*I, rand())
+    # random peaks
+    peaks = [Peak(rand(2).*(ub-lb) .+ lb, 0.02*rand()*I, rand())
              for i in 1:num_peaks]
     tggt = GaussGroundTruth(peaks)
-    # push!(prior_maps, Map(tggt(points), lb, ub))
+    m = Map(tggt(points), lb, ub)
+    push!(prior_maps, m)
 
-    sampler = MultiMap(map0, Map(tggt(points), lb, ub))
+    # # purely random values
+    # m = Map(rand(size(map0)...), lb, ub)
+    # push!(prior_maps, m)
 
-    sampleCostType = NormedSampleCost
+    sampler = MultiMap(map0)
+
+    sampleCostType = EIGFSampleCost
 
     ## initialize alg values
     # weights = (; μ=17, σ=1.5, τ=7)
-    weights = (; μ=3, σ=1, τ=.5, d=1)
-    # weights = (; μ=1, σ=1, τ=1, d=1)
+    # weights = (; μ=3, σ=1, τ=.5, d=1)
+    weights = (; μ=1, σ=1e1, τ=1, d=0) # sogp
+    # weights = (; μ=1, σ=5e2, τ=1, d=0) # others
     # weights = (; μ=1, σ=1, τ=.1, d=1)
-    start_loc = [0.5, 0.2] # starting location
-    num_samples = 20
+    start_loc = [1.0, 0.0] # starting location
+    num_samples = 30
 
 
     # sample sparsely from the prior maps
@@ -107,14 +117,13 @@ function simMission(; num_peaks=3, seed_val=0)
     axs_sp = range.(lb, ub, n)
     points_sp = vec(collect.(Iterators.product(axs_sp...)))
     prior_samples = [Sample((x, i+length(sampler)), d(x))
-                     for (i, d) in enumerate(prior_maps)
+                     for (i, d) in enumerate(prior_maps[priors])
                          for x in points_sp if !isnan(d(x))]
 
     # Calculate correlation coefficients
-    [cor(map0.(points_sp), d.(points_sp)) for d in prior_maps]
+    @debug [cor(map0.(points_sp), d.(points_sp)) for d in prior_maps]
 
     display(visualize(sampler.maps..., prior_maps...;
-              titles=["Ground Truth 1", "Ground Truth 2", "Prior 1", "Prior 2"],
               samples=points_sp))
 
     return Mission(; occupancy,
@@ -341,6 +350,8 @@ function (M::Mission)(; samples=Sample[], beliefs=BeliefModel[], seed_val=0, vis
             sampleCost = M.sampleCostType(M, samples, beliefModel, quantities)
             new_loc = selectSampleLocation(sampleCost, lb, ub)
             @debug "new location: $new_loc"
+            @debug "cost function values: $(Tuple(values(sampleCost, new_loc)))"
+            @debug "cost function weights: $(Tuple(M.weights))"
             @debug "cost function terms: $(Tuple(values(sampleCost, new_loc)) .* Tuple(M.weights))"
             @debug "cost function value: $(sampleCost(new_loc))"
         end
@@ -357,7 +368,7 @@ function (M::Mission)(; samples=Sample[], beliefs=BeliefModel[], seed_val=0, vis
         if visuals
             display(visualize(M, beliefModel, sampleCost, samples, quantity=1))
         end
-        @debug "output correlation matrix:" outputCorMat(beliefs[end])
+        @debug "output determination matrix:" outputCorMat(beliefs[end]).^2
         sleep(sleep_time)
     end
 

@@ -151,7 +151,7 @@ end
 
 function values(sc::EIGFSampleCost, loc)
     beliefs = sc.beliefModel([(loc, q) for q in sc.quantities]) # means and standard deviations
-    μ_norm, σ_norm = mean.(belief ./ sc.belief_max for belief in beliefs)
+    μ_norm, σ_norm = mean.(beliefs)
 
     # τ = sc.pathCost(pointToCell(loc, sc.occupancy)) # distance to location
     # τ_norm = τ / mean(sc.occupancy.ub .- sc.occupancy.lb)

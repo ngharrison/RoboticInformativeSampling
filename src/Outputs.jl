@@ -6,17 +6,28 @@ using Plots
 using Visualization: visualize
 
 const output_dir = dirname(Base.active_project()) * "/output/"
+const output_ext = ".jld2"
 
-function saveOutputs(mission, samples, beliefs, metrics; save_animation=false)
+"""
+Creates a string containing the date and time separated by dashes.
+Can pass in a DateTime object, defaults to current time.
+"""
+function dateTimeString(dt=now())
+    parts = (year, month, day, hour, minute, second)
+    return join(lpad.(dt .|> parts, 2, '0'), "-")
+end
+
+function save(mission, samples, beliefs;
+              animation=false,
+              file_name=dateTimeString() * "_mission")
 
     mkpath(output_dir)
-    dt = now() # current DateTime
-    parts = (year, month, day, hour, minute, second)
-    file_name = join(lpad.(dt .|> parts, 2, '0'), "-")
-    mission_file = output_dir * file_name * ".jdl2"
-    jldsave(mission_file; mission, samples, beliefs, metrics)
 
-    if save_animation
+    full_path_name = output_dir * file_name * output_ext
+
+    jldsave(full_path_name; mission, samples, beliefs)
+
+    if animation
         num_quant = length(mission.sampler)
         animation = @animate for i in eachindex(beliefs)
             visualize(beliefs[i],
@@ -27,6 +38,14 @@ function saveOutputs(mission, samples, beliefs, metrics; save_animation=false)
         mp4(animation, output_dir * file_name * ".mp4"; fps=1)
     end
 
+end
+
+function save(metrics; file_name=dateTimeString() * "_metrics")
+    mkpath(output_dir)
+
+    full_path_name = output_dir * file_name * output_ext
+
+    jldsave(full_path_name; metrics)
 end
 
 end

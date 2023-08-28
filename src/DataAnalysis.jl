@@ -10,19 +10,97 @@ end
 using Missions: Mission
 using BeliefModels: BeliefModel
 using Samples: Sample
+using Outputs: output_dir, output_ext
+
+using Statistics: mean, std
 using FileIO: load
-using Plots: plot
+using Plots
 
-data = load("../output/2023-07-21-17-56-40.jdl2")
+"""
+Calculates the standard deviation across elements of an array when the elements
+are arrays of arrays.
+"""
+function stdM(cors)
+    m = mean(cors)
+    d = cors .- Ref(mean(cors))
+    l = [[v.^2 for v in u] for u in d]
+    s = sum(l) / (length(cors) - 1)
+    return [[sqrt(v) for v in u] for u in s]
+end
 
-mission = data["mission"]
-beliefs = data["beliefs"]
-samples = data["samples"]
-metrics = data["metrics"]
+p_acc = []
+p_cor = []
+
+# SOGP
+priors = (0,0,0)
+file_name = output_dir * "paper/metrics_$(join(priors))" * output_ext
+
+data = load(file_name)
+maes = [run.mae for run in data["metrics"]]
+cors = [run.cors for run in data["metrics"]]
+dets = [[v.^2 for v in u] for u in cors]
+
+p = plot(mean(maes), yerr=std(maes))
+push!(p_acc, p)
+p = plot(hcat((c[2:end] for c in mean(dets))...)',
+         yerr=hcat((c[2:end] for c in stdM(dets))...)')
+push!(p_cor, p)
+
+# Single correlations
+for priors in ((1,0,0), (0,1,0), (0,0,1))
+    file_name = output_dir * "paper/metrics_$(join(priors))" * output_ext
+
+    data = load(file_name)
+    maes = [run.mae for run in data["metrics"]]
+    cors = [run.cors for run in data["metrics"]]
+    dets = [[v.^2 for v in u] for u in cors]
+
+    p = plot(mean(maes), yerr=std(maes))
+    push!(p_acc, p)
+    p = plot(hcat((c[2:end] for c in mean(dets))...)',
+             yerr=hcat((c[2:end] for c in stdM(dets))...)')
+    push!(p_cor, p)
+end
+
+# Double correlations
+for priors in ((1,1,0), (1,0,1), (0,1,1))
+    file_name = output_dir * "paper/metrics_$(join(priors))" * output_ext
+
+    data = load(file_name)
+    maes = [run.mae for run in data["metrics"]]
+    cors = [run.cors for run in data["metrics"]]
+    dets = [[v.^2 for v in u] for u in cors]
+
+    p = plot(mean(maes), yerr=std(maes))
+    push!(p_acc, p)
+    p = plot(hcat((c[2:end] for c in mean(dets))...)',
+             yerr=hcat((c[2:end] for c in stdM(dets))...)')
+    push!(p_cor, p)
+end
+
+# Triple correlation
+priors = (1,1,1)
+file_name = output_dir * "paper/metrics_$(join(priors))" * output_ext
+
+data = load(file_name)
+maes = [run.mae for run in data["metrics"]]
+cors = [run.cors for run in data["metrics"]]
+dets = [[v.^2 for v in u] for u in cors]
+
+p = plot(mean(maes), yerr=std(maes))
+push!(p_acc, p)
+p = plot(hcat((c[2:end] for c in mean(dets))...)',
+         yerr=hcat((c[2:end] for c in stdM(dets))...)')
+push!(p_cor, p)
+
 
 plot(
-    plot(1:mission.num_samples, metrics.mae),
-    plot(1:mission.num_samples, metrics.mu),
-    plot(1:mission.num_samples, metrics.mb),
-    layout = (3, 1)
+    p_acc...,
+    ylim=(0,0.25),
+    layout=grid(4,2)
+)
+
+plot(
+    p_cor...,
+    layout=grid(4,2)
 )
