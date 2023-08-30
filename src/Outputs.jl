@@ -21,7 +21,7 @@ function save(mission, samples, beliefs;
               animation=false,
               file_name=dateTimeString() * "_mission")
 
-    mkpath(output_dir)
+    mkpath(output_dir * dirname(file_name))
 
     full_path_name = output_dir * file_name * output_ext
 
@@ -41,7 +41,7 @@ function save(mission, samples, beliefs;
 end
 
 function save(metrics; file_name=dateTimeString() * "_metrics")
-    mkpath(output_dir)
+    mkpath(output_dir * dirname(file_name))
 
     full_path_name = output_dir * file_name * output_ext
 
