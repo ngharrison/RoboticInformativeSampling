@@ -15,7 +15,7 @@ using Metrics: calcMetrics
 using Outputs: save
 
 ## initialize data for mission
-mission = simMission()
+mission = ausMission()
 
 ## run search alg
 @time samples, beliefs = mission(visuals=true, sleep_time=0.5);

@@ -168,12 +168,13 @@ function ausMission()
     occupancy = imgToMap(Matrix{Bool}(isnan.(images[1][australia...])), lb, ub)
 
 
-    sampleCostType = NormedSampleCost
+    sampleCostType = EIGFSampleCost
 
     ## initialize alg values
-    weights = [1e-1, 6, 5e-1, 3e-3] # mean, std, dist, prox
+    # weights = [1e-1, 6, 5e-1, 3e-3] # mean, std, dist, prox
+    weights = (; μ=1, σ=5e2, τ=1, d=0) # others
     start_loc = [0.8, 0.6] # starting location
-    num_samples = 30
+    num_samples = 50
 
 
     # sample sparsely from the prior maps
