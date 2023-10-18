@@ -1,7 +1,5 @@
 #!/usr/bin/env julia
-
-# using Pkg
-# Pkg.activate("../..")
+# should be run as `julia --project <script_name>` from within a project directory
 
 using RobotOS
 @rosimport std_msgs.msg: Bool, Float64
