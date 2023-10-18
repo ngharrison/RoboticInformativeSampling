@@ -14,11 +14,11 @@ using Visualization: visualize
 using Metrics: calcMetrics
 using Outputs: save
 
+mission_peaks = [3,3,4,4,5,5]
+num_runs = 3
+metrics = Array{Any, 2}(undef, (length(mission_peaks), num_runs))
 # pick all the prior data combinations
-for priors in Iterators.product(fill(0:1,3)...)
-    mission_peaks = [3,3,4,4,5,5]
-    num_runs = 3
-    metrics = Array{Any, 2}(undef, (length(mission_peaks), num_runs))
+@time for priors in Iterators.product(fill(0:1,3)...)
     for (i, num_peaks) in enumerate(mission_peaks)
         ## initialize data for mission
         mission = simMission(; seed_val=i, num_peaks, priors=collect(Bool, priors))
@@ -32,5 +32,5 @@ for priors in Iterators.product(fill(0:1,3)...)
         end
     end
     ## save outputs
-    save(metrics; file_name="paper/metrics_$(join(priors))")
+    save(metrics; file_name="batch/metrics_$(join(priors))")
 end

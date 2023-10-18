@@ -37,7 +37,7 @@ function visualize(md, beliefModel::BeliefModel, sampleCost, samples; quantity)
     # TODO this will need to be updated to test for actual types
     if hasmethod(getindex, Tuple{typeof(md.sampler), Integer})
         # we actually have ground truth
-        b = visualize(md.sampler[quantity], "Ground Truth")
+        b = visualize(md.sampler[quantity], "Quantity of Interest")
     end
     c = visualize(sampleCost, samples, md.occupancy)
     l = @layout [a ; b c]
@@ -51,10 +51,11 @@ Method to show a ground truth map and up to three other prior data maps.
 Pass each map in as its own argument.
 """
 function visualize(maps::Map...;
-                   titles=["Ground Truth"; ["Prior $i" for i in 1:length(maps)-1]],
+                   titles=["Quantity of Interest"; ["Prior $i" for i in 1:length(maps)-1]],
                    samples=[])
     plot(
-        visualize.(maps, titles; samples, clim=extrema(maps[1]))...,
+        visualize(maps[1], titles[1]; clim=extrema(maps[1])),
+        visualize.(maps[2:end], titles[2:end]; samples, clim=extrema(maps[1]))...,
         layout=grid(2,2),
         size=default_size,
         margin=default_margin
@@ -70,16 +71,19 @@ Method to show any Map data.
 """
 function visualize(map::Map, title="Map"; samples=[], clim=nothing)
     axes = range.(map.lb, map.ub, size(map))
-    heatmap(axes..., map';
-            xlabel="x1",
-            ylabel="x2",
-            title,
-            clim
-            )
-    scatter!(first.(samples), last.(samples);
-             label="Samples",
-             color=sample_color,
-             markersize=default_markersize)
+    plt = heatmap(axes..., map';
+                  xlabel="x1",
+                  ylabel="x2",
+                  title,
+                  clim
+                  )
+    if !isempty(samples)
+        scatter!(first.(samples), last.(samples);
+                 label="Samples",
+                 color=sample_color,
+                 markersize=default_markersize)
+    end
+    return plt
 end
 
 """

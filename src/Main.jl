@@ -8,7 +8,7 @@ end
 using Logging
 global_logger(ConsoleLogger(stderr, Logging.Info))
 
-using Missions: simMission, ausMission, conradMission, rosMission
+using Missions: simMission, ausMission, nswMission, conradMission, rosMission
 using BeliefModels: outputCorMat
 using Visualization: visualize
 using Metrics: calcMetrics

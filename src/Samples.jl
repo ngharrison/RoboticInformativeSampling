@@ -62,6 +62,7 @@ function selectSampleLocation(sampleCost, lb, ub)
         loc0,
         ParticleSwarm(; lower=lb, upper=ub, n_particles=20)
     )
+    @debug "sample optimizer:" opt
     return opt.minimizer
 end
 

@@ -11,12 +11,16 @@ function calcMetrics(mission, beliefs)
     mae = zeros(length(beliefs), length(M.sampler))
     mu = zeros(length(beliefs), length(M.sampler))
     mb = zeros(length(beliefs), length(M.sampler))
+    mxae = zeros(length(beliefs), length(M.sampler))
+    mxu = zeros(length(beliefs), length(M.sampler))
+    mxb = zeros(length(beliefs), length(M.sampler))
     cors = Matrix{Any}(undef, (length(beliefs), length(M.sampler)))
     for (q, map) in enumerate(M.sampler)
-        mae[:,q], mu[:,q], mb[:,q], cors[:,q] = calcMetrics(mission, beliefs, q, points)
+        (mae[:,q], mu[:,q], mb[:,q],
+         mxae[:,q], mxu[:,q], mxb[:,q], cors[:,q]) = calcMetrics(mission, beliefs, q, points)
     end
 
-    return (; mae, mu, mb, cors)
+    return (; mae, mu, mb, mxae, mxu, mxb, cors)
 end
 
 function calcMetrics(mission, beliefs, q)
@@ -27,24 +31,32 @@ function calcMetrics(mission, beliefs, q)
     mae = zeros(length(beliefs))
     mu = zeros(length(beliefs))
     mb = zeros(length(beliefs))
+    mxae = zeros(length(beliefs))
+    mxu = zeros(length(beliefs))
+    mxb = zeros(length(beliefs))
     cors = Vector{Any}(undef, (length(beliefs),))
     for (i, beliefModel) in enumerate(beliefs)
-        mae[i], mu[i], mb[i], cors[i] = calcMetrics(mission, beliefModel, q, points)
+        (mae[i], mu[i], mb[i],
+         mxae[i], mxu[i], mxb[i], cors[i]) = calcMetrics(mission, beliefModel, q, points)
     end
 
-    return (; mae, mu, mb, cors)
+    return (; mae, mu, mb, mxae, mxu, mxb, cors)
 end
 
 function calcMetrics(mission, beliefs, q, points)
     mae = zeros(length(beliefs))
     mu = zeros(length(beliefs))
     mb = zeros(length(beliefs))
+    mxae = zeros(length(beliefs))
+    mxu = zeros(length(beliefs))
+    mxb = zeros(length(beliefs))
     cors = Vector{Any}(undef, (length(beliefs),))
     for (i, beliefModel) in enumerate(beliefs)
-        mae[i], mu[i], mb[i], cors[i] = calcMetrics(mission, beliefModel, q, points)
+        (mae[i], mu[i], mb[i],
+         mxae[i], mxu[i], mxb[i], cors[i]) = calcMetrics(mission, beliefModel, q, points)
     end
 
-    return (; mae, mu, mb, cors)
+    return (; mae, mu, mb, mxae, mxu, mxb, cors)
 end
 
 function calcMetrics(mission, beliefModel::BeliefModel, q, points)
@@ -57,10 +69,15 @@ function calcMetrics(mission, beliefModel::BeliefModel, q, points)
     mu = mean(σ[vec(mask)])
     # Mean Belief?
     mb = mean(μ[vec(mask)])
-    # Maxes?
+    # Max Absolute Error
+    mxae = maximum(abs.(μ[mask] .- true_vals[mask]))
+    # Max Uncertainty
+    mxu = maximum(σ[vec(mask)])
+    # Max Belief?
+    mxb = maximum(μ[vec(mask)])
     # Correlations
     cors = outputCorMat(beliefModel)[:,q]
-    return (; mae, mu, mb, cors)
+    return (; mae, mu, mb, mxae, mxu, mxb, cors)
 end
 
 end

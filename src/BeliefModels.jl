@@ -4,7 +4,7 @@ using LinearAlgebra: I, diag
 using AbstractGPs: GP, posterior, mean_and_var, mean_and_cov, logpdf, with_lengthscale,
                    SqExponentialKernel, IntrinsicCoregionMOKernel
 using Statistics: mean, std
-using Optim: optimize, Options, NelderMead
+using Optim: optimize, Options, NelderMead, LBFGS
 using ParameterHandling: value_flatten
 using DocStringExtensions: SIGNATURES
 
@@ -83,7 +83,7 @@ function BeliefModel(samples, lb, ub; kernel=multiKernel)
     θ0 = initHyperparams(X, Y, lb, ub)
 
     # optimize hyperparameters (train)
-    θ, _ = optimizeLoss(createLossFunc(X, Y, kernel), θ0)
+    θ = optimizeLoss(createLossFunc(X, Y, kernel), θ0)
 
     # produce optimized gp belief model
     f = GP(kernel(θ)) # prior gp
@@ -140,7 +140,8 @@ function initHyperparams(X, Y, lb, ub)
     T = maximum(last, X) # number of outputs
     n = fullyConnectedCovNum(T)
     # TODO may change to all just 0.5
-    σ = (length(Y)>1 ? std(Y) : 0.5)/sqrt(2) * ones(n)
+    # σ = (length(Y)>1 ? std(Y) : 0.5)/sqrt(2) * ones(n)
+    σ = 0.5/sqrt(2) * ones(n)
     a = mean(ub .- lb)
     ℓ = length(X)==1 ? a : a/length(X) + mean(std(first.(X)))*(1-1/length(X))
     σn = 0.001
@@ -155,15 +156,16 @@ Routine to optimize the lossFunc.
 Can pass in a different solver. NelderMead is picked as default for better speed
 with about the same performance as LFBGS.
 """
-function optimizeLoss(lossFunc, θ0; solver=NelderMead, iterations=1_000)
+function optimizeLoss(lossFunc, θ0; solver=NelderMead, iterations=1_500)
     options = Options(; iterations)
 
     θ0_flat, unflatten = value_flatten(θ0)
     loss_flat = lossFunc ∘ unflatten
 
     opt = optimize(loss_flat, θ0_flat, solver(), options)
+    @debug "model optimizer:" opt
 
-    return unflatten(opt.minimizer), opt
+    return unflatten(opt.minimizer)
 end
 
 """

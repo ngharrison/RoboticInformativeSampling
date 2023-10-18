@@ -14,6 +14,7 @@ Cost to take a new sample at a location. This is a fallback method that
 calculates a simple linear combination of all the values of a SampleCost.
 """
 function (sc::SampleCost)(loc)
+    sc.occupancy(loc) && return Inf
     vals = values(sc, loc)
     return sum(w*v for (w,v) in zip(sc.weights, vals))
 end
@@ -91,8 +92,9 @@ function values(sc::NormedSampleCost, loc)
     beliefs = sc.beliefModel([(loc, q) for q in sc.quantities]) # means and standard deviations
     μ_norm, σ_norm = mean.(belief ./ sc.belief_max for belief in beliefs) # normed and averaged
 
-    τ = sc.pathCost(pointToCell(loc, sc.occupancy)) # distance to location
-    τ_norm = τ / mean(sc.occupancy.ub .- sc.occupancy.lb) # normalized
+    τ_norm = sc.occupancy(loc) ? Inf : 0.0
+    # τ = sc.pathCost(pointToCell(loc, sc.occupancy)) # distance to location
+    # τ_norm = τ / mean(sc.occupancy.ub .- sc.occupancy.lb) # normalized
 
     return (-μ_norm, -log(σ_norm), τ_norm, 0.0)
 end

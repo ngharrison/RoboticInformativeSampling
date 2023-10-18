@@ -38,7 +38,7 @@ Inputs:
 end
 
 # Constructors for Mission data
-function simMission(; seed_val=0, num_peaks=3, priors=Bool[0,0,0])
+function simMission(; seed_val=0, num_peaks=3, priors=Bool[1,1,1])
     seed!(seed_val) # make random values deterministic
 
     lb = [0.0, 0.0]; ub = [1.0, 1.0]
@@ -59,12 +59,13 @@ function simMission(; seed_val=0, num_peaks=3, priors=Bool[0,0,0])
     ## initialize ground truth
 
     # simulated
-    peaks = [Peak(rand(2).*(ub-lb) .+ lb, 0.02*rand()*I, rand())
+    peaks = [Peak(rand(2).*(ub-lb) .+ lb, 0.02*(rand()+0.5)*I, rand())
              for i in 1:num_peaks]
     ggt = GaussGroundTruth(peaks)
     axs = range.(lb, ub, size(occupancy))
     points = collect.(Iterators.product(axs...))
-    map0 = Map(ggt(points), lb, ub)
+    mat = ggt(points)
+    map0 = Map(mat./maximum(mat), lb, ub)
 
     ## Create prior prior_samples
 
@@ -87,10 +88,11 @@ function simMission(; seed_val=0, num_peaks=3, priors=Bool[0,0,0])
     # push!(prior_maps, [zeros(size(map0,1),t) map0[:,1:end-t]]) # shift
 
     # random peaks
-    peaks = [Peak(rand(2).*(ub-lb) .+ lb, 0.02*rand()*I, rand())
+    peaks = [Peak(rand(2).*(ub-lb) .+ lb, 0.02*(rand()+0.5)*I, rand())
              for i in 1:num_peaks]
     tggt = GaussGroundTruth(peaks)
-    m = Map(tggt(points), lb, ub)
+    tmat = tggt(points)
+    m = Map(tmat./maximum(tmat), lb, ub)
     push!(prior_maps, m)
 
     # # purely random values
@@ -104,8 +106,8 @@ function simMission(; seed_val=0, num_peaks=3, priors=Bool[0,0,0])
     ## initialize alg values
     # weights = (; μ=17, σ=1.5, τ=7)
     # weights = (; μ=3, σ=1, τ=.5, d=1)
-    weights = (; μ=1, σ=1e1, τ=1, d=0) # sogp
-    # weights = (; μ=1, σ=5e2, τ=1, d=0) # others
+    # weights = (; μ=1, σ=1e1, τ=1, d=0) # sogp
+    weights = (; μ=1, σ=5e2, τ=1, d=0) # others
     # weights = (; μ=1, σ=1, τ=.1, d=1)
     start_loc = [1.0, 0.0] # starting location
     num_samples = 30
@@ -122,9 +124,11 @@ function simMission(; seed_val=0, num_peaks=3, priors=Bool[0,0,0])
 
     # Calculate correlation coefficients
     @debug [cor(map0.(points_sp), d.(points_sp)) for d in prior_maps]
+    # @debug [cor(vec(map0), vec(d)) for d in prior_maps]
 
     display(visualize(sampler.maps..., prior_maps...;
-              samples=points_sp))
+                      samples=points_sp,
+                      titles=["QOI", "Scaling Factor", "Additive Noise", "Random Map"]))
 
     return Mission(; occupancy,
                    sampler,
@@ -132,61 +136,70 @@ function simMission(; seed_val=0, num_peaks=3, priors=Bool[0,0,0])
                    sampleCostType,
                    weights,
                    start_loc,
-                   prior_samples)
+                   prior_samples)#, [cor(vec(map0), vec(d)).^2 for d in prior_maps]
 
 end
 
+function normalize(a)
+    l, h = extrema(filter(!isnan, a))
+    return (a .- l) ./ (h - l)
+end
 
-normalize(a) = a ./ maximum(filter(!isnan, a))
+function spatialAve(M, extent=1)
+    N = zero(M)
+    for i in axes(M,1), j in axes(M,2)
+        tot = 0
+        count = 0
+        for k in -extent:extent
+            for l in -extent:extent
+                m = i + k
+                n = j + l
+                if 1 <= m <= size(M,1) && 1 <= n <= size(M,2) && !isnan(M[m,n])
+                    tot += M[m,n]
+                    count += 1
+                end
+            end
+        end
+        N[i,j] = tot/count
+    end
+    return N
+end
 
-
-function ausMission()
+function ausMission(; seed_val=0, num_samples=30, priors=Bool[1,1,1])
     # have it run around australia
 
+    seed!(seed_val)
+
     file_names = [
-        "vege_720x360.csv",
-        "topo_720x360.csv",
-        "temp_720x360.csv",
-        "rain_720x360.csv"
+        "vege_ave_aus.csv",
+        "topo_ave_aus.csv",
+        "temp_ave_aus.csv",
+        "rain_ave_aus.csv"
     ]
 
     images = readdlm.(maps_dir .* file_names, ',')
 
-    for img in images
-        img[img .== 99999] .= NaN
-    end
-
-    australia = (202:258, 587:668)
-
     lb = [0.0, 0.0]; ub = [1.0, 1.0]
 
-    map0 = imgToMap(normalize(images[1][australia...]), lb, ub)
+    map0 = imgToMap(normalize(images[1]), lb, ub)
     sampler = MultiMap(map0)
 
-    prior_maps = [imgToMap(normalize(img[australia...]), lb, ub) for img in images[2:end]]
+    prior_maps = [imgToMap(normalize(img), lb, ub) for img in images[2:end]]
 
-    occupancy = imgToMap(Matrix{Bool}(isnan.(images[1][australia...])), lb, ub)
-
+    occupancy = imgToMap(Matrix{Bool}(reduce(.|, [isnan.(i)
+                                                  for i in images])), lb, ub)
 
     sampleCostType = EIGFSampleCost
 
     ## initialize alg values
     # weights = [1e-1, 6, 5e-1, 3e-3] # mean, std, dist, prox
-    weights = (; μ=1, σ=5e2, τ=1, d=0) # others
+    # weights = (; μ=1, σ=5e3, τ=1, d=1) # others
+    weights = (; μ=1, σ=5e3, τ=1, d=1) # others
     start_loc = [0.8, 0.6] # starting location
-    num_samples = 50
 
 
     # sample sparsely from the prior maps
     # currently all data have the same sample numbers and locations
-
-    # # grid of samples
-    # n = (5,5) # number of samples in each dimension
-    # axs_sp = range.(lb, ub, n)
-    # points_sp = vec(collect.(Iterators.product(axs_sp...)))
-    # prior_samples = [Sample((x, i+length(sampler)), d(x))
-    #                  for (i, d) in enumerate(prior_maps)
-    #                      for x in points_sp if !isnan(d(x))]
 
     # maximize minimum distance between samples
     points_sp = Vector{Float64}[]
@@ -198,11 +211,13 @@ function ausMission()
         # !v && push!(points_sp, x)
     end
     prior_samples = [Sample((x, i+length(sampler)), d(x))
-                     for (i, d) in enumerate(prior_maps)
+                     for (i, d) in enumerate(prior_maps[priors])
                          for x in points_sp if !isnan(d(x))]
 
     # Calculate correlation coefficients
     [cor(map0.(points_sp), d.(points_sp)) for d in prior_maps]
+    [cor(vec(map0[.!occupancy]), vec(d[.!occupancy])) for d in prior_maps]
+    # scatter(vec(map0[.!occupancy]), [vec(d[.!occupancy]) for d in prior_maps], layout=3)
 
     display(visualize(sampler.maps..., prior_maps...;
               titles=["Vegetation", "Elevation", "Ground Temperature", "Rainfall"],
@@ -215,6 +230,72 @@ function ausMission()
                    weights,
                    start_loc,
                    prior_samples)
+end
+
+function nswMission(; seed_val=0, num_samples=30, priors=Bool[1,1,1])
+    # have it run around australia
+
+    seed!(seed_val)
+
+    file_names = [
+        "vege_ave_nsw.csv",
+        "topo_ave_nsw.csv",
+        "temp_ave_nsw.csv",
+        "rain_ave_nsw.csv"
+    ]
+
+    images = readdlm.(maps_dir .* file_names, ',')
+
+    ims_sm = spatialAve.(images, 3)
+
+    lb = [0.0, 0.0]; ub = [1.0, 1.0]
+
+    map0 = imgToMap(normalize(ims_sm[1]), lb, ub)
+    sampler = MultiMap(map0)
+
+    prior_maps = [imgToMap(normalize(img), lb, ub) for img in ims_sm[2:end]]
+
+    occupancy = imgToMap(Matrix{Bool}(reduce(.|, [isnan.(i)
+                                                  for i in ims_sm])), lb, ub)
+
+    sampleCostType = EIGFSampleCost
+
+    ## initialize alg values
+    # weights = [1e-1, 6, 5e-1, 3e-3] # mean, std, dist, prox
+    # weights = (; μ=1, σ=5e3, τ=1, d=1) # others
+    weights = (; μ=1, σ=5e3, τ=1, d=1) # others
+    start_loc = [1.0, 0.0] # starting location
+
+
+    # sample sparsely from the prior maps
+    # currently all data have the same sample numbers and locations
+
+    # sample sparsely from the prior maps
+    # currently all data have the same sample numbers and locations
+    n = (5,5) # number of samples in each dimension
+    axs_sp = range.(lb, ub, n)
+    points_sp = vec(collect.(Iterators.product(axs_sp...)))
+    prior_samples = [Sample((x, i+length(sampler)), d(x))
+                     for (i, d) in enumerate(prior_maps[priors])
+                         for x in points_sp if !isnan(d(x))]
+
+    # Calculate correlation coefficients
+    [cor(map0.(points_sp), d.(points_sp)) for d in prior_maps]
+    [cor(vec(map0[.!occupancy]), vec(d[.!occupancy])) for d in prior_maps]
+    # scatter(vec(map0[.!occupancy]), [vec(d[.!occupancy]) for d in prior_maps], layout=3)
+
+    display(visualize(sampler.maps..., prior_maps...;
+              titles=["Vegetation", "Elevation", "Ground Temperature", "Rainfall"],
+              samples=points_sp))
+
+    return Mission(; occupancy,
+                   sampler,
+                   num_samples,
+                   sampleCostType,
+                   weights,
+                   start_loc,
+                   prior_samples)
+
 
 end
 
