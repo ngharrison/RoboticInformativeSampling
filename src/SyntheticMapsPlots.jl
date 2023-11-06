@@ -110,4 +110,4 @@ plot(p1, p2, p3, p4, cbar,
      margin=4Plots.mm
 )
 
-savefig("../output/paper/qoi_priors.png")
+savefig(output_dir * "paper/qoi_priors.png")

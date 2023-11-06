@@ -302,8 +302,8 @@ end
 function conradMission()
 
     file_names = [
-        "../maps/weightMap1.csv",
-        "../maps/weightMap2.csv",
+        maps_dir * "weightMap1.csv",
+        maps_dir * "weightMap2.csv",
     ]
 
     # need to drop the last point

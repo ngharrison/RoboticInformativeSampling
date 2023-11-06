@@ -76,7 +76,7 @@ plot(
     size=(width, height)
 )
 
-savefig("../output/$dir/$(dir)_correlations.png")
+savefig(output_dir * "$dir/$(dir)_correlations.png")
 
 p = plot(
     maes[1:30,:],
@@ -97,7 +97,7 @@ p = plot(
     size=(width, height)
 )
 
-savefig("../output/$dir/$(dir)_errors.png")
+savefig(output_dir * "$dir/$(dir)_errors.png")
 
 ## Batch
 dir = "batch"
@@ -180,7 +180,7 @@ plot(
     size=(width, height)
 )
 
-savefig("../output/$dir/hypothesis_scores.png")
+savefig(output_dir * "$dir/hypothesis_scores.png")
 
 plot(
     err_means,
@@ -203,7 +203,7 @@ plot(
     size=(width, height)
 )
 
-savefig("../output/$dir/errors.png")
+savefig(output_dir * "$dir/errors.png")
 
 
 ## True mean coefficients

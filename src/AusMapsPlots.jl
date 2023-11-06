@@ -16,6 +16,7 @@ using Maps: Map, imgToMap, MultiMap
 using Missions: maps_dir, normalize, spatialAve
 using Samples: Sample, selectSampleLocation
 using Visualization: visualize
+using Outputs: output_dir
 
 seed_val=0; priors=Bool[1,1,1];
 
@@ -124,4 +125,4 @@ plot(p1, p2, p3, p4, cbar,
      margin=4Plots.mm
 )
 
-savefig("../output/paper/aus_ave_data_maps.png")
+savefig(output_dir * "paper/aus_ave_data_maps.png")

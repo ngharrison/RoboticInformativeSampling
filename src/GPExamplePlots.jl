@@ -80,4 +80,4 @@ plot(p1, p2,
      right_margin=17mm,
      )
 
-savefig("../output/paper/example_gp.png")
+savefig(output_dir * "paper/example_gp.png")
