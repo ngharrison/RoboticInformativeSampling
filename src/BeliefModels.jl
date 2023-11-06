@@ -106,12 +106,14 @@ Outputs:
 """
 function (beliefModel::BeliefModelSimple)(x::SampleInput; full_cov=false)
     func = full_cov ? mean_and_cov : mean_and_var
-    return only.(func(beliefModel.gp, [x]))
+    μ, σ² = only.(func(beliefModel.gp, [x]))
+    return μ, .√σ²
 end
 
 function (beliefModel::BeliefModelSimple)(X::Vector{SampleInput}; full_cov=false)
     func = full_cov ? mean_and_cov : mean_and_var
-    return func(beliefModel.gp, X)
+    μ, σ² = func(beliefModel.gp, X)
+    return μ, .√σ²
 end
 
 """
