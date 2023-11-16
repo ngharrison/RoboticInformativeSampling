@@ -22,7 +22,6 @@ Calculates the standard deviation across elements of an array when the elements
 are arrays of arrays.
 """
 function stdM(cors)
-    m = mean(cors)
     d = cors .- Ref(mean(cors))
     l = [[v.^2 for v in u] for u in d]
     s = sum(l) / (length(cors) - 1)
