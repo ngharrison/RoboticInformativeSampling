@@ -5,6 +5,8 @@ using DocStringExtensions: SIGNATURES
 
 using Maps: SampleInput, SampleOutput
 
+export Sample, selectSampleLocation, takeSamples
+
 """
 Usage: `Sample(x, y)`
 

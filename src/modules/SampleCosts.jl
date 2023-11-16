@@ -7,6 +7,9 @@ using DocStringExtensions: SIGNATURES
 using Maps: pointToCell, cellToPoint, res
 using Paths: PathCost
 
+export SampleCost, values, BasicSampleCost,
+       NormedSampleCost, MIPTSampleCost, EIGFSampleCost
+
 abstract type SampleCost end
 
 """

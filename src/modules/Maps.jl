@@ -2,6 +2,10 @@ module Maps
 
 using Distributions: MvNormal, pdf
 
+export Map, GaussGroundTruth, MultiMap, Peak,
+       imgToMap, res, pointToCell, cellToPoint,
+       Location, SampleInput, SampleOutput
+
 const Location = Vector{Float64}
 const SampleInput = Tuple{Location, Int}
 const SampleOutput = Float64

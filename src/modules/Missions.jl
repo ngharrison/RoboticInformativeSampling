@@ -14,6 +14,9 @@ using SampleCosts: SampleCost, values, BasicSampleCost,
 using BeliefModels: BeliefModel, outputCorMat
 using Visualization: visualize
 
+export simMission, ausMission, nswMission, conradMission, rosMission,
+       Mission, maps_dir
+
 const maps_dir = dirname(Base.active_project()) * "/maps/"
 
 """

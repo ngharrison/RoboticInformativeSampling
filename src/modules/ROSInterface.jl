@@ -15,6 +15,8 @@ using Rotations: QuatRotation, RotZ, params
 
 using Maps: Location, SampleInput
 
+export ROSConnection
+
 """
 Stores information for communicating with Swagbot.
 """

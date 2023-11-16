@@ -4,6 +4,8 @@ using LinearAlgebra: norm
 using DataStructures: PriorityQueue, dequeue!
 using DocStringExtensions: SIGNATURES
 
+export PathCost, getPath, finalOrientation
+
 """
 Struct for PathCost function data. Previous computations are kept track of in
 its data. Can be used multiple times for the same start cell, saving

@@ -3,6 +3,8 @@ module Metrics
 using Statistics: mean
 using BeliefModels: BeliefModel, outputCorMat
 
+export calcMetrics
+
 function calcMetrics(mission, beliefs)
     M = mission
     axs = range.(M.occupancy.lb, M.occupancy.ub, size(M.occupancy))

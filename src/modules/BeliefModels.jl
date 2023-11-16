@@ -10,6 +10,8 @@ using DocStringExtensions: SIGNATURES
 
 using Maps: Location, SampleInput
 
+export BeliefModel, fullyConnectedCovMat, outputCorMat
+
 abstract type BeliefModel end
 
 """

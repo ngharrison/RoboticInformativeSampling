@@ -7,6 +7,8 @@ using Maps: GroundTruth, Map, res
 using BeliefModels: BeliefModel
 using SampleCosts: SampleCost
 
+export visualize
+
 # placeholders to avoid recomputing
 axes = nothing
 points = nothing

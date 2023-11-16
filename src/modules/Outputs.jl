@@ -5,6 +5,8 @@ using Dates: now, year, month, day, hour, minute, second
 using Plots
 using Visualization: visualize
 
+export save, output_dir, output_ext
+
 const output_dir = dirname(Base.active_project()) * "/output/"
 const output_ext = ".jld2"
 
