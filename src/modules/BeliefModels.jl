@@ -97,14 +97,12 @@ end
 
 """
 Inputs:
-
-    - X: a single sample input or an array of multiple
-    - full_cov: (optional) if this is true, returns the full covariance matrix
-      in place of the vector of variances
+- `X`: a single sample input or an array of multiple
+- `full_cov`: (optional) if this is true, returns the full covariance matrix
+  in place of the vector of variances
 
 Outputs:
-
-    - μ, σ: a pair of expected value(s) and uncertainty(s) for the given point(s)
+- `μ, σ`: a pair of expected value(s) and uncertainty(s) for the given point(s)
 """
 function (beliefModel::BeliefModelSimple)(x::SampleInput; full_cov=false)
     func = full_cov ? mean_and_cov : mean_and_var
@@ -120,14 +118,12 @@ end
 
 """
 Inputs:
-
-    - X: a single sample input or an array of multiple
-    - full_cov: (optional) if this is true, returns the full covariance matrix
-      in place of the vector of variances
+- `X`: a single sample input or an array of multiple
+- `full_cov`: (optional) if this is true, returns the full covariance matrix
+    in place of the vector of variances
 
 Outputs:
-
-    - μ, σ: a pair of expected value(s) and uncertainty(s) for the given point(s)
+- `μ, σ`: a pair of expected value(s) and uncertainty(s) for the given point(s)
 """
 function (beliefModel::BeliefModelSplit)(X::Union{SampleInput, Vector{SampleInput}}; full_cov=false)
     μ, _ = beliefModel.combined(X; full_cov)
@@ -231,9 +227,8 @@ Creates an output covariance matrix from an array of parameters by filling a low
 triangular matrix.
 
 Inputs:
-
-    - a: parameter vector, must hold (T+1)*T/2 parameters, where T = number of
-      outputs
+- `a`: parameter vector, must hold (T+1)*T/2 parameters, where T = number of
+  outputs
 """
 function fullyConnectedCovMat(a)
 
@@ -256,9 +251,8 @@ Creates an output covariance matrix from an array of parameters by filling the
 first column and diagonal of a lower triangular matrix.
 
 Inputs:
-
-    - a: parameter vector, must hold 2T-1 parameters, where T = number of
-      outputs
+- `a`: parameter vector, must hold 2T-1 parameters, where T = number of
+  outputs
 """
 function manyToOneCovMat(a)
 

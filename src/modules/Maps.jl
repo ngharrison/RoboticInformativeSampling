@@ -1,6 +1,7 @@
 module Maps
 
 using Distributions: MvNormal, pdf
+using DocStringExtensions: SIGNATURES, TYPEDFIELDS
 
 export Map, GaussGroundTruth, MultiMap, Peak,
        imgToMap, res, pointToCell, cellToPoint,
@@ -21,10 +22,7 @@ Also made to function like a built-in matrix directly by sub-typing and
 implementing the base methods.
 
 Fields:
-
-    - data: matrix of data
-    - lb: vector of lower bounds, defaults to [0, 0]
-    - ub: vector of upper bounds, defaults to [1, 1]
+$(TYPEDFIELDS)
 
 Usage:
 
@@ -35,8 +33,11 @@ m[i,j] # can also use as if it's just the underlying matrix
 ```
 """
 struct Map{T1<:Real, M<:AbstractMatrix{T1}, T2<:Real} <: AbstractMatrix{T1}
+    "matrix of data"
     data::M
+    "vector of lower bounds, defaults to [0, 0]"
     lb::Vector{T2}
+    "vector of upper bounds, defaults to [1, 1]"
     ub::Vector{T2}
 end
 
@@ -167,20 +168,20 @@ end
 """
 Used within a GaussGroundTruth. Holds a 2D normal distribution and the
 desired height of the peak.
-
-Usage: `Peak(μ, Σ, h)`
-
-Inputs:
-
-    - μ: the peak location (distribution mean)
-    - Σ: the peak width (distribution covariance)
-    - h: the peak height
 """
 struct Peak
     distr
     h
 end
 
+"""
+$(SIGNATURES)
+
+Inputs:
+- `μ`: the peak location (distribution mean)
+- `Σ`: the peak width (distribution covariance)
+- `h`: the peak height
+"""
 Peak(μ, Σ, h) = Peak(MvNormal(μ, Σ), h)
 
 end

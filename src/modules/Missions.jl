@@ -5,7 +5,7 @@ using Images: load, imresize, Gray, gray
 using DelimitedFiles: readdlm
 using Statistics: cor
 using Random: seed!
-using DocStringExtensions: SIGNATURES
+using DocStringExtensions: SIGNATURES, TYPEDFIELDS
 
 using Maps: Map, imgToMap, GaussGroundTruth, MultiMap, Peak, pointToCell, cellToPoint
 using Samples: Sample, selectSampleLocation, takeSamples
@@ -20,23 +20,23 @@ export simMission, ausMission, nswMission, conradMission, rosMission,
 const maps_dir = dirname(Base.active_project()) * "/maps/"
 
 """
-Inputs:
-    - occupancy: an occupancy map, true in cells that are occupied
-    - sampler: a function that returns a measurement value for any input
-    - num_samples: the number of samples to collect in one run
-    - sampleCostType: a constructor for the function that returns the (negated)
-      value of taking a sample
-    - weights: weights for picking the next sample location
-    - start_loc: the starting location
-    - prior_samples: any samples taken previously (default empty)
+Fields:
+$(TYPEDFIELDS)
 """
 @kwdef struct Mission
+    "an occupancy map, true in cells that are occupied"
     occupancy
+    "a function that returns a measurement value for any input"
     sampler
+    "the number of samples to collect in one run"
     num_samples
+    "a constructor for the function that returns the (negated) value of taking a sample"
     sampleCostType
+    "weights for picking the next sample location"
     weights
+    "the starting location"
     start_loc
+    "any samples taken previously (default empty)"
     prior_samples = Sample[]
 end
 
@@ -394,20 +394,18 @@ and visuals are possibly shown. The run finishes when the designated number of
 samples is collected.
 
 Inputs:
-
-    - samples: a vector of samples, this can be used to jump-start a mission or
-      resume a previous mission (default empty)
-    - beliefs: a vector of beliefs, this pairs with the previous argument
-      (default empty)
-    - visuals: true or false to cause map plots to be shown or not (default false)
-    - sleep_time: the amount of time to wait after each iteration, useful for
-      visualizations (default 0)
+- `samples`: a vector of samples, this can be used to jump-start a mission
+  or resume a previous mission (default empty)
+- `beliefs`: a vector of beliefs, this pairs with the previous argument
+  (default empty)
+- `visuals`: true or false to cause map plots to be shown or not (default false)
+- `sleep_time`: the amount of time to wait after each iteration, useful for
+  visualizations (default 0)
 
 Outputs:
-
-    - samples: a vector of new samples collected
-    - beliefs: a vector of probabilistic representations of the quantities being
-      searched for, one for each sample collection
+- `samples`: a vector of new samples collected
+- `beliefs`: a vector of probabilistic representations of the quantities being
+  searched for, one for each sample collection
 """
 function (M::Mission)(; samples=Sample[], beliefs=BeliefModel[], seed_val=0, visuals=false, sleep_time=0)
     M.occupancy(M.start_loc) && error("start location is within obstacle")

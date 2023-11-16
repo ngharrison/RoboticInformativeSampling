@@ -29,10 +29,9 @@ The constructor initializes the path search algorithm, created for each new
 start cell.
 
 Inputs:
-
-    - start: the starting cell in the matrix
-    - occupancy: a matrix indicating which cells are occupied
-    - resolution: a vector of the width and height of each cell
+- `start`: the starting cell in the matrix
+- `occupancy`: a matrix indicating which cells are occupied
+- `resolution`: a vector of the width and height of each cell
 """
 function PathCost(start, occupancy, resolution)
     # initialize data structures with values for first cell

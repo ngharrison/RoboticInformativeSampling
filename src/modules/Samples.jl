@@ -1,22 +1,22 @@
 module Samples
 
 using Optim: optimize, ParticleSwarm
-using DocStringExtensions: SIGNATURES
+using DocStringExtensions: SIGNATURES, TYPEDFIELDS
 
 using Maps: SampleInput, SampleOutput
 
 export Sample, selectSampleLocation, takeSamples
 
 """
-Usage: `Sample(x, y)`
+Struct to hold the input and output of a sample.
 
 Fields:
-
-    - x: the sample input, usually a location and sensor id
-    - y: the sample output or observation, a scalar
+$(TYPEDFIELDS)
 """
 struct Sample
+    "the sample input, usually a location and sensor id"
     x::SampleInput
+    "the sample output or observation, a scalar"
     y::SampleOutput
 end
 
@@ -27,11 +27,10 @@ Pulls a ground truth value from a given location and constructs a Sample object
 to hold them both.
 
 Inputs:
-
-    - loc: the location to sample
-    - sampler: a function that returns ground truth values
-    - quantities: (optional) a vector of integers which represent which
-      quantities to sample, defaults to all of them
+- `loc`: the location to sample
+- `sampler`: a function that returns ground truth values
+- `quantities`: (optional) a vector of integers which represent which
+  quantities to sample, defaults to all of them
 
 Outputs a vector of Samples containing input x and measurement y
 """
@@ -50,9 +49,8 @@ $(SIGNATURES)
 The optimization of choosing a best single sample location.
 
 Inputs:
-
-    - occupancy: a map containing upper and lower bounds
-    - sampleCost: a function from sample location to cost (x->cost(x))
+- `occupancy`: a map containing upper and lower bounds
+- `sampleCost`: a function from sample location to cost (x->cost(x))
 
 Returns the sample location, a vector
 """
