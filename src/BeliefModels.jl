@@ -15,7 +15,7 @@ abstract type BeliefModel end
 """
 Belief model struct and function for multiple outputs with 2D inputs.
 
-Designed on top of a Multi-output Gaussian Process. Can still be used with a
+Designed on top of a Multi-output Gaussian Process, but can still be used with a
 single output.
 """
 struct BeliefModelSimple <: BeliefModel
@@ -51,12 +51,12 @@ function Base.show(io::IO, ::MIME"text/plain", bm::BeliefModelSplit)
 end
 
 """
-$SIGNATURES
+$(SIGNATURES)
 
 Creates and returns a new BeliefModel. A BeliefModelSimple is returned if there
-are no prior_samples, and it is trained and conditioned on the given samples.
+are no prior samples, and it is trained and conditioned on the given samples.
 Otherwise a BeliefModelSplit is returned, trained and conditioned on both the
-samples and prior_samples. Lower and upper bounds are used to initialize one of
+samples and prior samples. Lower and upper bounds are used to initialize one of
 the hyperparameters.
 """
 function BeliefModel(samples, prior_samples, lb, ub)
@@ -70,10 +70,10 @@ function BeliefModel(samples, prior_samples, lb, ub)
 end
 
 """
-$SIGNATURES
+$(SIGNATURES)
 
 Creates and returns a BeliefModelSimple with hyperparameters trained and
-conditioned on the the samples given.
+conditioned on the samples given.
 """
 function BeliefModel(samples, lb, ub; kernel=multiKernel)
     # set up training data
@@ -134,7 +134,7 @@ function (beliefModel::BeliefModelSplit)(X::Union{SampleInput, Vector{SampleInpu
 end
 
 """
-$SIGNATURES
+$(SIGNATURES)
 
 Creates the structure of hyperparameters and gives them initial values.
 """
@@ -151,7 +151,7 @@ function initHyperparams(X, Y, lb, ub)
 end
 
 """
-$SIGNATURES
+$(SIGNATURES)
 
 Routine to optimize the lossFunc.
 
@@ -171,7 +171,7 @@ function optimizeLoss(lossFunc, θ0; solver=NelderMead, iterations=1_500)
 end
 
 """
-$SIGNATURES
+$(SIGNATURES)
 
 This function creates the loss function for training the GP. The negative log
 marginal likelihood is used.
@@ -200,7 +200,7 @@ end
 ## Kernel stuff
 
 """
-$SIGNATURES
+$(SIGNATURES)
 
 A simple squared exponential kernel for the GP with parameters θ.
 
@@ -209,7 +209,7 @@ This function creates the kernel function used within the GP.
 singleKernel(θ) = θ.σ^2 * with_lengthscale(SqExponentialKernel(), θ.ℓ^2)
 
 """
-$SIGNATURES
+$(SIGNATURES)
 
 A multi-task GP kernel, a variety of multi-output GP kernel based on the
 Intrinsic Coregionalization Model with a Squared Exponential base kernel and an
@@ -223,7 +223,7 @@ multiKernel(θ) = IntrinsicCoregionMOKernel(kernel=with_lengthscale(SqExponentia
 fullyConnectedCovNum(num_outputs) = (num_outputs+1)*num_outputs÷2
 
 """
-$SIGNATURES
+$(SIGNATURES)
 
 Creates an output covariance matrix from an array of parameters by filling a lower
 triangular matrix.
@@ -248,7 +248,7 @@ end
 manyToOneCovNum(num_outputs) = 2*num_outputs - 1
 
 """
-$SIGNATURES
+$(SIGNATURES)
 
 Creates an output covariance matrix from an array of parameters by filling the
 first column and diagonal of a lower triangular matrix.
@@ -275,7 +275,7 @@ function manyToOneCovMat(a)
 end
 
 """
-$SIGNATURES
+$(SIGNATURES)
 
 Gives the correlation matrix between all outputs.
 """

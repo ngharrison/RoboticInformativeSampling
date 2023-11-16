@@ -32,7 +32,7 @@ struct BasicSampleCost <: SampleCost
 end
 
 """
-$SIGNATURES
+$(SIGNATURES)
 
 A pathCost is constructed automatically from the other arguments.
 

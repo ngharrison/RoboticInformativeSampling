@@ -19,7 +19,7 @@ struct Sample
 end
 
 """
-$SIGNATURES
+$(SIGNATURES)
 
 Pulls a ground truth value from a given location and constructs a Sample object
 to hold them both.
@@ -43,7 +43,7 @@ function takeSamples(loc, sampler, quantities)
 end
 
 """
-$SIGNATURES
+$(SIGNATURES)
 
 The optimization of choosing a best single sample location.
 

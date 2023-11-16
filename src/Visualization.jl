@@ -20,14 +20,14 @@ sample_color = :green
 new_sample_color = :red
 
 """
-$SIGNATURES
+$(SIGNATURES)
 
 Main method to visualize the current state of a search. Generates all the other
 visuals through their respective methods and lays them out in a grid. Currently
 shows the belief model, the ground truth, and the obstacles.
 
 Arguments pass through to the sub-methods that need them. res is the grid
-resolution when plotting continuous-valued functions and defaults to $default_res.
+resolution when plotting continuous-valued functions and defaults to $(default_res).
 
 If no ground truth is available, it is not plotted.
 """
@@ -45,7 +45,7 @@ function visualize(md, beliefModel::BeliefModel, sampleCost, samples; quantity)
 end
 
 """
-$SIGNATURES
+$(SIGNATURES)
 
 Method to show a ground truth map and up to three other prior data maps.
 Pass each map in as its own argument.
@@ -65,7 +65,7 @@ end
 ## functions to visualize individual pieces
 
 """
-$SIGNATURES
+$(SIGNATURES)
 
 Method to show any Map data.
 """
@@ -87,7 +87,7 @@ function visualize(map::Map, title="Map"; samples=[], clim=nothing)
 end
 
 """
-$SIGNATURES
+$(SIGNATURES)
 
 Method to show ground truth data.
 """
@@ -102,7 +102,7 @@ function visualize(sampler::GroundTruth, map)
 end
 
 """
-$SIGNATURES
+$(SIGNATURES)
 
 Method to show belief model values of mean and standard deviation and the sample
 locations that they were generated from. Shows two plots side-by-side.
@@ -151,7 +151,7 @@ end
 
 
 """
-$SIGNATURES
+$(SIGNATURES)
 
 Method to show sample cost values.
 """
@@ -180,7 +180,7 @@ function visualize(sampleCost, samples, occupancy)
 end
 
 """
-$SIGNATURES
+$(SIGNATURES)
 
 Method to get the x and y plotting axes. This (re)generates them only if needed
 and saves them into global module variables for future use.
@@ -199,7 +199,7 @@ function getAxes(map)
 end
 
 """
-$SIGNATURES
+$(SIGNATURES)
 
 Method to generate the x and y plotting axes.
 """

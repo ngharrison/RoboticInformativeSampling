@@ -383,7 +383,7 @@ function rosMission()
 end
 
 """
-$SIGNATURES
+$(SIGNATURES)
 
 The main function that runs the adaptive sampling routine. For each iteration, a
 sample location is selected, a sample is collected, the belief model is updated,

@@ -21,7 +21,7 @@ struct PathCost
 end
 
 """
-$SIGNATURES
+$(SIGNATURES)
 
 The constructor initializes the path search algorithm, created for each new
 start cell.
@@ -109,7 +109,7 @@ function previousStep(current, costMatrix)
 end
 
 """
-$SIGNATURES
+$(SIGNATURES)
 
 Given a PathCost and a goal point, this function returns the angle of the
 direction from penultimate cell to goal cell, effectively the direction at the
@@ -128,7 +128,7 @@ function finalOrientation(S::PathCost, goal)
 end
 
 """
-$SIGNATURES
+$(SIGNATURES)
 
 Given a PathCost and a goal point, this function returns the entire list of
 cells from the start to the goal. Only useful to be called after the PathCost
