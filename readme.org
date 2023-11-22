@@ -133,7 +133,7 @@ A consistent pattern is followed for most data and functions in this repo using 
 A functor's methods are meant to be the primary purpose of that object. e.g. a BeliefModel returns the belief, a SampleCost returns the sample cost, etc. If an object's data are used in any secondary way, it will be its own separate function with its own name, and the object will be passed in directly.
 
 * Julia Tips
-** Maps
+** Development Environment
 These instructions focus on getting started up just using the REPL, which can be a sufficient set of tools. If you want to use an IDE, VSCode with the Julia extension is the main one recommended. It is supported by the Julia contributors and the community as a whole. You'll need to read their docs to learn how to use it.
 
 ** REPL
