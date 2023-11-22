@@ -130,6 +130,25 @@ A consistent pattern is followed for most data and functions in this repo using 
 3. zero to many method definitions -- what the functor does when it is called (possibly with arguments)
 
 
+As an example, here is a simplified version of the Map functor:
+#+begin_src julia
+# struct definition
+struct Map
+    data
+    lb
+    ub
+end
+
+# constructor definition
+Map(data) = Map(data, [0.0, 0.0], [1.0, 1.0])
+
+# method definition
+function (map::Map)(x::Location)
+    checkBounds(x, map)
+    map[pointToCell(x, map)]
+end
+#+end_src
+
 A functor's methods are meant to be the primary purpose of that object. e.g. a BeliefModel returns the belief, a SampleCost returns the sample cost, etc. If an object's data are used in any secondary way, it will be its own separate function with its own name, and the object will be passed in directly.
 
 * Julia Tips
