@@ -5,7 +5,8 @@ if mod_dir ∉ LOAD_PATH
 end
 
 using Documenter
-using Maps
+using Maps, Missions, BeliefModels,
+      Samples, SampleCosts, Paths, Visualization
 
 makedocs(
     sitename="AdaptiveSampling.jl",

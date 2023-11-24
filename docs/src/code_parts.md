@@ -21,6 +21,10 @@ Main public types and functions:
 - `pointToCell`
 - `GroundTruth`
 
+```@autodocs
+Modules = [Maps]
+```
+
 ## Missions.jl
 
 Functions for initializing mission data and the function for running the entire search mission. The entry-point to the actual adaptive sampling. This contains the main loop and most of the usage of Samples and BeliefModels.
@@ -30,6 +34,10 @@ Main public types and functions:
 - `ausMission`
 - `rosMission`
 
+```@autodocs
+Modules = [Missions]
+```
+
 ## BeliefModels.jl
 
 Everything to do with what is inferred about values in the environment. In practical terms: means, variances, and correlations. This is all built on Gaussian Processes.
@@ -37,6 +45,10 @@ Everything to do with what is inferred about values in the environment. In pract
 Main public types and functions:
 - `BeliefModel`
 - `outputCorMat`
+
+```@autodocs
+Modules = [BeliefModels]
+```
 
 ## Samples.jl
 
@@ -47,6 +59,10 @@ Main public types and functions:
 - `takeSamples`
 - `selectSampleLocation`
 - `SampleCost`
+
+```@autodocs
+Modules = [Samples]
+```
 
 ## SampleCosts.jl
 
@@ -60,6 +76,10 @@ Main public types and functions:
 - `MIPTSampleCost`
 - `EIGFSampleCost`
 
+```@autodocs
+Modules = [SampleCosts]
+```
+
 ## Paths.jl
 
 Searching for paths on a 2D grid using A#. Its main use is to get the path cost (distance), but it can return the full path as well.
@@ -69,12 +89,20 @@ Main public types and functions:
 - `finalOrientation`
 - `getPath`
 
+```@autodocs
+Modules = [Paths]
+```
+
 ## Visualization.jl
 
 Methods to visualize mission data. The form displayed is determined by what data types are passed in.
 
 Main public types and functions:
 - `visualize`
+
+```@autodocs
+Modules = [Visualization]
+```
 
 ## ROSInterface.jl
 
