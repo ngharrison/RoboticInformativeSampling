@@ -57,7 +57,7 @@ To automate multiple runs of the code and get statistical information, use [Benc
 
 ### Profiling
 
-Reference: https://docs.julialang.org/en/v1/manual/profile/
+Reference: <https://docs.julialang.org/en/v1/manual/profile/>
 
 `using Profile`
 
@@ -67,7 +67,7 @@ I like using [StatProfilerHTML.jl](https://github.com/tkluck/StatProfilerHTML.jl
 
 ### Debugging
 
-Reference: https://github.com/JuliaDebug/Debugger.jl
+Reference: <https://github.com/JuliaDebug/Debugger.jl>
 
 `using Debugger`
 
