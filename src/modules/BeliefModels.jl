@@ -61,7 +61,7 @@ Otherwise a BeliefModelSplit is returned, trained and conditioned on both the
 samples and prior samples. Lower and upper bounds are used to initialize one of
 the hyperparameters.
 
-A noise variance can optionally be passed in:
+A noise standard deviation can optionally be passed in:
 - a scalar: same value will be added on entire diagonal
 - a vector: a different value added to the diagonal for each sample (must match length)
 """
@@ -81,7 +81,7 @@ $(SIGNATURES)
 Creates and returns a BeliefModelSimple with hyperparameters trained and
 conditioned on the samples given.
 
-A noise variance can optionally be passed in:
+A noise standard deviation can optionally be passed in:
 - a scalar: same value will be added on entire diagonal
 - a vector: a different value added to the diagonal for each sample (must match length)
 """
