@@ -60,8 +60,12 @@ are no prior samples, and it is trained and conditioned on the given samples.
 Otherwise a BeliefModelSplit is returned, trained and conditioned on both the
 samples and prior samples. Lower and upper bounds are used to initialize one of
 the hyperparameters.
+
+A noise variance can optionally be passed in:
+- a scalar: same value will be added on entire diagonal
+- a vector: a different value added to the diagonal for each sample (must match length)
 """
-function BeliefModel(samples, prior_samples, lb, ub)
+function BeliefModel(samples, prior_samples, lb, ub; σn=1e-3)
     # create a simple belief model for the current samples
     current = BeliefModel(samples, lb, ub)
     isempty(prior_samples) && return current
@@ -76,20 +80,24 @@ $(SIGNATURES)
 
 Creates and returns a BeliefModelSimple with hyperparameters trained and
 conditioned on the samples given.
+
+A noise variance can optionally be passed in:
+- a scalar: same value will be added on entire diagonal
+- a vector: a different value added to the diagonal for each sample (must match length)
 """
-function BeliefModel(samples, lb, ub; kernel=multiKernel)
+function BeliefModel(samples, lb, ub; σn=1e-3, kernel=multiKernel)
     # set up training data
     X = getfield.(samples, :x)
     Y = getfield.(samples, :y)
 
-    θ0 = initHyperparams(X, Y, lb, ub)
+    θ0 = initHyperparams(X, Y, lb, ub; σn)
 
     # optimize hyperparameters (train)
     θ = optimizeLoss(createLossFunc(X, Y, kernel), θ0)
 
     # produce optimized gp belief model
     f = GP(kernel(θ)) # prior gp
-    fx = f(X, θ.σn^2+√eps())
+    fx = f(X, θ.σn.^2 .+ √eps())
     f_post = posterior(fx, Y) # gp conditioned on training samples
 
     return BeliefModelSimple(f_post, θ)
@@ -136,15 +144,14 @@ $(SIGNATURES)
 
 Creates the structure of hyperparameters and gives them initial values.
 """
-function initHyperparams(X, Y, lb, ub)
+function initHyperparams(X, Y, lb, ub; σn=1e-3)
     T = maximum(last, X) # number of outputs
     n = fullyConnectedCovNum(T)
-    # TODO may change to all just 0.5
+    # NOTE may change to all just 0.5
     # σ = (length(Y)>1 ? std(Y) : 0.5)/sqrt(2) * ones(n)
     σ = 0.5/sqrt(2) * ones(n)
     a = mean(ub .- lb)
     ℓ = length(X)==1 ? a : a/length(X) + mean(std(first.(X)))*(1-1/length(X))
-    σn = 0.001
     return (; σ, ℓ, σn)
 end
 
@@ -179,7 +186,7 @@ function createLossFunc(X, Y, kernel)
     θ -> begin
         try
             f = GP(kernel(θ))
-            fx = f(X, θ.σn^2+√eps()) # eps to prevent numerical issues
+            fx = f(X, θ.σn.^2 .+ √eps()) # eps to prevent numerical issues
             return -logpdf(fx, Y)
         catch e
             # for PosDefException
@@ -188,7 +195,8 @@ function createLossFunc(X, Y, kernel)
             @error e θ X Y
 
             f = GP(kernel(θ))
-            fx = f(X, θ.σn^2+√eps()+1e-1*θ.σ) # fix by making diagonal a little bigger
+            # NOTE this will probably break if reached with the multiKernel
+            fx = f(X, θ.σn.^2 .+ √eps()+1e-1*θ.σ) # fix by making diagonal a little bigger
             return -logpdf(fx, Y)
         end
     end
