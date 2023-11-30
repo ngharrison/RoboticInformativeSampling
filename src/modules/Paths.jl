@@ -32,13 +32,16 @@ Inputs:
 - `start`: the starting cell in the matrix
 - `occupancy`: a matrix indicating which cells are occupied
 - `resolution`: a vector of the width and height of each cell
+
+Note: this type and associated methods can in fact be used with any
+N-dimensional cost array, not just a matrix.
 """
 function PathCost(start, occupancy, resolution)
     # initialize data structures with values for first cell
     costMatrix = [occ ? Inf : NaN for occ in occupancy]
     costMatrix[start] = 0.0
 
-    frontier = PriorityQueue{CartesianIndex{2}, Float64}()
+    frontier = PriorityQueue{CartesianIndex{ndims(costMatrix)}, Float64}()
     frontier[start] = 0.0
 
     PathCost(start, costMatrix, resolution, frontier)
@@ -54,6 +57,8 @@ If the cells of the path are desired, use the getPath function.
 function (S::PathCost)(goal)
     S.costMatrix[goal] |> !isnan && return S.costMatrix[goal]
 
+    difs = CartesianIndices(ntuple(Returns(-1:1), ndims(d)))
+
     # update the frontier for the new goal
     for cell in keys(S.frontier)
         S.frontier[cell] = S.costMatrix[cell] + dist(cell, goal, S.resolution)
@@ -67,10 +72,10 @@ function (S::PathCost)(goal)
         cell == goal && return cost
 
         # now look all around the current cell
-        for i in -1:1, j in -1:1
-            i == j == 0 && continue
+        for dif in difs
+            all(==(0), Tuple(dif)) && continue
 
-            new_cell = cell + CartesianIndex(i,j)
+            new_cell = cell + dif
             checkbounds(Bool, S.costMatrix, new_cell) || continue
 
             new_cost = S.costMatrix[cell] + dist(cell, new_cell, S.resolution)
@@ -94,9 +99,8 @@ dist(x1, x2, weights) = norm(Tuple(x2 - x1) .* weights)
 function previousStep(current, costMatrix)
     min_val = Inf
     min_dif = CartesianIndex(0,0)
-    for i in -1:1, j in -1:1
-        i == j == 0 && continue # don't check current cell
-        dif = CartesianIndex(i,j)
+    for dif in CartesianIndices(ntuple(Returns(-1:1), ndims(d)))
+        all(==(0), Tuple(dif)) && continue # don't check current cell
         cell = current - dif
         checkbounds(Bool, costMatrix, cell) || continue
         val = costMatrix[cell]
