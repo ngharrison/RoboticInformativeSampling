@@ -31,13 +31,16 @@ m = Map(matrix, lb, ub)
 m(x) # returns the value at a single 2D point
 m[i,j] # can also use as if it's just the underlying matrix
 ```
+
+Full disclosure, this type and all its associated methods are implemented to
+work with an array of any number of dimensions, not just 2.
 """
-struct Map{T1<:Real, M<:AbstractMatrix{T1}, T2<:Real} <: AbstractMatrix{T1}
-    "matrix of data"
-    data::M
-    "vector of lower bounds, defaults to [0, 0]"
+struct Map{T1<:Real, N, A<:AbstractArray{T1, N}, T2<:Real} <: AbstractArray{T1, N}
+    "N-dimensional array of data"
+    data::A
+    "vector of lower bounds, defaults to zeros"
     lb::Vector{T2}
-    "vector of upper bounds, defaults to [1, 1]"
+    "vector of upper bounds, defaults to ones"
     ub::Vector{T2}
 end
 
@@ -49,7 +52,7 @@ function Base.show(io::IO, ::MIME"text/plain", map::Map{T1}) where T1
     show(io, "text/plain", map.data)
 end
 
-Map(data::AbstractMatrix{<:Real}) = Map(data, [0.0, 0.0], [1.0, 1.0])
+Map(data::AbstractArray{<:Real}) = Map(data, zeros(ndims(data)), ones(ndims(data)))
 
 """
 Takes a matrix in the format created from an image, re-formats it, and returns a
@@ -81,7 +84,7 @@ end
 Generates a random point in the map. Returns the location and its value.
 """
 function Base.rand(map::Map)
-    x = map.lb .+ rand(2).*(map.ub .- map.lb)
+    x = map.lb .+ rand(ndims(map)).*(map.ub .- map.lb)
     return x, map(x)
 end
 
@@ -126,7 +129,7 @@ res(map) = (map.ub .- map.lb) ./ (size(map) .- 1)
 
 """
 Takes in a point in world-coordinates and a Map and returns a CartesianIndex for
-the underlying matrix.
+the underlying array.
 """
 pointToCell(x, map) = CartesianIndex(Tuple(round.(Int, (x .- map.lb) ./ res(map)) .+ 1))
 
