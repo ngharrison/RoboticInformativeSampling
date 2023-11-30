@@ -35,13 +35,19 @@ m[i,j] # can also use as if it's just the underlying matrix
 Full disclosure, this type and all its associated methods are implemented to
 work with an array of any number of dimensions, not just 2.
 """
-struct Map{T1<:Real, N, A<:AbstractArray{T1, N}, T2<:Real} <: AbstractArray{T1, N}
+struct Map{T1<:Real, N<:Any, A<:AbstractArray{T1, N}, T2<:Real} <: AbstractArray{T1, N}
     "N-dimensional array of data"
     data::A
     "vector of lower bounds, defaults to zeros"
     lb::Vector{T2}
     "vector of upper bounds, defaults to ones"
     ub::Vector{T2}
+
+    function Map(data, lb, ub)
+        length(lb) == length(ub) == ndims(data) ||
+            error("lengths of bounds don't match data dimensions")
+        new{eltype(data), ndims(data), typeof(data), eltype(lb)}(data, lb, ub)
+    end
 end
 
 function Base.show(io::IO, map::Map{T1}) where T1
