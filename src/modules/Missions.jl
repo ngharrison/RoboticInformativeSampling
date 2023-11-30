@@ -41,7 +41,7 @@ $(TYPEDFIELDS)
 end
 
 # Constructors for Mission data
-function simMission(; seed_val=0, num_peaks=3, priors=Bool[1,1,1])
+function simMission(; seed_val=0, num_samples=30, num_peaks=3, priors=Bool[1,1,1])
     seed!(seed_val) # make random values deterministic
 
     lb = [0.0, 0.0]; ub = [1.0, 1.0]
@@ -113,7 +113,6 @@ function simMission(; seed_val=0, num_peaks=3, priors=Bool[1,1,1])
     weights = (; μ=1, σ=5e2, τ=1, d=0) # others
     # weights = (; μ=1, σ=1, τ=.1, d=1)
     start_loc = [1.0, 0.0] # starting location
-    num_samples = 30
 
 
     # sample sparsely from the prior maps
