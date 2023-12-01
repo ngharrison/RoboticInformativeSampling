@@ -90,7 +90,7 @@ function (M::Mission)(; samples=Sample[], beliefs=BeliefModel[], seed_val=0, vis
 
     beliefModel = nothing
     if !isempty(samples)
-        beliefModel = BeliefModel(samples, M.prior_samples, lb, ub)
+        beliefModel = BeliefModel([M.prior_samples; samples], lb, ub)
     end
     sampleCost = nothing
 
