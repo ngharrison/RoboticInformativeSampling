@@ -206,7 +206,7 @@ $(TYPEDSIGNATURES)
 Method to generate the x and y plotting axes.
 """
 function generateAxes(map)
-    global axes = (:).(map.lb, res(map), map.ub)
+    global axes = range.(map.lb, map.ub, size(map))
     global points = collect.(Iterators.product(axes...))
     return axes, points
 end

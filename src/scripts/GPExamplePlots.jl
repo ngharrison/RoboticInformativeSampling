@@ -25,7 +25,7 @@ mission = simMission(; seed_val=3, num_peaks=4, priors=collect(Bool, (0,0,0)))
 
 j = 12
 occ = mission.occupancy
-axs = (:).(occ.lb, res(occ), occ.ub)
+axs = range.(occ.lb, occ.ub, size(occ))
 points = collect.(Iterators.product(axs...))
 dims = Tuple(length.(axs))
 μ, σ = beliefs[j](tuple.(vec(points), 1))

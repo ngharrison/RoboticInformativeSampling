@@ -98,7 +98,7 @@ plot([x->f(x) for f in fs2], 0, 1;
 savefig(output_dir * "linear_models/from_samples_and_kernel.svg")
 
 ## linear model --- GP predictions
-axs = (:).(occ.lb, res(occ), occ.ub)
+axs = range.(occ.lb, occ.ub, size(occ))
 points = collect.(Iterators.product(axs...))
 dims = Tuple(length.(axs))
 
