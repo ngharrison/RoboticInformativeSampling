@@ -2,7 +2,7 @@ module SampleCosts
 
 using LinearAlgebra: norm
 using Statistics: mean
-using DocStringExtensions: SIGNATURES
+using DocStringExtensions: TYPEDSIGNATURES, TYPEDEF
 
 using Maps: pointToCell, cellToPoint, res
 using Paths: PathCost
@@ -13,8 +13,13 @@ export SampleCost, values, BasicSampleCost,
 abstract type SampleCost end
 
 """
+$(TYPEDSIGNATURES)
+
 Cost to take a new sample at a location. This is a fallback method that
 calculates a simple linear combination of all the values of a SampleCost.
+
+Has the form:
+``\\mathrm{cost} = - w_{1} μ - w_{2} σ + w_{3} τ + w_{4} D``
 """
 function (sc::SampleCost)(loc)
     sc.occupancy(loc) && return Inf
@@ -35,7 +40,7 @@ struct BasicSampleCost <: SampleCost
 end
 
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
 
 A pathCost is constructed automatically from the other arguments.
 
@@ -50,11 +55,10 @@ function BasicSampleCost(md, samples, beliefModel, quantities)
 end
 
 """
-Combines belief mean and standard deviation, travel distance,
-and sample proximity.
+$(TYPEDSIGNATURES)
 
-Has the form:
-cost = - w1 μ - w2 σ + w3 τ + w4 D
+Returns the values to be used to calculate the sample cost (belief mean,
+standard deviation, travel distance, sample proximity).
 """
 function values(sc::BasicSampleCost, loc)
     beliefs = sc.beliefModel([(loc, q) for q in sc.quantities]) # means and standard deviations

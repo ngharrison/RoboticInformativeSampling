@@ -1,7 +1,7 @@
 module Visualization
 
 using Plots: plot, heatmap, scatter!, @layout, mm, grid
-using DocStringExtensions: SIGNATURES
+using DocStringExtensions: TYPEDSIGNATURES
 
 using Maps: GroundTruth, Map, res
 using BeliefModels: BeliefModel
@@ -22,7 +22,7 @@ sample_color = :green
 new_sample_color = :red
 
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
 
 Main method to visualize the current state of a search. Generates all the other
 visuals through their respective methods and lays them out in a grid. Currently
@@ -47,7 +47,7 @@ function visualize(md, beliefModel::BeliefModel, sampleCost, samples; quantity)
 end
 
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
 
 Method to show a ground truth map and up to three other prior data maps.
 Pass each map in as its own argument.
@@ -67,7 +67,7 @@ end
 ## functions to visualize individual pieces
 
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
 
 Method to show any Map data.
 """
@@ -89,7 +89,7 @@ function visualize(map::Map, title="Map"; samples=[], clim=nothing)
 end
 
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
 
 Method to show ground truth data.
 """
@@ -104,7 +104,7 @@ function visualize(sampler::GroundTruth, map)
 end
 
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
 
 Method to show belief model values of mean and standard deviation and the sample
 locations that they were generated from. Shows two plots side-by-side.
@@ -153,7 +153,7 @@ end
 
 
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
 
 Method to show sample cost values.
 """
@@ -182,7 +182,7 @@ function visualize(sampleCost, samples, occupancy)
 end
 
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
 
 Method to get the x and y plotting axes. This (re)generates them only if needed
 and saves them into global module variables for future use.
@@ -201,7 +201,7 @@ function getAxes(map)
 end
 
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
 
 Method to generate the x and y plotting axes.
 """

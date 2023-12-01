@@ -1,7 +1,7 @@
 module Samples
 
 using Optim: optimize, ParticleSwarm
-using DocStringExtensions: SIGNATURES, TYPEDFIELDS
+using DocStringExtensions: TYPEDSIGNATURES, TYPEDFIELDS
 
 using Maps: SampleInput, SampleOutput
 
@@ -21,7 +21,7 @@ struct Sample
 end
 
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
 
 Pulls a ground truth value from a given location and constructs a Sample object
 to hold them both.
@@ -44,13 +44,14 @@ function takeSamples(loc, sampler, quantities)
 end
 
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
 
 The optimization of choosing a best single sample location.
 
 Inputs:
-- `occupancy`: a map containing upper and lower bounds
 - `sampleCost`: a function from sample location to cost (x->cost(x))
+- `lb`: map lower bounds
+- `ub`: map upper bounds
 
 Returns the sample location, a vector
 """

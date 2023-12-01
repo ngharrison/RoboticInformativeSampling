@@ -5,7 +5,7 @@ using Images: load, imresize, Gray, gray
 using DelimitedFiles: readdlm
 using Statistics: cor
 using Random: seed!
-using DocStringExtensions: SIGNATURES, TYPEDFIELDS
+using DocStringExtensions: TYPEDSIGNATURES, TYPEDFIELDS
 
 using Maps: Map, imgToMap, GaussGroundTruth, MultiMap, Peak, pointToCell, cellToPoint
 using Samples: Sample, selectSampleLocation, takeSamples
@@ -22,6 +22,17 @@ const maps_dir = dirname(Base.active_project()) * "/maps/"
 """
 Fields:
 $(TYPEDFIELDS)
+
+Defined as a keyword struct, so all arguments are passed in as keywords:
+```julia
+mission = Mission(; occupancy,
+                  sampler,
+                  num_samples,
+                  sampleCostType,
+                  weights,
+                  start_loc,
+                  prior_samples)
+```
 """
 @kwdef struct Mission
     "an occupancy map, true in cells that are occupied"
@@ -38,6 +49,87 @@ $(TYPEDFIELDS)
     start_loc
     "any samples taken previously (default empty)"
     prior_samples = Sample[]
+end
+
+"""
+The main function that runs the adaptive sampling routine. For each iteration, a
+sample location is selected, a sample is collected, the belief model is updated,
+and visuals are possibly shown. The run finishes when the designated number of
+samples is collected.
+
+Inputs:
+- `samples`: a vector of samples, this can be used to jump-start a mission
+  or resume a previous mission (default empty)
+- `beliefs`: a vector of beliefs, this pairs with the previous argument
+  (default empty)
+- `visuals`: true or false to cause map plots to be shown or not (default false)
+- `sleep_time`: the amount of time to wait after each iteration, useful for
+  visualizations (default 0)
+
+Outputs:
+- `samples`: a vector of new samples collected
+- `beliefs`: a vector of probabilistic representations of the quantities being
+  searched for, one for each sample collection
+
+# Examples
+```julia
+using Missions: simMission
+
+mission = simMission(num_samples=10) # create the specific mission
+samples, beliefs = mission(visuals=true, sleep_time=0.5) # run the mission
+```
+"""
+function (M::Mission)(; samples=Sample[], beliefs=BeliefModel[], seed_val=0, visuals=false, sleep_time=0)
+    M.occupancy(M.start_loc) && error("start location is within obstacle")
+
+    # initialize
+    seed!(seed_val)
+    lb, ub = M.occupancy.lb, M.occupancy.ub
+    new_loc = M.start_loc
+    quantities = eachindex(M.sampler) # all current available quantities
+
+    beliefModel = nothing
+    if !isempty(samples)
+        beliefModel = BeliefModel(samples, M.prior_samples, lb, ub)
+    end
+    sampleCost = nothing
+
+    println("Mission started")
+    println()
+
+    for i in 1:M.num_samples
+        println("Sample number $i")
+
+        # new sample location
+        if beliefModel !== nothing # prior belief exists
+            sampleCost = M.sampleCostType(M, samples, beliefModel, quantities)
+            new_loc = selectSampleLocation(sampleCost, lb, ub)
+            @debug "new location: $new_loc"
+            @debug "cost function values: $(Tuple(values(sampleCost, new_loc)))"
+            @debug "cost function weights: $(Tuple(M.weights))"
+            @debug "cost function terms: $(Tuple(values(sampleCost, new_loc)) .* Tuple(M.weights))"
+            @debug "cost function value: $(sampleCost(new_loc))"
+        end
+
+        # sample all quantities
+        new_samples = takeSamples(new_loc, M.sampler)
+        append!(samples, new_samples)
+
+        # new belief
+        beliefModel = BeliefModel([M.prior_samples; samples], lb, ub)
+        push!(beliefs, beliefModel)
+
+        # visualization
+        if visuals
+            display(visualize(M, beliefModel, sampleCost, samples, quantity=1))
+        end
+        @debug "output determination matrix:" outputCorMat(beliefs[end]).^2
+        sleep(sleep_time)
+    end
+
+    println()
+    println("Mission complete")
+    return samples, beliefs
 end
 
 # Constructors for Mission data
@@ -140,31 +232,6 @@ function simMission(; seed_val=0, num_samples=30, num_peaks=3, priors=Bool[1,1,1
                    start_loc,
                    prior_samples)#, [cor(vec(map0), vec(d)).^2 for d in prior_maps]
 
-end
-
-function normalize(a)
-    l, h = extrema(filter(!isnan, a))
-    return (a .- l) ./ (h - l)
-end
-
-function spatialAve(M, extent=1)
-    N = zero(M)
-    for i in axes(M,1), j in axes(M,2)
-        tot = 0
-        count = 0
-        for k in -extent:extent
-            for l in -extent:extent
-                m = i + k
-                n = j + l
-                if 1 <= m <= size(M,1) && 1 <= n <= size(M,2) && !isnan(M[m,n])
-                    tot += M[m,n]
-                    count += 1
-                end
-            end
-        end
-        N[i,j] = tot/count
-    end
-    return N
 end
 
 function ausMission(; seed_val=0, num_samples=30, priors=Bool[1,1,1])
@@ -384,79 +451,30 @@ function rosMission()
                    start_loc)
 end
 
-"""
-$(SIGNATURES)
+# helper methods
+function normalize(a)
+    l, h = extrema(filter(!isnan, a))
+    return (a .- l) ./ (h - l)
+end
 
-The main function that runs the adaptive sampling routine. For each iteration, a
-sample location is selected, a sample is collected, the belief model is updated,
-and visuals are possibly shown. The run finishes when the designated number of
-samples is collected.
-
-Inputs:
-- `samples`: a vector of samples, this can be used to jump-start a mission
-  or resume a previous mission (default empty)
-- `beliefs`: a vector of beliefs, this pairs with the previous argument
-  (default empty)
-- `visuals`: true or false to cause map plots to be shown or not (default false)
-- `sleep_time`: the amount of time to wait after each iteration, useful for
-  visualizations (default 0)
-
-Outputs:
-- `samples`: a vector of new samples collected
-- `beliefs`: a vector of probabilistic representations of the quantities being
-  searched for, one for each sample collection
-"""
-function (M::Mission)(; samples=Sample[], beliefs=BeliefModel[], seed_val=0, visuals=false, sleep_time=0)
-    M.occupancy(M.start_loc) && error("start location is within obstacle")
-
-    # initialize
-    seed!(seed_val)
-    lb, ub = M.occupancy.lb, M.occupancy.ub
-    new_loc = M.start_loc
-    quantities = eachindex(M.sampler) # all current available quantities
-
-    beliefModel = nothing
-    if !isempty(samples)
-        beliefModel = BeliefModel(samples, M.prior_samples, lb, ub)
-    end
-    sampleCost = nothing
-
-    println("Mission started")
-    println()
-
-    for i in 1:M.num_samples
-        println("Sample number $i")
-
-        # new sample location
-        if beliefModel !== nothing # prior belief exists
-            sampleCost = M.sampleCostType(M, samples, beliefModel, quantities)
-            new_loc = selectSampleLocation(sampleCost, lb, ub)
-            @debug "new location: $new_loc"
-            @debug "cost function values: $(Tuple(values(sampleCost, new_loc)))"
-            @debug "cost function weights: $(Tuple(M.weights))"
-            @debug "cost function terms: $(Tuple(values(sampleCost, new_loc)) .* Tuple(M.weights))"
-            @debug "cost function value: $(sampleCost(new_loc))"
+function spatialAve(M, extent=1)
+    N = zero(M)
+    for i in axes(M,1), j in axes(M,2)
+        tot = 0
+        count = 0
+        for k in -extent:extent
+            for l in -extent:extent
+                m = i + k
+                n = j + l
+                if 1 <= m <= size(M,1) && 1 <= n <= size(M,2) && !isnan(M[m,n])
+                    tot += M[m,n]
+                    count += 1
+                end
+            end
         end
-
-        # sample all quantities
-        new_samples = takeSamples(new_loc, M.sampler)
-        append!(samples, new_samples)
-
-        # new belief
-        beliefModel = BeliefModel([M.prior_samples; samples], lb, ub)
-        push!(beliefs, beliefModel)
-
-        # visualization
-        if visuals
-            display(visualize(M, beliefModel, sampleCost, samples, quantity=1))
-        end
-        @debug "output determination matrix:" outputCorMat(beliefs[end]).^2
-        sleep(sleep_time)
+        N[i,j] = tot/count
     end
-
-    println()
-    println("Mission complete")
-    return samples, beliefs
+    return N
 end
 
 end

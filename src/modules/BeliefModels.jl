@@ -6,15 +6,23 @@ using AbstractGPs: GP, posterior, mean_and_var, mean_and_cov, logpdf, with_lengt
 using Statistics: mean, std
 using Optim: optimize, Options, NelderMead, LBFGS
 using ParameterHandling: value_flatten
-using DocStringExtensions: SIGNATURES
+using DocStringExtensions: TYPEDSIGNATURES, TYPEDEF
 
 using Maps: Location, SampleInput
 
 export BeliefModel, fullyConnectedCovMat, outputCorMat
 
+"""
+$(TYPEDEF)
+
+Abstract type. All subtypes of this will be callable with the same interface:
+`X -> μ, σ` (SampleInputs -> means, variances)
+"""
 abstract type BeliefModel end
 
 """
+$(TYPEDEF)
+
 Belief model struct and function for multiple outputs with 2D inputs.
 
 Designed on top of a Multi-output Gaussian Process, but can still be used with a
@@ -33,10 +41,15 @@ function Base.show(io::IO, ::MIME"text/plain", bm::BeliefModelSimple)
 end
 
 """
+$(TYPEDEF)
+
 A combination of two BeliefModelSimples. One is trained on current samples and
 the other is trained on current and previous samples. The main purpose for this
 is to use the current for mean estimates and the combined for variance
 estimates.
+
+This was used for a certain sample cost function and isn't used so much anymore.
+Still could be a valuable idea.
 """
 struct BeliefModelSplit <: BeliefModel
     current
@@ -53,7 +66,7 @@ function Base.show(io::IO, ::MIME"text/plain", bm::BeliefModelSplit)
 end
 
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
 
 Creates and returns a new BeliefModel. A BeliefModelSimple is returned if there
 are no prior samples, and it is trained and conditioned on the given samples.
@@ -61,9 +74,17 @@ Otherwise a BeliefModelSplit is returned, trained and conditioned on both the
 samples and prior samples. Lower and upper bounds are used to initialize one of
 the hyperparameters.
 
-A noise standard deviation can optionally be passed in:
-- a scalar: same value will be added on entire diagonal
-- a vector: a different value added to the diagonal for each sample (must match length)
+A noise standard deviation can optionally be passed in either as a single scalar
+value for all samples or a vector of values, one for each sample.
+
+# Examples
+```julia
+# create a BeliefModelSplit
+beliefModel = BeliefModel(samples, M.prior_samples, lb, ub)
+
+# create a BeliefModelSimple
+beliefModel = BeliefModel([M.prior_samples; samples], lb, ub)
+```
 """
 function BeliefModel(samples, prior_samples, lb, ub; σn=1e-3)
     # create a simple belief model for the current samples
@@ -76,14 +97,13 @@ function BeliefModel(samples, prior_samples, lb, ub; σn=1e-3)
 end
 
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
 
 Creates and returns a BeliefModelSimple with hyperparameters trained and
 conditioned on the samples given.
 
-A noise standard deviation can optionally be passed in:
-- a scalar: same value will be added on entire diagonal
-- a vector: a different value added to the diagonal for each sample (must match length)
+A noise standard deviation can optionally be passed in either as a single scalar
+value for all samples or a vector of values, one for each sample.
 """
 function BeliefModel(samples, lb, ub; σn=1e-3, kernel=multiKernel)
     # set up training data
@@ -111,6 +131,13 @@ Inputs:
 
 Outputs:
 - `μ, σ`: a pair of expected value(s) and uncertainty(s) for the given point(s)
+
+# Examples
+```julia
+X = [([.1, .2], 1),
+     ([.2, .1], 2)]
+μ, σ = beliefModel(X) # result: [μ1, μ2], [σ1, σ2]
+```
 """
 function (beliefModel::BeliefModelSimple)(x::SampleInput; full_cov=false)
     func = full_cov ? mean_and_cov : mean_and_var
@@ -132,6 +159,13 @@ Inputs:
 
 Outputs:
 - `μ, σ`: a pair of expected value(s) and uncertainty(s) for the given point(s)
+
+# Examples
+```julia
+X = [([.1, .2], 1),
+     ([.2, .1], 2)]
+μ, σ = beliefModel(X) # result: [μ1, μ2], [σ1, σ2]
+```
 """
 function (beliefModel::BeliefModelSplit)(X::Union{SampleInput, Vector{SampleInput}}; full_cov=false)
     μ, _ = beliefModel.combined(X; full_cov)
@@ -140,7 +174,7 @@ function (beliefModel::BeliefModelSplit)(X::Union{SampleInput, Vector{SampleInpu
 end
 
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
 
 Creates the structure of hyperparameters and gives them initial values.
 """
@@ -156,9 +190,9 @@ function initHyperparams(X, Y, lb, ub; σn=1e-3)
 end
 
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
 
-Routine to optimize the lossFunc.
+Routine to optimize the lossFunc and return the optimal parameters `θ`.
 
 Can pass in a different solver. NelderMead is picked as default for better speed
 with about the same performance as LFBGS.
@@ -176,7 +210,7 @@ function optimizeLoss(lossFunc, θ0; solver=NelderMead, iterations=1_500)
 end
 
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
 
 This function creates the loss function for training the GP. The negative log
 marginal likelihood is used.
@@ -206,16 +240,16 @@ end
 ## Kernel stuff
 
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
 
-A simple squared exponential kernel for the GP with parameters θ.
+A simple squared exponential kernel for the GP with parameters `θ`.
 
 This function creates the kernel function used within the GP.
 """
 singleKernel(θ) = θ.σ^2 * with_lengthscale(SqExponentialKernel(), θ.ℓ^2)
 
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
 
 A multi-task GP kernel, a variety of multi-output GP kernel based on the
 Intrinsic Coregionalization Model with a Squared Exponential base kernel and an
@@ -229,7 +263,7 @@ multiKernel(θ) = IntrinsicCoregionMOKernel(kernel=with_lengthscale(SqExponentia
 fullyConnectedCovNum(num_outputs) = (num_outputs+1)*num_outputs÷2
 
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
 
 Creates an output covariance matrix from an array of parameters by filling a lower
 triangular matrix.
@@ -253,7 +287,7 @@ end
 manyToOneCovNum(num_outputs) = 2*num_outputs - 1
 
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
 
 Creates an output covariance matrix from an array of parameters by filling the
 first column and diagonal of a lower triangular matrix.
@@ -279,7 +313,9 @@ function manyToOneCovMat(a)
 end
 
 """
-$(SIGNATURES)
+```julia
+outputCorMat(beliefModel::BeliefModel)
+```
 
 Gives the correlation matrix between all outputs.
 """

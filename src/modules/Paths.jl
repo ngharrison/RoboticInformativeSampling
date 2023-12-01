@@ -2,18 +2,23 @@ module Paths
 
 using LinearAlgebra: norm
 using DataStructures: PriorityQueue, dequeue!
-using DocStringExtensions: SIGNATURES
+using DocStringExtensions: TYPEDEF, TYPEDSIGNATURES, TYPEDFIELDS
 
 export PathCost, getPath, finalOrientation
 
 """
+$(TYPEDEF)
+
 Struct for PathCost function data. Previous computations are kept track of in
 its data. Can be used multiple times for the same start cell, saving
 computation.
 
 The cells of the costMatrix contain the distance to them from the start cell.
-NaN is a placeholder meaning no path has been calculated to that cell yet. Inf
+`NaN` is a placeholder meaning no path has been calculated to that cell yet. `Inf`
 means that cell is not reachable from the start cell.
+
+Fields:
+$(TYPEDFIELDS)
 """
 struct PathCost
     start
@@ -23,7 +28,7 @@ struct PathCost
 end
 
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
 
 The constructor initializes the path search algorithm, created for each new
 start cell.
@@ -114,7 +119,7 @@ function previousStep(current, costMatrix)
 end
 
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
 
 Given a PathCost and a goal point, this function returns the angle of the
 direction from penultimate cell to goal cell, effectively the direction at the
@@ -133,7 +138,7 @@ function finalOrientation(S::PathCost, goal)
 end
 
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
 
 Given a PathCost and a goal point, this function returns the entire list of
 cells from the start to the goal. Only useful to be called after the PathCost

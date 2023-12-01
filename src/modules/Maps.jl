@@ -1,39 +1,44 @@
 module Maps
 
 using Distributions: MvNormal, pdf
-using DocStringExtensions: SIGNATURES, TYPEDFIELDS
+using DocStringExtensions: TYPEDSIGNATURES, TYPEDFIELDS, TYPEDEF
 
 export Map, GaussGroundTruth, MultiMap, Peak,
        imgToMap, res, pointToCell, cellToPoint,
        Location, SampleInput, SampleOutput
 
+"""
+$(TYPEDEF)
+Location of sample
+"""
 const Location = Vector{Float64}
+
+"""
+$(TYPEDEF)
+Sample input, the combination of: ([`Location`](@ref), sensor index)
+"""
 const SampleInput = Tuple{Location, Int}
+
+"""
+$(TYPEDEF)
+Value of sample measurement
+"""
 const SampleOutput = Float64
 
 """
-A general type for holding 2D data along with associated map bounds. It's main
-purpose is to handle the conversion between world coordinates and grid indices
-internally. Accepts a 2-element vector as a coordinate pair.  Converting between
-the two representations treats rows as the first variable (x-axis) and columns
-as the second (y-axis).
+A general type for holding multidimensional data (usually a matrix) along with
+associated dimension bounds. It's main purpose is to handle the conversion
+between world coordinates and grid indices internally. Converting between the
+two representations treats rows as the first variable (x-axis), columns as
+the second (y-axis), and so on.
 
-Also made to function like a built-in matrix directly by sub-typing and
-implementing the base methods.
+It's typical use is to act as a 2D map of some value that can be sampled.
+
+Also made to function directly like a built-in N-dimensional array by sub-typing
+and implementing the base methods.
 
 Fields:
 $(TYPEDFIELDS)
-
-Usage:
-
-```julia
-m = Map(matrix, lb, ub)
-m(x) # returns the value at a single 2D point
-m[i,j] # can also use as if it's just the underlying matrix
-```
-
-Full disclosure, this type and all its associated methods are implemented to
-work with an array of any number of dimensions, not just 2.
 """
 struct Map{T1<:Real, N<:Any, A<:AbstractArray{T1, N}, T2<:Real} <: AbstractArray{T1, N}
     "N-dimensional array of data"
@@ -50,6 +55,31 @@ struct Map{T1<:Real, N<:Any, A<:AbstractArray{T1, N}, T2<:Real} <: AbstractArray
     end
 end
 
+Map(data::AbstractArray{<:Real}) = Map(data, zeros(ndims(data)), ones(ndims(data)))
+
+"""
+Method accepts a single vector (the location), returns a scalar (the value at
+that point).
+
+# Examples
+```julia
+data = reshape(1:25, 5, 5)
+lb = [0.0, 0.0]
+ub = [1.0, 1.0]
+m = Map(data, lb, ub)
+m2 = Map(data) # bounds will be zero to one
+
+x = [.2, .75]
+m(x) # returns the value at a single 2D point
+m[1,4] # can also use as if it's just the underlying matrix
+```
+"""
+function (map::Map)(x::Location)
+    checkBounds(x, map)
+    map[pointToCell(x, map)]
+end
+
+# implement base methods
 function Base.show(io::IO, map::Map{T1}) where T1
     print(io, "Map{$T1} [$(map.lb), $(map.ub)]")
 end
@@ -58,15 +88,6 @@ function Base.show(io::IO, ::MIME"text/plain", map::Map{T1}) where T1
     show(io, "text/plain", map.data)
 end
 
-Map(data::AbstractArray{<:Real}) = Map(data, zeros(ndims(data)), ones(ndims(data)))
-
-"""
-Takes a matrix in the format created from an image, re-formats it, and returns a
-Map. Images view a matrix with its indexing top-down and left-right. Maps view a
-matrix with its indexing left-right and bottom-up.
-"""
-imgToMap(img, args...) = Map(permutedims(reverse(img, dims=1), (2,1)), args...)
-
 # make a map behave like an array
 Base.size(m::Map) = size(m.data)
 Base.IndexStyle(::Type{<:Map}) = IndexLinear()
@@ -74,20 +95,16 @@ Base.getindex(m::Map, i::Integer) = m.data[i]
 Base.setindex!(m::Map, v, i::Integer) = (m.data[i] = v)
 
 """
-Function emits error if location is outside of map bounds.
-"""
-function checkBounds(x::Location, map::Map)
-    all(map.lb .<= x .<= map.ub) || error("location $x is out of map bounds: ($(map.lb), $(map.ub))")
-end
+$(TYPEDSIGNATURES)
 
-# accepts a single vector, returns a scalar
-function (map::Map)(x::Location)
-    checkBounds(x, map)
-    map[pointToCell(x, map)]
-end
-
-"""
 Generates a random point in the map. Returns the location and its value.
+
+# Examples
+```julia
+data = reshape(1:25, 5, 5)
+map = Map(data)
+rand(map)
+```
 """
 function Base.rand(map::Map)
     x = map.lb .+ rand(ndims(map)).*(map.ub .- map.lb)
@@ -100,6 +117,15 @@ right map. Internally a list of maps.
 
 Constructor can take in a tuple or vector of Maps or each Map as a separate
 argument.
+
+# Examples
+```julia
+mmap = MultiMap(Map(zeros(5, 5)), Map(ones(5, 5)))
+
+x = [.2, .75]
+mmap(x) # result: [0, 1]
+mmap((x, 2)) # result: 1
+```
 """
 struct MultiMap{T1<:Real}
     maps::Tuple{Vararg{Map{T1}}}
@@ -129,17 +155,57 @@ Base.getindex(m::MultiMap, i::Integer) = m.maps[i]
 
 # helper methods used with maps
 """
+Takes a matrix in the format created from an image, re-formats it, and returns a
+Map. Images view a matrix with its indexing top-down and left-right. Maps view a
+matrix with its indexing left-right and bottom-up.
+
+# Examples
+```julia
+using DelimitedFiles: readdlm
+
+image = readdlm(file_name, ',')
+lb = [0.0, 0.0]; ub = [1.0, 1.0]
+map = imgToMap(image, lb, ub)
+map = imgToMap(image) # or auto bounds
+```
+"""
+imgToMap(img, args...) = Map(permutedims(reverse(img, dims=1), (2,1)), args...)
+
+"""
+$(TYPEDSIGNATURES)
+
+Function emits error if location is outside of map bounds.
+
+# Examples
+```julia
+x = [.2, .75]
+data = reshape(1:25, 5, 5)
+map = Map(data)
+checkBounds(x, map) # no error thrown
+```
+"""
+function checkBounds(x::Location, map::Map)
+    all(map.lb .<= x .<= map.ub) || error("location $x is out of map bounds: ($(map.lb), $(map.ub))")
+end
+
+"""
+$(TYPEDSIGNATURES)
+
 Returns the resolution for each dimension of the given Map as a vector.
 """
 res(map) = (map.ub .- map.lb) ./ (size(map) .- 1)
 
 """
+$(TYPEDSIGNATURES)
+
 Takes in a point in world-coordinates and a Map and returns a CartesianIndex for
 the underlying array.
 """
 pointToCell(x, map) = CartesianIndex(Tuple(round.(Int, (x .- map.lb) ./ res(map)) .+ 1))
 
 """
+$(TYPEDSIGNATURES)
+
 Takes in a CartesianIndex and a Map and returns a point in world-coordinates.
 """
 cellToPoint(ci, map) = (collect(Tuple(ci)) .- 1) .* res(map) .+ map.lb
@@ -151,8 +217,7 @@ abstract type GroundTruth end
 Struct/function for generating ground truth values from a linear combination of
 gaussian peaks.
 
-Usage:
-
+# Examples
 ```julia
 GaussGroundTruth(peaks) # pass in a list of Peaks
 ```
@@ -184,7 +249,7 @@ struct Peak
 end
 
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
 
 Inputs:
 - `μ`: the peak location (distribution mean)

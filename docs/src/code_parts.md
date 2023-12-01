@@ -82,7 +82,7 @@ Modules = [SampleCosts]
 
 ## Paths.jl
 
-Searching for paths on a 2D grid using A#. Its main use is to get the path cost (distance), but it can return the full path as well.
+Searching for paths on a 2D grid using A*. Its main use is to get the path cost (distance), but it can return the full path as well.
 
 Main public types and functions:
 - `PathCost`
