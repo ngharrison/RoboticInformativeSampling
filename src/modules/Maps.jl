@@ -50,7 +50,7 @@ struct Map{T1<:Real, N<:Any, A<:AbstractArray{T1, N}, T2<:Real} <: AbstractArray
 
     function Map(data, lb, ub)
         length(lb) == length(ub) == ndims(data) ||
-            error("lengths of bounds don't match data dimensions")
+            throw(DimensionMismatch("lengths of bounds don't match data dimensions"))
         new{eltype(data), ndims(data), typeof(data), eltype(lb)}(data, lb, ub)
     end
 end
@@ -185,7 +185,7 @@ checkBounds(x, map) # no error thrown
 ```
 """
 function checkBounds(x::Location, map::Map)
-    all(map.lb .<= x .<= map.ub) || error("location $x is out of map bounds: ($(map.lb), $(map.ub))")
+    all(map.lb .<= x .<= map.ub) || throw(BoundsError("location $x is out of map bounds: ($(map.lb), $(map.ub))"))
 end
 
 """

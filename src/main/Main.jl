@@ -15,10 +15,10 @@ using Metrics: calcMetrics
 using Outputs: save
 
 ## initialize data for mission
-mission = ausMission()
+mission = simMission(num_samples=10)
 
 ## run search alg
-@time samples, beliefs = mission(visuals=true, sleep_time=0.5);
+@time samples, beliefs = mission(visuals=false, sleep_time=0.0);
 @debug "output determination matrix:" outputCorMat(beliefs[end]).^2
 # save(mission, samples, beliefs; animation=true)
 
