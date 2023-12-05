@@ -3,18 +3,14 @@
 using Pkg
 Pkg.activate(Base.source_dir() * "/../..")
 
-# allows using modules defined in any file in project modules directory
-mod_dir = dirname(Base.active_project()) * "/src/modules"
-if mod_dir ∉ LOAD_PATH
-    push!(LOAD_PATH, mod_dir)
-end
-
 # set the logging level: Info or Debug
 using Logging
 global_logger(ConsoleLogger(stderr, Logging.Debug))
 
-using Visualization: vis
-using Outputs: save
+using AdaptiveSampling: Visualization, Outputs
+
+using .Visualization: vis
+using .Outputs: save
 
 include("../missions/pye_farm.jl")
 

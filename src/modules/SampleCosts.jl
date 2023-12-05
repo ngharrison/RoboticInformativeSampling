@@ -4,8 +4,8 @@ using LinearAlgebra: norm
 using Statistics: mean
 using DocStringExtensions: TYPEDSIGNATURES
 
-using Maps: pointToCell, cellToPoint, res
-using Paths: PathCost
+using ..Maps: pointToCell, cellToPoint, res
+using ..Paths: PathCost
 
 export SampleCost, values, BasicSampleCost,
        NormedSampleCost, MIPTSampleCost, EIGFSampleCost

@@ -1,10 +1,5 @@
-# allows using modules defined in any file in project src directory
-mod_dir = dirname(Base.active_project()) * "/src/modules"
-if mod_dir ∉ LOAD_PATH
-    push!(LOAD_PATH, mod_dir)
-end
 
-using Maps, Missions, BeliefModels, Samples, Outputs, ROSInterface
+using AdaptiveSampling: Maps, Missions, BeliefModels, Samples, Outputs, ROSInterface
 
 using Statistics: mean, std
 using FileIO: load

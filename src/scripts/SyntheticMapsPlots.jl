@@ -1,19 +1,14 @@
-
-# allows using modules defined in any file in project src directory
-mod_dir = dirname(Base.active_project()) * "/src/modules"
-if mod_dir ∉ LOAD_PATH
-    push!(LOAD_PATH, mod_dir)
-end
-
-## data
 using Random: seed!
 using LinearAlgebra: I
 using Statistics: cor
 using Plots
 
-using Maps: Map, GaussGroundTruth, Peak, generateAxes
-using Samples: Sample, MapsSampler
+using AdaptiveSampling: Maps, Samples
 
+using .Maps: Map, GaussGroundTruth, Peak, generateAxes
+using .Samples: Sample, MapsSampler
+
+## data
 seed_val=3; num_peaks=4; priors=Bool[1,1,1];
 
 seed!(seed_val) # make random values deterministic

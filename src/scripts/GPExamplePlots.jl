@@ -1,15 +1,10 @@
-
-# allows using modules defined in any file in project src directory
-mod_dir = dirname(Base.active_project()) * "/src/modules"
-if mod_dir ∉ LOAD_PATH
-    push!(LOAD_PATH, mod_dir)
-end
-
 using Plots
 using Plots: mm
 
-using Maps: res, generateAxes
-using Missions: simMission
+using AdaptiveSampling: Maps, Missions
+
+using .Maps: res, generateAxes
+using .Missions: simMission
 
 function copy_ticks(plt::Plots.Plot=current())
     sp::Plots.Subplot = plt[1]

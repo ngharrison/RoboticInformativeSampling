@@ -5,8 +5,8 @@ using Dates: now, year, month, day, hour, minute, second
 using Images: save as saveImg, colorview, RGBA
 
 using Plots
-using Maps: generateAxes
-using Visualization: visualize
+using ..Maps: generateAxes
+using ..Visualization: visualize
 
 export save, output_dir, output_ext, saveBeliefMapToPng
 

@@ -11,7 +11,7 @@ using PyCall: pyimport
 using Rotations: QuatRotation, RotZ, params
 using DocStringExtensions: TYPEDSIGNATURES, TYPEDFIELDS, FUNCTIONNAME
 
-using Samples: Location, SampleInput
+using ..Samples: Location, SampleInput
 
 export ROSConnection
 

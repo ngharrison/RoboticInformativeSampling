@@ -3,7 +3,7 @@ module Samples
 using Optim: optimize, ParticleSwarm
 using DocStringExtensions: TYPEDSIGNATURES, TYPEDFIELDS, TYPEDEF
 
-using Maps: Map
+using ..Maps: Map
 
 export Sample, MapsSampler, selectSampleLocation, takeSamples
 

@@ -1,15 +1,10 @@
+using AdaptiveSampling: Maps, Missions, BeliefModels, Samples, Outputs
 
-# allows using modules defined in any file in project src directory
-mod_dir = dirname(Base.active_project()) * "/src/modules"
-if mod_dir ∉ LOAD_PATH
-    push!(LOAD_PATH, mod_dir)
-end
-
-using Maps: res, generateAxes
-using Missions: Mission
-using BeliefModels: BeliefModel, fullyConnectedCovMat
-using Samples: Sample
-using Outputs: output_dir, output_ext
+using .Maps: res, generateAxes
+using .Missions: Mission
+using .BeliefModels: BeliefModel, fullyConnectedCovMat
+using .Samples: Sample
+using .Outputs: output_dir, output_ext
 
 using Statistics: mean
 using StatsBase: mean_and_cov, AnalyticWeights

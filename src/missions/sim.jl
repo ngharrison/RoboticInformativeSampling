@@ -1,18 +1,14 @@
-# allows using modules defined in any file in project src directory
-mod_dir = dirname(Base.active_project()) * "/src/modules"
-if mod_dir ∉ LOAD_PATH
-    push!(LOAD_PATH, mod_dir)
-end
-
 using LinearAlgebra: I, norm
 using Statistics: mean, cor
 using Random: seed!
 
-using Maps: Map, GaussGroundTruth, Peak, generateAxes
-using Samples: Sample, MapsSampler
-using SampleCosts: EIGFSampleCost
-using Missions: Mission
-using Visualization: vis
+using AdaptiveSampling
+
+using .Maps: Map, GaussGroundTruth, Peak, generateAxes
+using .Samples: Sample, MapsSampler
+using .SampleCosts: EIGFSampleCost
+using .Missions: Mission
+using .Visualization: vis
 
 function simMission(; seed_val=0, num_samples=30, num_peaks=3, priors=Bool[1,1,1])
     seed!(seed_val) # make random values deterministic

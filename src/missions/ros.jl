@@ -1,14 +1,11 @@
-# allows using modules defined in any file in project src directory
-mod_dir = dirname(Base.active_project()) * "/src/modules"
-if mod_dir ∉ LOAD_PATH
-    push!(LOAD_PATH, mod_dir)
-end
+using AdaptiveSampling: Maps, SampleCosts, ROSInterface, Missions
 
-using Maps: Map
-using SampleCosts: EIGFSampleCost
+using .Maps: Map
+using .SampleCosts: EIGFSampleCost
+using .Missions: Mission
 
 # this requires a working rospy installation
-using ROSInterface: ROSConnection
+using .ROSInterface: ROSConnection
 
 function rosMission(; num_samples=4)
 

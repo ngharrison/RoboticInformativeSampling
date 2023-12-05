@@ -1,16 +1,12 @@
 # script for analyzing data from missions
 # can be run after Main.jl or by opening a saved file
 
-# allows using modules defined in any file in project src directory
-mod_dir = dirname(Base.active_project()) * "/src/modules"
-if mod_dir ∉ LOAD_PATH
-    push!(LOAD_PATH, mod_dir)
-end
+using AdaptiveSampling: Missions, BeliefModels, Samples, Outputs
 
-using Missions: Mission
-using BeliefModels: BeliefModel
-using Samples: Sample
-using Outputs: output_dir, output_ext
+using .Missions: Mission
+using .BeliefModels: BeliefModel
+using .Samples: Sample
+using .Outputs: output_dir, output_ext
 
 using Statistics: mean, std
 using FileIO: load

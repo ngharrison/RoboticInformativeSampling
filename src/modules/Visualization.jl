@@ -3,9 +3,9 @@ module Visualization
 using Plots: plot, heatmap, scatter!, @layout, mm, grid
 using DocStringExtensions: TYPEDSIGNATURES, TYPEDEF
 
-using Maps: GroundTruth, Map, res, generateAxes
-using BeliefModels: BeliefModel
-using SampleCosts: SampleCost
+using ..Maps: GroundTruth, Map, res, generateAxes
+using ..BeliefModels: BeliefModel
+using ..SampleCosts: SampleCost
 
 export visualize, vis
 

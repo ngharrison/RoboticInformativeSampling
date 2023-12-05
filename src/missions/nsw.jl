@@ -1,18 +1,14 @@
-# allows using modules defined in any file in project src directory
-mod_dir = dirname(Base.active_project()) * "/src/modules"
-if mod_dir ∉ LOAD_PATH
-    push!(LOAD_PATH, mod_dir)
-end
-
 using DelimitedFiles: readdlm
 using Statistics: cor
 using Random: seed!
 
-using Maps: Map, imgToMap, maps_dir
-using Samples: Sample, MapsSampler
-using SampleCosts: EIGFSampleCost
-using Missions: Mission
-using Visualization: vis
+using AdaptiveSampling: Maps, Samples, SampleCosts, Missions, Visualization
+
+using .Maps: Map, imgToMap, maps_dir
+using .Samples: Sample, MapsSampler
+using .SampleCosts: EIGFSampleCost
+using .Missions: Mission
+using .Visualization: vis
 
 include("../utils/utils.jl")
 

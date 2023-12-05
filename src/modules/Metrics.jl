@@ -2,9 +2,9 @@ module Metrics
 
 using Statistics: mean
 
-using Maps: generateAxes
-using BeliefModels: BeliefModel, outputCorMat
-using Samples: MapsSampler
+using ..Maps: generateAxes
+using ..BeliefModels: BeliefModel, outputCorMat
+using ..Samples: MapsSampler
 
 export calcMetrics
 

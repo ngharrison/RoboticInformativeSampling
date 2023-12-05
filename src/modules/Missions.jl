@@ -3,9 +3,9 @@ module Missions
 using Random: seed!
 using DocStringExtensions: TYPEDSIGNATURES, TYPEDFIELDS
 
-using Maps: randomPoint
-using Samples: Sample, selectSampleLocation, takeSamples
-using BeliefModels: BeliefModel, outputCorMat
+using ..Maps: randomPoint
+using ..Samples: Sample, selectSampleLocation, takeSamples
+using ..BeliefModels: BeliefModel, outputCorMat
 
 export Mission, replay, maps_dir
 

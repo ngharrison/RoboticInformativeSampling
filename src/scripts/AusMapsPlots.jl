@@ -1,23 +1,18 @@
-
-# allows using modules defined in any file in project src directory
-mod_dir = dirname(Base.active_project()) * "/src/modules"
-if mod_dir ∉ LOAD_PATH
-    push!(LOAD_PATH, mod_dir)
-end
-
-## data
 using Random: seed!
 using LinearAlgebra: norm
 using Statistics: cor
 using DelimitedFiles: readdlm
 using Plots
 
-using Maps: Map, imgToMap
-using Missions: maps_dir, normalize, spatialAve
-using Samples: Sample, MapsSampler, selectSampleLocation
-using Visualization: visualize
-using Outputs: output_dir
+using AdaptiveSampling: Maps, Missions, Samples, Visualization, Outputs
 
+using .Maps: Map, imgToMap
+using .Missions: maps_dir, normalize, spatialAve
+using .Samples: Sample, MapsSampler, selectSampleLocation
+using .Visualization: visualize
+using .Outputs: output_dir
+
+## data
 seed_val=0; priors=Bool[1,1,1];
 
 seed!(seed_val)
