@@ -8,6 +8,8 @@ Written in Julia for speed and code flexibility.
 
 Created by Nicholas Harrison.
 
+See a video of an example run [[file:docs/res/ICRA_2024_run.mp4][here]].
+
 * Installation and Setup
 Download Julia and run installer: [[https://julialang.org/downloads/]]
 
