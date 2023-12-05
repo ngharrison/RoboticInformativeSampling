@@ -62,7 +62,7 @@ If the cells of the path are desired, use the getPath function.
 function (S::PathCost)(goal)
     S.costMatrix[goal] |> !isnan && return S.costMatrix[goal]
 
-    difs = CartesianIndices(ntuple(Returns(-1:1), ndims(d)))
+    difs = CartesianIndices(ntuple(Returns(-1:1), ndims(S.costMatrix)))
 
     # update the frontier for the new goal
     for cell in keys(S.frontier)
@@ -104,7 +104,7 @@ dist(x1, x2, weights) = norm(Tuple(x2 - x1) .* weights)
 function previousStep(current, costMatrix)
     min_val = Inf
     min_dif = CartesianIndex(0,0)
-    for dif in CartesianIndices(ntuple(Returns(-1:1), ndims(d)))
+    for dif in CartesianIndices(ntuple(Returns(-1:1), ndims(costMatrix)))
         all(==(0), Tuple(dif)) && continue # don't check current cell
         cell = current - dif
         checkbounds(Bool, costMatrix, cell) || continue
