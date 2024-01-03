@@ -13,12 +13,14 @@ using PyCall
 
 using Rotations: QuatRotation, RotZ, params
 
-using Maps: Location, SampleInput
+using Samples: Location, SampleInput
 
 export ROSConnection
 
 """
 Stores information for communicating with Swagbot.
+
+Objects of this type can be used as samplers in missions.
 """
 struct ROSConnection
     sub_topics

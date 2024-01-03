@@ -7,8 +7,8 @@ using Statistics: cor
 using Random: seed!
 using DocStringExtensions: TYPEDSIGNATURES, TYPEDFIELDS
 
-using Maps: Map, imgToMap, GaussGroundTruth, MultiMap, Peak, pointToCell, cellToPoint
-using Samples: Sample, selectSampleLocation, takeSamples
+using Maps: Map, imgToMap, GaussGroundTruth, Peak, pointToCell, cellToPoint
+using Samples: Sample, MapsSampler, selectSampleLocation, takeSamples
 using SampleCosts: SampleCost, values, BasicSampleCost,
                    NormedSampleCost, MIPTSampleCost, EIGFSampleCost
 using BeliefModels: BeliefModel, outputCorMat
@@ -194,7 +194,7 @@ function simMission(; seed_val=0, num_samples=30, num_peaks=3, priors=Bool[1,1,1
     # m = Map(rand(size(map0)...), lb, ub)
     # push!(prior_maps, m)
 
-    sampler = MultiMap(map0)
+    sampler = MapsSampler(map0)
 
     sampleCostType = EIGFSampleCost
 
@@ -251,7 +251,7 @@ function ausMission(; seed_val=0, num_samples=30, priors=Bool[1,1,1])
     lb = [0.0, 0.0]; ub = [1.0, 1.0]
 
     map0 = imgToMap(normalize(images[1]), lb, ub)
-    sampler = MultiMap(map0)
+    sampler = MapsSampler(map0)
 
     prior_maps = [imgToMap(normalize(img), lb, ub) for img in images[2:end]]
 
@@ -320,7 +320,7 @@ function nswMission(; seed_val=0, num_samples=30, priors=Bool[1,1,1])
     lb = [0.0, 0.0]; ub = [1.0, 1.0]
 
     map0 = imgToMap(normalize(ims_sm[1]), lb, ub)
-    sampler = MultiMap(map0)
+    sampler = MapsSampler(map0)
 
     prior_maps = [imgToMap(normalize(img), lb, ub) for img in ims_sm[2:end]]
 
@@ -395,7 +395,7 @@ function conradMission()
         maps[2][pointToCell([x,y], maps[2])] = z
     end
 
-    sampler = MultiMap(maps)
+    sampler = MapsSampler(maps)
 
     sampleCostType = NormedSampleCost
 

@@ -11,8 +11,8 @@ using LinearAlgebra: I
 using Statistics: cor
 using Plots
 
-using Maps: Map, GaussGroundTruth, MultiMap, Peak
-using Samples: Sample
+using Maps: Map, GaussGroundTruth, Peak
+using Samples: Sample, MapsSampler
 
 seed_val=3; num_peaks=4; priors=Bool[1,1,1];
 
@@ -54,7 +54,7 @@ tmat = tggt(points)
 m = Map(tmat./maximum(tmat), lb, ub)
 push!(prior_maps, m)
 
-sampler = MultiMap(map0)
+sampler = MapsSampler(map0)
 
 # sample sparsely from the prior maps
 # currently all data have the same sample numbers and locations

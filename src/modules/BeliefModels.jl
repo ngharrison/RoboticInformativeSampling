@@ -8,7 +8,7 @@ using Optim: optimize, Options, NelderMead, LBFGS
 using ParameterHandling: value_flatten
 using DocStringExtensions: TYPEDSIGNATURES, TYPEDEF
 
-using Maps: Location, SampleInput
+using Samples: SampleInput
 
 export BeliefModel, fullyConnectedCovMat, outputCorMat
 

@@ -15,7 +15,6 @@ Main public types and functions:
 - `SampleInput`
 - `SampleOutput`
 - `Map`
-- `MultiMap`
 - `imgToMap`
 - `res`
 - `pointToCell`
@@ -56,6 +55,7 @@ Everything to do with sampling values in the environment.
 
 Main public types and functions:
 - `Sample`
+- `MapsSampler`
 - `takeSamples`
 - `selectSampleLocation`
 - `SampleCost`

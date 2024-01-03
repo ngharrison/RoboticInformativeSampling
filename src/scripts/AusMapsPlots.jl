@@ -12,9 +12,9 @@ using Statistics: cor
 using DelimitedFiles: readdlm
 using Plots
 
-using Maps: Map, imgToMap, MultiMap
+using Maps: Map, imgToMap
 using Missions: maps_dir, normalize, spatialAve
-using Samples: Sample, selectSampleLocation
+using Samples: Sample, MapsSampler, selectSampleLocation
 using Visualization: visualize
 using Outputs: output_dir
 
@@ -43,7 +43,7 @@ map0 = imgToMap(normalize(ims_sm[1]), lb, ub)
 # savefig("temp.png")
 
 # scatter!([3211, 3211, 3310, 3310], 1800 .- [1141, 1240, 1141, 1240])
-sampler = MultiMap(map0)
+sampler = MapsSampler(map0)
 
 prior_maps = [imgToMap(normalize(img), lb, ub) for img in ims_sm[2:end]]
 

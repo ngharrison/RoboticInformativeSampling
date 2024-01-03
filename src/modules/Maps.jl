@@ -1,29 +1,10 @@
 module Maps
 
 using Distributions: MvNormal, pdf
-using DocStringExtensions: TYPEDSIGNATURES, TYPEDFIELDS, TYPEDEF
+using DocStringExtensions: TYPEDSIGNATURES, TYPEDFIELDS
 
-export Map, GaussGroundTruth, MultiMap, Peak,
-       imgToMap, res, pointToCell, cellToPoint,
-       Location, SampleInput, SampleOutput
-
-"""
-$(TYPEDEF)
-Location of sample
-"""
-const Location = Vector{Float64}
-
-"""
-$(TYPEDEF)
-Sample input, the combination of: ([`Location`](@ref), sensor index)
-"""
-const SampleInput = Tuple{Location, Int}
-
-"""
-$(TYPEDEF)
-Value of sample measurement
-"""
-const SampleOutput = Float64
+export Map, GaussGroundTruth, Peak, imgToMap,
+       res, pointToCell, cellToPoint
 
 """
 A general type for holding multidimensional data (usually a matrix) along with
@@ -74,7 +55,7 @@ m(x) # returns the value at a single 2D point
 m[1,4] # can also use as if it's just the underlying matrix
 ```
 """
-function (map::Map)(x::Location)
+function (map::Map)(x)
     checkBounds(x, map)
     map[pointToCell(x, map)]
 end
@@ -111,49 +92,6 @@ function Base.rand(map::Map)
     return x, map(x)
 end
 
-"""
-Handles samples of the form (location, quantity) to give the value from the
-right map. Internally a list of maps.
-
-Constructor can take in a tuple or vector of Maps or each Map as a separate
-argument.
-
-# Examples
-```julia
-mmap = MultiMap(Map(zeros(5, 5)), Map(ones(5, 5)))
-
-x = [.2, .75]
-mmap(x) # result: [0, 1]
-mmap((x, 2)) # result: 1
-```
-"""
-struct MultiMap{T1<:Real}
-    maps::Tuple{Vararg{Map{T1}}}
-end
-
-MultiMap(maps::Map...) = MultiMap(maps)
-MultiMap(maps::AbstractVector{<:Map}) = MultiMap(Tuple(maps))
-
-(mmap::MultiMap)(x::Location) = [map(x) for map in mmap]
-(mmap::MultiMap)(x::SampleInput) = mmap[x[2]](x[1])
-
-# make a multimap behave like a tuple
-Base.keys(m::MultiMap) = keys(m.maps)
-Base.length(m::MultiMap) = length(m.maps)
-Base.iterate(m::MultiMap) = iterate(m.maps)
-Base.iterate(m::MultiMap, i::Integer) = iterate(m.maps, i)
-Base.Broadcast.broadcastable(m::MultiMap) = Ref(m) # don't broadcast
-Base.IndexStyle(::Type{<:MultiMap}) = IndexLinear()
-Base.getindex(m::MultiMap, i::Integer) = m.maps[i]
-
-# change display
-function Base.show(io::IO, mmap::MultiMap{T1}) where T1
-    print(io, "MultiMap{$T1}:")
-    for map in mmap
-        print("\n\t", map)
-    end
-end
-
 # helper methods used with maps
 """
 Takes a matrix in the format created from an image, re-formats it, and returns a
@@ -185,7 +123,7 @@ map = Map(data)
 checkBounds(x, map) # no error thrown
 ```
 """
-function checkBounds(x::Location, map::Map)
+function checkBounds(x, map::Map)
     all(map.lb .<= x .<= map.ub) ||
         throw(BoundsError("location $x is out of map bounds: ($(map.lb), $(map.ub))"))
 end

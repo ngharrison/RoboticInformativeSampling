@@ -1,11 +1,29 @@
 module Samples
 
 using Optim: optimize, ParticleSwarm
-using DocStringExtensions: TYPEDSIGNATURES, TYPEDFIELDS
+using DocStringExtensions: TYPEDSIGNATURES, TYPEDFIELDS, TYPEDEF
 
-using Maps: SampleInput, SampleOutput
+using Maps: Map
 
-export Sample, selectSampleLocation, takeSamples
+export Sample, MapsSampler, selectSampleLocation, takeSamples
+
+"""
+$(TYPEDEF)
+Location of sample
+"""
+const Location = Vector{Float64}
+
+"""
+$(TYPEDEF)
+Sample input, the combination of: ([`Location`](@ref), sensor index)
+"""
+const SampleInput = Tuple{Location, Int}
+
+"""
+$(TYPEDEF)
+Value of sample measurement
+"""
+const SampleOutput = Float64
 
 """
 Struct to hold the input and output of a sample.
@@ -18,6 +36,49 @@ struct Sample
     x::SampleInput
     "the sample output or observation, a scalar"
     y::SampleOutput
+end
+
+"""
+Handles samples of the form (location, quantity) to give the value from the
+right map. Internally a tuple of Maps.
+
+Constructor can take in a tuple or vector of Maps or each Map as a separate
+argument.
+
+# Examples
+```julia
+ss = MapsSampler(Map(zeros(5, 5)), Map(ones(5, 5)))
+
+x = [.2, .75]
+ss(x) # result: [0, 1]
+ss((x, 2)) # result: 1
+```
+"""
+struct MapsSampler{T1<:Real}
+    maps::Tuple{Vararg{Map{T1}}}
+end
+
+MapsSampler(maps::Map...) = MapsSampler(maps)
+MapsSampler(maps::AbstractVector{<:Map}) = MapsSampler(Tuple(maps))
+
+(ss::MapsSampler)(x::Location) = [map(x) for map in ss]
+(ss::MapsSampler)(x::SampleInput) = ss[x[2]](x[1])
+
+# make it behave like a tuple
+Base.keys(m::MapsSampler) = keys(m.maps)
+Base.length(m::MapsSampler) = length(m.maps)
+Base.iterate(m::MapsSampler) = iterate(m.maps)
+Base.iterate(m::MapsSampler, i::Integer) = iterate(m.maps, i)
+Base.Broadcast.broadcastable(m::MapsSampler) = Ref(m) # don't broadcast
+Base.IndexStyle(::Type{<:MapsSampler}) = IndexLinear()
+Base.getindex(m::MapsSampler, i::Integer) = m.maps[i]
+
+# change display
+function Base.show(io::IO, ss::MapsSampler{T1}) where T1
+    print(io, "MapsSampler{$T1}:")
+    for map in ss
+        print("\n\t", map)
+    end
 end
 
 """
