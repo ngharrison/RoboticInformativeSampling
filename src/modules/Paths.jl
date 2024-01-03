@@ -24,6 +24,9 @@ struct PathCost
     start
     costMatrix
     resolution
+    diffs
+    dist
+    heuristic
     frontier
 end
 
@@ -41,15 +44,21 @@ Inputs:
 Note: this type and associated methods can in fact be used with any
 N-dimensional cost array, not just a matrix.
 """
-function PathCost(start, occupancy, resolution)
+function PathCost(start, occupancy, resolution;
+                  diagonals=true, dist=weightedEuclidian, heuristic=weightedEuclidian)
     # initialize data structures with values for first cell
     costMatrix = [occ ? Inf : NaN for occ in occupancy]
     costMatrix[start] = 0.0
 
+    # create diffs but filter out center cell and maybe diagonals
+    comp = (diagonals ? >(0) : ==(1))
+    f = diff -> comp(count(!=(0), Tuple(diff)))
+    diffs = filter(f, CartesianIndices(ntuple(Returns(-1:1), ndims(costMatrix))))
+
     frontier = PriorityQueue{CartesianIndex{ndims(costMatrix)}, Float64}()
     frontier[start] = 0.0
 
-    PathCost(start, costMatrix, resolution, frontier)
+    PathCost(start, costMatrix, resolution, diffs, dist, heuristic, frontier)
 end
 
 """
@@ -62,11 +71,9 @@ If the cells of the path are desired, use the getPath function.
 function (S::PathCost)(goal)
     S.costMatrix[goal] |> !isnan && return S.costMatrix[goal]
 
-    difs = CartesianIndices(ntuple(Returns(-1:1), ndims(S.costMatrix)))
-
     # update the frontier for the new goal
     for cell in keys(S.frontier)
-        S.frontier[cell] = S.costMatrix[cell] + dist(cell, goal, S.resolution)
+        S.frontier[cell] = S.costMatrix[cell] + S.heuristic(cell, goal, S.resolution)
     end
 
     while !isempty(S.frontier)
@@ -77,19 +84,17 @@ function (S::PathCost)(goal)
         cell == goal && return cost
 
         # now look all around the current cell
-        for dif in difs
-            all(==(0), Tuple(dif)) && continue
-
-            new_cell = cell + dif
+        for diff in S.diffs
+            new_cell = cell + diff
             checkbounds(Bool, S.costMatrix, new_cell) || continue
 
-            new_cost = S.costMatrix[cell] + dist(cell, new_cell, S.resolution)
+            new_cost = S.costMatrix[cell] + S.dist(cell, new_cell, S.resolution)
 
             if (S.costMatrix[new_cell] |> isnan ||
                 new_cell ∈ keys(S.frontier) && S.costMatrix[new_cell] > new_cost)
                 S.costMatrix[new_cell] = new_cost
                 # actual cost so far plus heuristic
-                S.frontier[new_cell] = new_cost + dist(new_cell, goal, S.resolution)
+                S.frontier[new_cell] = new_cost + S.heuristic(new_cell, goal, S.resolution)
             end
         end
     end
@@ -99,19 +104,19 @@ function (S::PathCost)(goal)
     return Inf
 end
 
-dist(x1, x2, weights) = norm(Tuple(x2 - x1) .* weights)
+weightedEuclidian(x1, x2, weights) = norm(Tuple(x2 - x1) .* weights)
 
 function previousStep(current, costMatrix)
     min_val = Inf
     min_dif = CartesianIndex(0,0)
-    for dif in CartesianIndices(ntuple(Returns(-1:1), ndims(costMatrix)))
-        all(==(0), Tuple(dif)) && continue # don't check current cell
-        cell = current - dif
+    for diff in CartesianIndices(ntuple(Returns(-1:1), ndims(costMatrix)))
+        all(==(0), Tuple(diff)) && continue # don't check current cell
+        cell = current - diff
         checkbounds(Bool, costMatrix, cell) || continue
         val = costMatrix[cell]
         if !isnan(val) && val < min_val
             min_val = val
-            min_dif = dif
+            min_dif = diff
         end
     end
     isinf(min_val) && error("this cell has no known accessible neighbors")
