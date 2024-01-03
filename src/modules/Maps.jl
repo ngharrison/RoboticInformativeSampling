@@ -79,7 +79,13 @@ function (map::Map)(x::Location)
     map[pointToCell(x, map)]
 end
 
-# implement base methods
+# make a map behave like an array
+Base.size(m::Map) = size(m.data)
+Base.IndexStyle(::Type{<:Map}) = IndexLinear()
+Base.getindex(m::Map, i::Integer) = m.data[i]
+Base.setindex!(m::Map, v, i::Integer) = (m.data[i] = v)
+
+# change display
 function Base.show(io::IO, map::Map{T1}) where T1
     print(io, "Map{$T1} [$(map.lb), $(map.ub)]")
 end
@@ -87,12 +93,6 @@ function Base.show(io::IO, ::MIME"text/plain", map::Map{T1}) where T1
     print(io, "Map{$T1} [$(map.lb), $(map.ub)]:\n")
     show(io, "text/plain", map.data)
 end
-
-# make a map behave like an array
-Base.size(m::Map) = size(m.data)
-Base.IndexStyle(::Type{<:Map}) = IndexLinear()
-Base.getindex(m::Map, i::Integer) = m.data[i]
-Base.setindex!(m::Map, v, i::Integer) = (m.data[i] = v)
 
 """
 $(TYPEDSIGNATURES)
@@ -131,17 +131,13 @@ struct MultiMap{T1<:Real}
     maps::Tuple{Vararg{Map{T1}}}
 end
 
-function Base.show(io::IO, mmap::MultiMap{T1}) where T1
-    print(io, "MultiMap{$T1}:")
-    for map in mmap.maps
-        print("\n\t", map)
-    end
-end
-
 MultiMap(maps::Map...) = MultiMap(maps)
 MultiMap(maps::AbstractVector{<:Map}) = MultiMap(Tuple(maps))
 
-# make a multimap behave like an array
+(mmap::MultiMap)(x::Location) = [map(x) for map in mmap]
+(mmap::MultiMap)(x::SampleInput) = mmap[x[2]](x[1])
+
+# make a multimap behave like a tuple
 Base.keys(m::MultiMap) = keys(m.maps)
 Base.length(m::MultiMap) = length(m.maps)
 Base.iterate(m::MultiMap) = iterate(m.maps)
@@ -150,8 +146,13 @@ Base.Broadcast.broadcastable(m::MultiMap) = Ref(m) # don't broadcast
 Base.IndexStyle(::Type{<:MultiMap}) = IndexLinear()
 Base.getindex(m::MultiMap, i::Integer) = m.maps[i]
 
-(mmap::MultiMap)(x::Location) = [mmap.maps[i](x) for i in eachindex(mmap)]
-(mmap::MultiMap)(x::SampleInput) = mmap.maps[x[2]](x[1])
+# change display
+function Base.show(io::IO, mmap::MultiMap{T1}) where T1
+    print(io, "MultiMap{$T1}:")
+    for map in mmap
+        print("\n\t", map)
+    end
+end
 
 # helper methods used with maps
 """
@@ -185,7 +186,8 @@ checkBounds(x, map) # no error thrown
 ```
 """
 function checkBounds(x::Location, map::Map)
-    all(map.lb .<= x .<= map.ub) || throw(BoundsError("location $x is out of map bounds: ($(map.lb), $(map.ub))"))
+    all(map.lb .<= x .<= map.ub) ||
+        throw(BoundsError("location $x is out of map bounds: ($(map.lb), $(map.ub))"))
 end
 
 """
