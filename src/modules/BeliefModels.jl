@@ -12,6 +12,8 @@ using Samples: SampleInput
 
 export BeliefModel, fullyConnectedCovMat, outputCorMat
 
+include("SLFMKernel.jl")
+
 """
 $(TYPEDEF)
 
@@ -176,7 +178,7 @@ end
 """
 $(TYPEDSIGNATURES)
 
-Creates the structure of hyperparameters and gives them initial values.
+Creates the structure of hyperparameters for a MTGP and gives them initial values.
 """
 function initHyperparams(X, Y, lb, ub; σn=1e-3)
     T = maximum(last, X) # number of outputs
@@ -186,6 +188,21 @@ function initHyperparams(X, Y, lb, ub; σn=1e-3)
     σ = 0.5/sqrt(2) * ones(n)
     a = mean(ub .- lb)
     ℓ = length(X)==1 ? a : a/length(X) + mean(std(first.(X)))*(1-1/length(X))
+    return (; σ, ℓ, σn)
+end
+
+"""
+$(TYPEDSIGNATURES)
+
+Creates the structure of hyperparameters for a SLFM and gives them initial values.
+"""
+function initHyperparamsSLFM(X, Y, lb, ub; σn=1e-3)
+    T = maximum(last, X) # number of outputs
+    # NOTE may change to all just 0.5
+    # σ = (length(Y)>1 ? std(Y) : 0.5)/sqrt(2) * ones(n)
+    σ = 0.5/sqrt(2) * ones(T,T)
+    a = mean(ub .- lb)
+    ℓ = (length(X)==1 ? a : a/length(X) + mean(std(first.(X)))*(1-1/length(X))) * ones(T)
     return (; σ, ℓ, σn)
 end
 
@@ -261,6 +278,8 @@ multiKernel(θ) = IntrinsicCoregionMOKernel(kernel=with_lengthscale(SqExponentia
                                            B=fullyConnectedCovMat(θ.σ))
 
 fullyConnectedCovNum(num_outputs) = (num_outputs+1)*num_outputs÷2
+
+slfmKernel(θ) = SLFMMOKernel(with_lengthscale.(SqExponentialKernel(), θ.ℓ.^2), θ.σ)
 
 """
 $(TYPEDSIGNATURES)
