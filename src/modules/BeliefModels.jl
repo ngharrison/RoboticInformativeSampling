@@ -5,7 +5,7 @@ using AbstractGPs: GP, posterior, mean_and_var, mean_and_cov, logpdf, with_lengt
                    SqExponentialKernel, IntrinsicCoregionMOKernel
 using Statistics: mean, std
 using Optim: optimize, Options, NelderMead, LBFGS
-using ParameterHandling: value_flatten
+using ParameterHandling: value_flatten, fixed
 using DocStringExtensions: TYPEDSIGNATURES, TYPEDEF
 
 using Samples: SampleInput
@@ -112,14 +112,14 @@ function BeliefModel(samples, lb, ub; σn=1e-3, kernel=multiKernel)
     X = getfield.(samples, :x)
     Y = getfield.(samples, :y)
 
-    θ0 = initHyperparams(X, Y, lb, ub; σn)
+    θ0 = initHyperparams(X, Y, lb, ub; fixed(σn))
 
     # optimize hyperparameters (train)
     θ = optimizeLoss(createLossFunc(X, Y, kernel), θ0)
 
     # produce optimized gp belief model
     f = GP(kernel(θ)) # prior gp
-    fx = f(X, θ.σn.^2 .+ √eps())
+    fx = f(X, θ.σn.value.^2 .+ √eps())
     f_post = posterior(fx, Y) # gp conditioned on training samples
 
     return BeliefModelSimple(f_post, θ)
@@ -237,7 +237,7 @@ function createLossFunc(X, Y, kernel)
     θ -> begin
         try
             f = GP(kernel(θ))
-            fx = f(X, θ.σn.^2 .+ √eps()) # eps to prevent numerical issues
+            fx = f(X, θ.σn.value.^2 .+ √eps()) # eps to prevent numerical issues
             return -logpdf(fx, Y)
         catch e
             # for PosDefException
@@ -247,7 +247,7 @@ function createLossFunc(X, Y, kernel)
 
             f = GP(kernel(θ))
             # NOTE this will probably break if reached with the multiKernel
-            fx = f(X, θ.σn.^2 .+ √eps()+1e-1*θ.σ) # fix by making diagonal a little bigger
+            fx = f(X, θ.σn.value.^2 .+ √eps()+1e-1*θ.σ) # fix by making diagonal a little bigger
             return -logpdf(fx, Y)
         end
     end
