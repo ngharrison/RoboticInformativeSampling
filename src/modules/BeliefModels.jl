@@ -88,12 +88,12 @@ beliefModel = BeliefModel(samples, M.prior_samples, lb, ub)
 beliefModel = BeliefModel([M.prior_samples; samples], lb, ub)
 ```
 """
-function BeliefModel(samples, prior_samples, lb, ub; σn=1e-3)
+function BeliefModel(samples, prior_samples, lb, ub; σn=1e-3, kernel=multiKernel)
     # create a simple belief model for the current samples
-    current = BeliefModel(samples, lb, ub)
+    current = BeliefModel(samples, lb, ub; σn, kernel)
     isempty(prior_samples) && return current
     # create a simple belief model for the prior current samples combined
-    combined = BeliefModel([prior_samples; samples], lb, ub)
+    combined = BeliefModel([prior_samples; samples], lb, ub; σn, kernel)
     # split is a combination of the two
     return BeliefModelSplit(current, combined)
 end
