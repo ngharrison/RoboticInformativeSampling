@@ -39,7 +39,7 @@ If you get: =Error: Unable to load the 'rospy' python package!=
 3. Restart the julia REPL
 
 * Quick Start
-To run the project in its current state, run =include("Main.jl")= at the julia REPL after following the steps in [[*Installation and Setup][Installation and Setup]].
+To run the project in its current state, run =include("main/Main.jl")= at the julia REPL after following the steps in [[*Installation and Setup][Installation and Setup]].
 
 That should be enough to get you started. Go to the documentation to understand more about the code and the Julia language in general.
 
