@@ -2,6 +2,8 @@ module Outputs
 
 using JLD2: jldsave
 using Dates: now, year, month, day, hour, minute, second
+using Images: save as saveImg, colorview, RGBA
+
 using Plots
 using Visualization: visualize
 
@@ -48,6 +50,31 @@ function save(metrics; file_name=dateTimeString() * "_metrics")
     full_path_name = output_dir * file_name * output_ext
 
     jldsave(full_path_name; metrics)
+end
+
+# This is really just to give something out to munch,
+# so it needs to be an rgba png with the last channel as the amount
+function saveBeliefMapToPng(beliefModel, occupancy,
+                            file_name=dateTimeString() * "_belief_map")
+    mkpath(output_dir)
+
+    axs = range.(occupancy.lb, occupancy.ub, size(occupancy))
+    points = collect.(Iterators.product(axs...))
+    dims = Tuple(length.(axs))
+    μ, _ = beliefModel(tuple.(vec(points), 1))
+    pred_map = reshape(μ, dims)
+
+    l, h = extrema(pred_map)
+    amount = (pred_map .- l) ./ (h - l)
+
+    map_img = stack((0.8*ones(size(pred_map)),
+                     0.3*ones(size(pred_map)),
+                     zeros(size(pred_map)),
+                     amount), dims=1)
+
+    saveImg("$(output_dir)$(file_name).png",
+            colorview(RGBA, map_img))
+
 end
 
 end

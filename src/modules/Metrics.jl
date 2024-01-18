@@ -1,6 +1,7 @@
 module Metrics
 
 using Statistics: mean
+
 using BeliefModels: BeliefModel, outputCorMat
 
 export calcMetrics
