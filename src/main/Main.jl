@@ -15,7 +15,7 @@ using Metrics: calcMetrics
 using Outputs: save
 
 ## initialize data for mission
-mission = simMission(num_samples=10)
+mission = rosMission()
 
 ## run search alg
 @time samples, beliefs = mission(visuals=false, sleep_time=0.0);
