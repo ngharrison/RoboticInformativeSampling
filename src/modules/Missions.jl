@@ -424,12 +424,12 @@ function rosMission()
         using ROSInterface: ROSConnection
 
         # NOTE switch these for swagbot nodes
-        sub_nodes = [
+        sub_topics = [
             "/value1",
             "/value2"
         ]
 
-        sampler = ROSConnection(sub_nodes)
+        sampler = ROSConnection(sub_topics)
     end
 
     lb = [0.0, 0.0]; ub = [1.0, 1.0]

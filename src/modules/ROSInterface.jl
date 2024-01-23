@@ -3,13 +3,11 @@
 module ROSInterface
 
 using RobotOS
-@rosimport std_msgs.msg: Bool, Float64
 @rosimport geometry_msgs.msg: Pose, Point, Quaternion
 rostypegen(@__MODULE__)
-using .std_msgs.msg
 using .geometry_msgs.msg
 
-using PyCall
+using PyCall: pyimport
 
 using Rotations: QuatRotation, RotZ, params
 
