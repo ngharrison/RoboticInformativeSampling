@@ -23,7 +23,7 @@ mission = rosMission()
 # save(mission, samples, beliefs; animation=true)
 
 ## calculate errors
-metrics = calcMetrics(mission, beliefs, 1)
+#metrics = calcMetrics(mission, beliefs, 1)
 
 ## save outputs
-save(metrics)
+#save(metrics)
