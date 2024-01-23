@@ -51,8 +51,8 @@ m = Map(data, lb, ub)
 m2 = Map(data) # bounds will be zero to one
 
 x = [.2, .75]
-m(x) # returns the value at a single 2D point
-m[1,4] # can also use as if it's just the underlying matrix
+val = m(x) # returns the value at a single 2D point
+val2 = m[1,4] # can also use as if it's just the underlying matrix
 ```
 """
 function (map::Map)(x)
