@@ -22,7 +22,7 @@ git clone https://gitlab.acfr.usyd.edu.au/nhar0989/AdaptiveSampling.git
 
 This will create a directory called =AdaptiveSampling=.
 
-1. Navigate into the =AdaptiveSampling/src= directory on the command line
+1. Navigate into the =AdaptiveSampling= directory on the command line
 2. Run =julia --project= to enter the julia REPL and activate the project
 3. Run =]instantiate= to install all needed packages
 4. Exit the interactive Pkg mode by hitting backspace
@@ -39,7 +39,7 @@ If you get: =Error: Unable to load the 'rospy' python package!=
 3. Restart the julia REPL
 
 * Quick Start
-To run the project in its current state, run =include("main/Main.jl")= at the julia REPL after following the steps in [[*Installation and Setup][Installation and Setup]].
+To run the project in its current state, run =include("src/main/Main.jl")= at the julia REPL after following the steps in [[*Installation and Setup][Installation and Setup]].
 
 That should be enough to get you started. Go to the documentation to understand more about the code and the Julia language in general.
 
