@@ -13,8 +13,7 @@ using .geometry_msgs.msg
 function callback(pose::Pose, pub::Publisher{BoolMsg})
     println("Pose received!")
     println(pose)
-    rossleep(5)
-    println("Sortie published")
+    rossleep(1)
     publish(pub, BoolMsg(true)) # sortie finished
 end
 
