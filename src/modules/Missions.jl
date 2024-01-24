@@ -425,11 +425,11 @@ function rosMission()
         using ROSInterface: ROSConnection
 
         # NOTE switch these for swagbot nodes
-        sub_nodes = [
+        sub_topics = [
             "/rss/gp/crop_height_avg" # Average crop height in frame (excluding wheels)
         ]
 
-        sampler = ROSConnection(sub_nodes)
+        sampler = ROSConnection(sub_topics)
     end
 
     lb = [0.0, 0.0]; ub = [20.0, 20.0]
