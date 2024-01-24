@@ -11,8 +11,6 @@ global_logger(ConsoleLogger(stderr, Logging.Info))
 using Missions: simMission, ausMission, nswMission, conradMission, rosMission
 using BeliefModels: outputCorMat
 using Visualization: visualize
-using Metrics: calcMetrics
-using Outputs: save
 
 ## initialize data for mission
 mission = rosMission()
@@ -23,7 +21,9 @@ mission = rosMission()
 # save(mission, samples, beliefs; animation=true)
 
 ## calculate errors
-#metrics = calcMetrics(mission, beliefs, 1)
+# using Metrics: calcMetrics
+# metrics = calcMetrics(mission, beliefs, 1)
 
 ## save outputs
-#save(metrics)
+# using Outputs: save
+# save(metrics)
