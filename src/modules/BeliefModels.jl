@@ -5,7 +5,7 @@ using AbstractGPs: GP, posterior, mean_and_var, mean_and_cov, logpdf, with_lengt
                    SqExponentialKernel, IntrinsicCoregionMOKernel
 using Statistics: mean, std
 using Optim: optimize, Options, NelderMead, LBFGS
-using ParameterHandling: value_flatten, fixed
+using ParameterHandling: value_flatten
 using DocStringExtensions: TYPEDSIGNATURES, TYPEDEF
 
 using Samples: SampleInput
@@ -112,15 +112,16 @@ function BeliefModel(samples, lb, ub; σn=1e-3, kernel=multiKernel)
     X = getfield.(samples, :x)
     Y = getfield.(samples, :y)
 
-    θ0 = initHyperparams(X, Y, lb, ub; fixed(σn))
+    θ0 = initHyperparams(X, Y, lb, ub; σn)
 
     # optimize hyperparameters (train)
     θ = optimizeLoss(createLossFunc(X, Y, kernel), θ0)
 
     # produce optimized gp belief model
     f = GP(kernel(θ)) # prior gp
-    fx = f(X, θ.σn.value.^2 .+ √eps())
-    f_post = posterior(fx, Y) # gp conditioned on training samples
+    # currently not using σn
+    fx = f(X, last.(Y).^2 .+ √eps())
+    f_post = posterior(fx, first.(Y)) # gp conditioned on training samples
 
     return BeliefModelSimple(f_post, θ)
 end
@@ -184,7 +185,7 @@ function initHyperparams(X, Y, lb, ub; σn=1e-3)
     T = maximum(last, X) # number of outputs
     n = fullyConnectedCovNum(T)
     # NOTE may change to all just 0.5
-    # σ = (length(Y)>1 ? std(Y) : 0.5)/sqrt(2) * ones(n)
+    # σ = (length(first.(Y))>1 ? std(first.(Y)) : 0.5)/sqrt(2) * ones(n)
     σ = 0.5/sqrt(2) * ones(n)
     a = mean(ub .- lb)
     ℓ = length(X)==1 ? a : a/length(X) + mean(std(first.(X)))*(1-1/length(X))
@@ -199,7 +200,7 @@ Creates the structure of hyperparameters for a SLFM and gives them initial value
 function initHyperparamsSLFM(X, Y, lb, ub; σn=1e-3)
     T = maximum(last, X) # number of outputs
     # NOTE may change to all just 0.5
-    # σ = (length(Y)>1 ? std(Y) : 0.5)/sqrt(2) * ones(n)
+    # σ = (length(first.(Y))>1 ? std(first.(Y)) : 0.5)/sqrt(2) * ones(n)
     σ = 0.5/sqrt(2) * ones(T,T)
     a = mean(ub .- lb)
     ℓ = (length(X)==1 ? a : a/length(X) + mean(std(first.(X)))*(1-1/length(X))) * ones(T)
@@ -237,8 +238,9 @@ function createLossFunc(X, Y, kernel)
     θ -> begin
         try
             f = GP(kernel(θ))
-            fx = f(X, θ.σn.value.^2 .+ √eps()) # eps to prevent numerical issues
-            return -logpdf(fx, Y)
+            # currently not using σn
+            fx = f(X, last.(Y).^2 .+ √eps()) # eps to prevent numerical issues
+            return -logpdf(fx, first.(Y))
         catch e
             # for PosDefException
             # this seems to happen when θ.σ is extremely large and θ.ℓ is
@@ -247,8 +249,9 @@ function createLossFunc(X, Y, kernel)
 
             f = GP(kernel(θ))
             # NOTE this will probably break if reached with the multiKernel
-            fx = f(X, θ.σn.value.^2 .+ √eps()+1e-1*θ.σ) # fix by making diagonal a little bigger
-            return -logpdf(fx, Y)
+            # currently not using σn
+            fx = f(X, last.(Y).^2 .+ √eps()+1e-1*θ.σ) # fix by making diagonal a little bigger
+            return -logpdf(fx, first.(Y))
         end
     end
 end

@@ -21,9 +21,9 @@ const SampleInput = Tuple{Location, Int}
 
 """
 $(TYPEDEF)
-Value of sample measurement
+Value of sample measurement, the measurement mean and standard deviation
 """
-const SampleOutput = Float64
+const SampleOutput = Tuple{Float64, Float64}
 
 """
 Struct to hold the input and output of a sample.

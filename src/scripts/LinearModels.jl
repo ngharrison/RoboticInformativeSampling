@@ -50,7 +50,7 @@ occ = mission.occupancy
 all_samples = [samples; mission.prior_samples]
 num_quant = maximum(s->s.x[2], all_samples)
 # split samples by quantity and get just the values
-vals = [getfield.(filter(s->s.x[2]==i, all_samples), :y)
+vals = [first.(getfield.(filter(s->s.x[2]==i, all_samples), :y))
         for i in 1:num_quant]
 extrema.(vals)
 beliefModel = beliefs[end]

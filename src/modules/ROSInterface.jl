@@ -57,12 +57,15 @@ function (R::ROSConnection)(new_loc::Location)
     rospy.wait_for_message("sortie_finished", std_msg.Bool) # a message means finished
     @debug "received sortie finished"
 
-    # get values
-    values = [rospy.wait_for_message(node, std_msg.Float32, timeout=20).data
-              for node in R.sub_topics]
-    @debug "received values:" values
+    # get values, creates a list of tuples of (value, error)
+    observations = [
+        (rospy.wait_for_message(val_topic, std_msg.Float32, timeout=20).data,
+         rospy.wait_for_message(err_topic, std_msg.Float32, timeout=20).data)
+        for (val_topic, err_topic) in R.sub_topics]
 
-    return values
+    @debug "received values:" observations
+
+    return observations
 end
 
 """
@@ -80,11 +83,13 @@ function (R::ROSConnection)(new_index::SampleInput)
     rospy.wait_for_message("sortie_finished", std_msg.Bool) # a message means finished
     @debug "received sortie finished"
 
-    # get values
-    values = rospy.wait_for_message(R.sub_topics[quantity], std_msg.Float32, timeout=20)
-    @debug "received values:" values
+    # get value
+    (val_topic, err_topic) = R.sub_topics[quantity]
+    value = rospy.wait_for_message(val_topic, std_msg.Float32, timeout=20).data
+    error = rospy.wait_for_message(err_topic, std_msg.Float32, timeout=20).data
+    @debug "received value:" value, error
 
-    return values
+    return value, error
 end
 
 """

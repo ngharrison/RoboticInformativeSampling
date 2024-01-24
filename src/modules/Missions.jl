@@ -424,9 +424,10 @@ function rosMission()
         # this requires a working rospy installation
         using ROSInterface: ROSConnection
 
-        # NOTE switch these for swagbot nodes
+        # the topics that will be listened to for measurements
         sub_topics = [
-            "/rss/gp/crop_height_avg" # Average crop height in frame (excluding wheels)
+            # Crop height avg and std in frame (excluding wheels)
+            ("/rss/gp/crop_height_avg", "/rss/gp/crop_height_std")
         ]
 
         sampler = ROSConnection(sub_topics)
