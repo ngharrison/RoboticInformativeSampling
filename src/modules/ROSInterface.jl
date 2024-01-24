@@ -55,10 +55,12 @@ function (R::ROSConnection)(new_loc::Location)
     std_msg = pyimport("std_msgs.msg")
 
     rospy.wait_for_message("sortie_finished", std_msg.Bool) # a message means finished
+    @debug "received sortie finished"
 
     # get values
     values = [rospy.wait_for_message(node, std_msg.Float32, timeout=20).data
               for node in R.sub_topics]
+    @debug "received values:" values
 
     return values
 end
@@ -76,9 +78,11 @@ function (R::ROSConnection)(new_index::SampleInput)
     std_msg = pyimport("std_msgs.msg")
 
     rospy.wait_for_message("sortie_finished", std_msg.Bool) # a message means finished
+    @debug "received sortie finished"
 
     # get values
     values = rospy.wait_for_message(R.sub_topics[quantity], std_msg.Float32, timeout=20)
+    @debug "received values:" values
 
     return values
 end
@@ -93,7 +97,9 @@ function publishNextLocation(publisher::Publisher{Pose}, new_loc::Location)
     # orientation = finalOrientation(pathCost, new_loc)
     orientation = 0
     q = Quaternion(params(QuatRotation(RotZ(orientation)))...)
-    publish(publisher, Pose(p, q))
+    pose = Pose(p, q)
+    publish(publisher, pose)
+    @debug "published next location:" pose
 end
 
 end
