@@ -438,10 +438,10 @@ function rosMission()
     occupancy = Map(zeros(Bool, 100, 100), lb, ub)
 
 
-    sampleCostType = NormedSampleCost
+    sampleCostType = EIGFSampleCost
 
     ## initialize alg values
-    weights = [1, 6, 1, 3e-3] # mean, std, dist, prox
+    weights = (; μ=1, σ=5e3, τ=1, d=0) # mean, std, dist, prox
     start_loc = [0.0, 0.0]
     num_samples = 4
 
