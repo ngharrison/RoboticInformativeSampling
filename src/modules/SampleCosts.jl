@@ -2,7 +2,7 @@ module SampleCosts
 
 using LinearAlgebra: norm
 using Statistics: mean
-using DocStringExtensions: TYPEDSIGNATURES, TYPEDEF
+using DocStringExtensions: TYPEDSIGNATURES
 
 using Maps: pointToCell, cellToPoint, res
 using Paths: PathCost

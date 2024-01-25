@@ -108,3 +108,9 @@ Modules = [Visualization]
 
 The interface for passing data to and from other ROS nodes. It sets up an `adaptive_sampling` node and provides methods to handle the data. This is designed specifically for communication with Swagbot.
 
+Main public types and functions:
+- `ROSConnection`
+
+```@autodocs
+Modules = [ROSInterface]
+```

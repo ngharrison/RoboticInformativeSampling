@@ -7,9 +7,9 @@ Kernel associated with the semiparametric latent factor model.
 
 # Definition
 
-For inputs ``x, x'`` and output dimensions ``p_x, p_{x'}'``, the kernel is defined as[^STJ]
+For inputs ``x, x'`` and output dimensions ``p, p''``, the kernel is defined as[^STJ]
 ```math
-k\big((x, p_x), (x, p_{x'})\big) = \sum^{Q}_{q=1} A_{p_xq}g_q(x, x')A_{p_{x'}q},
+k\big((x, p), (x', p')\big) = \sum^{Q}_{q=1} A_{p q}g_q(x, x')A_{p' q},
 ```
 where ``g_1, \ldots, g_Q`` are ``Q`` kernels, one for each latent process, and ``A`` is a matrix of weights for the kernels of
 size ``m \times Q``.
