@@ -43,6 +43,27 @@ To run the project in its current state, run =include("src/main/Main.jl")= at th
 
 That should be enough to get you started. Go to the documentation to understand more about the code and the Julia language in general.
 
+* Using as a ROS Package
+The project includes code to communicate with other nodes in the Robot Operating System (ROS). These features will work just by running the code as normal from the command line or within the Julia REPL.
+
+In addition, this project can be used as a ROS package itself by simply putting it inside your workspace source directory (e.g. =catkin_ws/src=). It works similar to using a ROS python package because it uses rospy behind the scenes. If you want to run, for example, =Main.jl=:
+
+1. Make sure the file is executable
+2. Run =catkin_make= from the workspace
+3. Source the workspace
+4. Run =rosrun adaptive_sampling Main.jl=
+
+
+The file will need to have the following code at the top for this to work:
+#+begin_src julia
+#!/usr/bin/env julia
+
+using Pkg
+Pkg.activate(Base.source_dir() * "/../..")
+#+end_src
+
+To see further examples of files that this works for, look in the =src/ros_sims= directory.
+
 * Documentation
 
 To generate the docs, run the following command from the project root:

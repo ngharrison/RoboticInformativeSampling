@@ -1,5 +1,10 @@
 #!/usr/bin/env julia
-# should be run as `julia --project <script_name>` from within a project directory
+# should be set and run as an executable
+
+# this file is just used for testing ROSInterface.jl
+
+using Pkg
+Pkg.activate(Base.source_dir() * "/../..")
 
 using RobotOS
 @rosimport std_msgs.msg: Bool, Float64

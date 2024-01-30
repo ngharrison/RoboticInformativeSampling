@@ -1,3 +1,8 @@
+#!/usr/bin/env julia
+
+using Pkg
+Pkg.activate(Base.source_dir() * "/../..")
+
 # allows using modules defined in any file in project modules directory
 mod_dir = dirname(Base.active_project()) * "/src/modules"
 if mod_dir ∉ LOAD_PATH
@@ -8,16 +13,13 @@ end
 using Logging
 global_logger(ConsoleLogger(stderr, Logging.Info))
 
-using Missions: simMission, ausMission, nswMission, conradMission, rosMission
-using BeliefModels: outputCorMat
-using Visualization: visualize
+using Missions: rosMission
 
 ## initialize data for mission
 mission = rosMission()
 
 ## run search alg
 @time samples, beliefs = mission(visuals=false, sleep_time=0.0);
-@debug "output determination matrix:" outputCorMat(beliefs[end]).^2
 
 ## save outputs
 # saveBeliefMapToPng(beliefModel, occupancy)
