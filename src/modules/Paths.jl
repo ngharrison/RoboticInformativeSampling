@@ -50,10 +50,15 @@ function PathCost(start, occupancy, resolution;
     costMatrix = [occ ? Inf : NaN for occ in occupancy]
     costMatrix[start] = 0.0
 
-    # create diffs but filter out center cell and maybe diagonals
-    comp = (diagonals ? >(0) : ==(1))
-    f = diff -> comp(count(!=(0), Tuple(diff)))
-    diffs = filter(f, CartesianIndices(ntuple(Returns(-1:1), ndims(costMatrix))))
+    # create movement diffs but filter out center cell and maybe diagonals
+    diffs = CartesianIndices(ntuple(Returns(-1:1), ndims(costMatrix)))
+    diffs = filter(diffs) do diff
+        if diagonals
+            any(!=(0), Tuple(diff))
+        else
+            count(!=(0), Tuple(diff)) == 1
+        end
+    end
 
     frontier = PriorityQueue{CartesianIndex{ndims(costMatrix)}, Float64}()
     frontier[start] = 0.0
