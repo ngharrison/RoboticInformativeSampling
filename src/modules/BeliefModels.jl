@@ -112,18 +112,45 @@ function BeliefModel(samples, lb, ub; σn=1e-3, kernel=multiKernel)
     X = getfield.(samples, :x)
     Y = getfield.(samples, :y)
 
-    θ0 = initHyperparams(X, Y, lb, ub; σn)
+    f_post, θ = buildOptimizedGP(X, Y, lb, ub; σn, kernel)
+    return BeliefModelSimple(f_post, θ)
+end
+
+# no measurement noise
+function buildOptimizedGP(X, Y_vals::AbstractArray{<:Real}, lb, ub; σn, kernel)
+    Y_errs = 0.0
+
+    θ0 = initHyperparams(X, Y_vals, lb, ub; σn)
 
     # optimize hyperparameters (train)
-    θ = optimizeLoss(createLossFunc(X, Y, kernel), θ0)
+    θ = optimizeLoss(createLossFunc(X, Y_vals, Y_errs, kernel), θ0)
 
     # produce optimized gp belief model
-    f = GP(kernel(θ)) # prior gp
-    # currently not using σn
-    fx = f(X, last.(Y).^2 .+ √eps())
-    f_post = posterior(fx, first.(Y)) # gp conditioned on training samples
+    fx = buildPriorGP(X, Y_errs, kernel, θ)
+    f_post = posterior(fx, Y_vals) # gp conditioned on training samples
 
-    return BeliefModelSimple(f_post, θ)
+    return f_post, θ
+end
+
+# with measurement noise
+function buildOptimizedGP(X, Y::AbstractArray{<:NTuple{2, <:Real}}, lb, ub; σn, kernel)
+    Y_vals, Y_errs = first.(Y), last.(Y)
+
+    θ0 = initHyperparams(X, Y_vals, lb, ub) # no noise to learn
+
+    # optimize hyperparameters (train)
+    θ = optimizeLoss(createLossFunc(X, Y_vals, Y_errs, kernel), θ0)
+
+    # produce optimized gp belief model
+    fx = buildPriorGP(X, Y_errs, kernel, θ)
+    f_post = posterior(fx, Y_vals) # gp conditioned on training samples
+
+    return f_post, θ
+end
+
+function buildPriorGP(X, Y_errs, kernel, θ, ϵ=0.0)
+    f = GP(kernel(θ))
+    f(X, Y_errs.^2 .+ √eps() .+ ϵ) # eps to prevent numerical issues
 end
 
 """
@@ -181,15 +208,15 @@ $(TYPEDSIGNATURES)
 
 Creates the structure of hyperparameters for a MTGP and gives them initial values.
 """
-function initHyperparams(X, Y, lb, ub; σn=1e-3)
+function initHyperparams(X, Y_vals, lb, ub; kwargs...)
     T = maximum(last, X) # number of outputs
     n = fullyConnectedCovNum(T)
     # NOTE may change to all just 0.5
-    # σ = (length(first.(Y))>1 ? std(first.(Y)) : 0.5)/sqrt(2) * ones(n)
+    # σ = (length(Y_vals)>1 ? std(Y_vals) : 0.5)/sqrt(2) * ones(n)
     σ = 0.5/sqrt(2) * ones(n)
     a = mean(ub .- lb)
     ℓ = length(X)==1 ? a : a/length(X) + mean(std(first.(X)))*(1-1/length(X))
-    return (; σ, ℓ, σn)
+    return (; σ, ℓ, kwargs...)
 end
 
 """
@@ -197,14 +224,14 @@ $(TYPEDSIGNATURES)
 
 Creates the structure of hyperparameters for a SLFM and gives them initial values.
 """
-function initHyperparamsSLFM(X, Y, lb, ub; σn=1e-3)
+function initHyperparamsSLFM(X, Y_vals, lb, ub; kwargs...)
     T = maximum(last, X) # number of outputs
     # NOTE may change to all just 0.5
-    # σ = (length(first.(Y))>1 ? std(first.(Y)) : 0.5)/sqrt(2) * ones(n)
+    # σ = (length(first.(Y_vals))>1 ? std(first.(Y_vals)) : 0.5)/sqrt(2) * ones(n)
     σ = 0.5/sqrt(2) * ones(T,T)
     a = mean(ub .- lb)
     ℓ = (length(X)==1 ? a : a/length(X) + mean(std(first.(X)))*(1-1/length(X))) * ones(T)
-    return (; σ, ℓ, σn)
+    return (; σ, ℓ, kwargs...)
 end
 
 """
@@ -233,25 +260,21 @@ $(TYPEDSIGNATURES)
 This function creates the loss function for training the GP. The negative log
 marginal likelihood is used.
 """
-function createLossFunc(X, Y, kernel)
+function createLossFunc(X, Y_vals, Y_errs, kernel)
     # returns a function for the negative log marginal likelihood
     θ -> begin
         try
-            f = GP(kernel(θ))
-            # currently not using σn
-            fx = f(X, last.(Y).^2 .+ √eps()) # eps to prevent numerical issues
-            return -logpdf(fx, first.(Y))
+            fx = buildPriorGP(X, Y_errs, kernel, θ)
+            return -logpdf(fx, Y_vals)
         catch e
             # for PosDefException
             # this seems to happen when θ.σ is extremely large and θ.ℓ is
             # much bigger than the search region dimensions
-            @error e θ X Y
+            @error e θ X Y_vals, Y_errs
 
-            f = GP(kernel(θ))
             # NOTE this will probably break if reached with the multiKernel
-            # currently not using σn
-            fx = f(X, last.(Y).^2 .+ √eps()+1e-1*θ.σ) # fix by making diagonal a little bigger
-            return -logpdf(fx, first.(Y))
+            fx = buildPriorGP(X, Y_errs, kernel, θ, 1e-1*θ.σ)
+            return -logpdf(fx, Y_vals)
         end
     end
 end

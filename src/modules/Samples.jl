@@ -31,11 +31,11 @@ Struct to hold the input and output of a sample.
 Fields:
 $(TYPEDFIELDS)
 """
-struct Sample
+struct Sample{T}
     "the sample input, usually a location and sensor id"
     x::SampleInput
     "the sample output or observation, a scalar"
-    y::SampleOutput
+    y::T
 end
 
 """
