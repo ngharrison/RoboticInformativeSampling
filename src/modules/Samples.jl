@@ -21,9 +21,9 @@ const SampleInput = Tuple{Location, Int}
 
 """
 $(TYPEDEF)
-Value of sample measurement
+Value of sample measurement, the measurement mean and standard deviation
 """
-const SampleOutput = Float64
+const SampleOutput = Tuple{Float64, Float64}
 
 """
 Struct to hold the input and output of a sample.
@@ -31,11 +31,11 @@ Struct to hold the input and output of a sample.
 Fields:
 $(TYPEDFIELDS)
 """
-struct Sample
+struct Sample{T}
     "the sample input, usually a location and sensor id"
     x::SampleInput
     "the sample output or observation, a scalar"
-    y::SampleOutput
+    y::T
 end
 
 """

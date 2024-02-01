@@ -2,7 +2,7 @@ module SampleCosts
 
 using LinearAlgebra: norm
 using Statistics: mean
-using DocStringExtensions: TYPEDSIGNATURES, TYPEDEF
+using DocStringExtensions: TYPEDSIGNATURES
 
 using Maps: pointToCell, cellToPoint, res
 using Paths: PathCost
@@ -168,7 +168,7 @@ function values(sc::EIGFSampleCost, loc)
 
     closest_sample = argmin(sample -> norm(sample.x[1] - loc), sc.samples)
 
-    μ_err = μ_norm - closest_sample.y
+    μ_err = μ_norm - closest_sample.y[1]
 
     return (-μ_err^2, -σ_norm^2, τ_norm, 0.0)
 end

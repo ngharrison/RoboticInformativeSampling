@@ -129,6 +129,7 @@ function (M::Mission)(; samples=Sample[], beliefs=BeliefModel[], seed_val=0, vis
 
     println()
     println("Mission complete")
+
     return samples, beliefs
 end
 
@@ -423,25 +424,26 @@ function rosMission()
         # this requires a working rospy installation
         using ROSInterface: ROSConnection
 
-        # NOTE switch these for swagbot nodes
+        # the topics that will be listened to for measurements
         sub_topics = [
-            "/value1",
-            "/value2"
+            # Crop height avg and std in frame (excluding wheels)
+            ("/rss/gp/crop_height_avg", "/rss/gp/crop_height_std")
         ]
 
         sampler = ROSConnection(sub_topics)
     end
 
-    lb = [0.0, 0.0]; ub = [1.0, 1.0]
+    lb = [0.0, 0.0]; ub = [20.0, 20.0]
 
     occupancy = Map(zeros(Bool, 100, 100), lb, ub)
 
-    sampleCostType = NormedSampleCost
+
+    sampleCostType = EIGFSampleCost
 
     ## initialize alg values
-    weights = [1, 6, 1, 3e-3] # mean, std, dist, prox
+    weights = (; μ=1, σ=5e3, τ=1, d=0) # mean, std, dist, prox
     start_loc = [0.0, 0.0]
-    num_samples = 10
+    num_samples = 4
 
     return Mission(; occupancy,
                    sampler,

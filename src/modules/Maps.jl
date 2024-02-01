@@ -21,7 +21,7 @@ and implementing the base methods.
 Fields:
 $(TYPEDFIELDS)
 """
-struct Map{T1<:Real, N<:Any, A<:AbstractArray{T1, N}, T2<:Real} <: AbstractArray{T1, N}
+struct Map{T1<:Any, N<:Any, A<:AbstractArray{T1, N}, T2<:Real} <: AbstractArray{T1, N}
     "N-dimensional array of data"
     data::A
     "vector of lower bounds, defaults to zeros"
@@ -36,7 +36,7 @@ struct Map{T1<:Real, N<:Any, A<:AbstractArray{T1, N}, T2<:Real} <: AbstractArray
     end
 end
 
-Map(data::AbstractArray{<:Real}) = Map(data, zeros(ndims(data)), ones(ndims(data)))
+Map(data::AbstractArray{<:Any}) = Map(data, zeros(ndims(data)), ones(ndims(data)))
 
 """
 Method accepts a single vector (the location), returns a scalar (the value at

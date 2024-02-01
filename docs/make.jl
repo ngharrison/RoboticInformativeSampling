@@ -6,7 +6,7 @@ end
 
 using Documenter
 using Maps, Missions, BeliefModels,
-      Samples, SampleCosts, Paths, Visualization
+      Samples, SampleCosts, Paths, Visualization, ROSInterface
 
 makedocs(
     sitename="AdaptiveSampling.jl",

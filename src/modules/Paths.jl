@@ -2,13 +2,11 @@ module Paths
 
 using LinearAlgebra: norm
 using DataStructures: PriorityQueue, dequeue!
-using DocStringExtensions: TYPEDEF, TYPEDSIGNATURES, TYPEDFIELDS
+using DocStringExtensions: TYPEDSIGNATURES, TYPEDFIELDS
 
 export PathCost, getPath, finalOrientation
 
 """
-$(TYPEDEF)
-
 Struct for PathCost function data. Previous computations are kept track of in
 its data. Can be used multiple times for the same start cell, saving
 computation.

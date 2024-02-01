@@ -3,10 +3,14 @@ module Metrics
 using Statistics: mean
 
 using BeliefModels: BeliefModel, outputCorMat
+using Samples: MapsSampler
 
 export calcMetrics
 
 function calcMetrics(mission, beliefs)
+    mission.sampler isa MapsSampler ||
+        error("don't know how to get a ground truth from that type of sampler")
+
     M = mission
     axs = range.(M.occupancy.lb, M.occupancy.ub, size(M.occupancy))
     points = collect.(Iterators.product(axs...))
@@ -27,6 +31,9 @@ function calcMetrics(mission, beliefs)
 end
 
 function calcMetrics(mission, beliefs, q)
+    mission.sampler isa MapsSampler ||
+        error("don't know how to get a ground truth from that type of sampler")
+
     M = mission
     axs = range.(M.occupancy.lb, M.occupancy.ub, size(M.occupancy))
     points = collect.(Iterators.product(axs...))
