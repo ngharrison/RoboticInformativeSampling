@@ -13,11 +13,11 @@ using Missions: maps_dir
 # calculates the mean of a vector of matrices
 # can be passed a function, such as isnan, to skip certain elements
 function matMean(a; skip=Returns(false))
-    res = zero(a[1])
-    for i in eachindex(res)
-        res[i] = mean(filter(!skip, getindex.(a, i)))
+    result = zero(a[1])
+    for i in eachindex(result)
+        result[i] = mean(filter(!skip, getindex.(a, i)))
     end
-    return res
+    return result
 end
 
 main_dir = maps_dir * "full_2022/"
