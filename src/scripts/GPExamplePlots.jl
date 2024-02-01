@@ -8,7 +8,7 @@ end
 using Plots
 using Plots: mm
 
-using Maps: res
+using Maps: res, generateAxes
 using Missions: simMission
 
 function copy_ticks(plt::Plots.Plot=current())
@@ -24,9 +24,7 @@ mission = simMission(; seed_val=3, num_peaks=4, priors=collect(Bool, (0,0,0)))
 @time samples, beliefs = mission(visuals=false, sleep_time=0.0);
 
 j = 12
-occ = mission.occupancy
-axs = range.(occ.lb, occ.ub, size(occ))
-points = collect.(Iterators.product(axs...))
+axs, points = generateAxes(mission.occupancy)
 dims = Tuple(length.(axs))
 μ, σ = beliefs[j](tuple.(vec(points), 1))
 pred_map = reshape(μ, dims)

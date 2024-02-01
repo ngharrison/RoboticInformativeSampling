@@ -7,7 +7,7 @@ using Statistics: cor
 using Random: seed!
 using DocStringExtensions: TYPEDSIGNATURES, TYPEDFIELDS
 
-using Maps: Map, imgToMap, GaussGroundTruth, Peak, pointToCell, cellToPoint
+using Maps: Map, imgToMap, GaussGroundTruth, Peak, pointToCell, cellToPoint, generateAxes
 using Samples: Sample, MapsSampler, selectSampleLocation, takeSamples
 using SampleCosts: SampleCost, values, BasicSampleCost,
                    NormedSampleCost, MIPTSampleCost, EIGFSampleCost
@@ -158,8 +158,7 @@ function simMission(; seed_val=0, num_samples=30, num_peaks=3, priors=Bool[1,1,1
     peaks = [Peak(rand(2).*(ub-lb) .+ lb, 0.02*(rand()+0.5)*I, rand())
              for i in 1:num_peaks]
     ggt = GaussGroundTruth(peaks)
-    axs = range.(lb, ub, size(occupancy))
-    points = collect.(Iterators.product(axs...))
+    axs, points = generateAxes(occupancy)
     mat = ggt(points)
     map0 = Map(mat./maximum(mat), lb, ub)
 

@@ -3,7 +3,7 @@ module Visualization
 using Plots: plot, heatmap, scatter!, @layout, mm, grid
 using DocStringExtensions: TYPEDSIGNATURES
 
-using Maps: GroundTruth, Map, res
+using Maps: GroundTruth, Map, res, generateAxes
 using BeliefModels: BeliefModel
 using SampleCosts: SampleCost
 
@@ -197,17 +197,6 @@ function getAxes(map)
     elseif axes === nothing # recompute
         axes, points = generateAxes(map)
     end
-    return axes, points
-end
-
-"""
-$(TYPEDSIGNATURES)
-
-Method to generate the x and y plotting axes.
-"""
-function generateAxes(map)
-    global axes = range.(map.lb, map.ub, size(map))
-    global points = collect.(Iterators.product(axes...))
     return axes, points
 end
 

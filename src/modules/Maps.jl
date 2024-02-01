@@ -4,7 +4,7 @@ using Distributions: MvNormal, pdf
 using DocStringExtensions: TYPEDSIGNATURES, TYPEDFIELDS
 
 export Map, GaussGroundTruth, Peak, imgToMap,
-       res, pointToCell, cellToPoint
+       res, pointToCell, cellToPoint, generateAxes
 
 """
 A general type for holding multidimensional data (usually a matrix) along with
@@ -149,6 +149,17 @@ $(TYPEDSIGNATURES)
 Takes in a CartesianIndex and a Map and returns a point in world-coordinates.
 """
 cellToPoint(ci, map) = (collect(Tuple(ci)) .- 1) .* res(map) .+ map.lb
+
+"""
+$(TYPEDSIGNATURES)
+
+Method to generate the x, y, etc. axes and points of a Map. Useful for plotting.
+"""
+function generateAxes(map)
+    axes = range.(map.lb, map.ub, size(map))
+    points = collect.(Iterators.product(axes...))
+    return axes, points
+end
 
 
 abstract type GroundTruth end

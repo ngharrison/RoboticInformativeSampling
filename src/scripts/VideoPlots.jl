@@ -5,6 +5,7 @@ if mod_dir ∉ LOAD_PATH
     push!(LOAD_PATH, mod_dir)
 end
 
+using Maps: generateAxes
 using Missions: Mission
 using BeliefModels: BeliefModel
 using Samples: Sample
@@ -45,8 +46,7 @@ x2 = getindex.(xp, 2)
 
 for i in eachindex(beliefs)
     # GP maps
-    axs = range.(occ.lb, occ.ub, size(occ))
-    points = collect.(Iterators.product(axs...))
+    axs, points = generateAxes(occ)
     μ, σ = beliefs[i](tuple.(vec(points), 1))
     dims = Tuple(length.(axs))
     pred_map = reshape(μ, dims)
@@ -157,8 +157,7 @@ xp_m = first.(getfield.(samples_m, :x))
 x1_m = getindex.(xp_m, 1)
 x2_m = getindex.(xp_m, 2)
 
-axs = range.(occ.lb, occ.ub, size(occ))
-points = collect.(Iterators.product(axs...))
+axs, points = generateAxes(occ)
 dims = Tuple(length.(axs))
 
 for i in eachindex(beliefs)

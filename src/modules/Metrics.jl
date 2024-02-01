@@ -2,6 +2,7 @@ module Metrics
 
 using Statistics: mean
 
+using Maps: generateAxes
 using BeliefModels: BeliefModel, outputCorMat
 using Samples: MapsSampler
 
@@ -12,8 +13,7 @@ function calcMetrics(mission, beliefs)
         error("don't know how to get a ground truth from that type of sampler")
 
     M = mission
-    axs = range.(M.occupancy.lb, M.occupancy.ub, size(M.occupancy))
-    points = collect.(Iterators.product(axs...))
+    axs, points = generateAxes(M.occupancy)
 
     mae = zeros(length(beliefs), length(M.sampler))
     mu = zeros(length(beliefs), length(M.sampler))
@@ -35,8 +35,7 @@ function calcMetrics(mission, beliefs, q)
         error("don't know how to get a ground truth from that type of sampler")
 
     M = mission
-    axs = range.(M.occupancy.lb, M.occupancy.ub, size(M.occupancy))
-    points = collect.(Iterators.product(axs...))
+    axs, points = generateAxes(M.occupancy)
 
     mae = zeros(length(beliefs))
     mu = zeros(length(beliefs))

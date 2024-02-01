@@ -5,6 +5,7 @@ using Dates: now, year, month, day, hour, minute, second
 using Images: save as saveImg, colorview, RGBA
 
 using Plots
+using Maps: generateAxes
 using Visualization: visualize
 
 export save, output_dir, output_ext
@@ -58,8 +59,7 @@ function saveBeliefMapToPng(beliefModel, occupancy,
                             file_name=dateTimeString() * "_belief_map")
     mkpath(output_dir)
 
-    axs = range.(occupancy.lb, occupancy.ub, size(occupancy))
-    points = collect.(Iterators.product(axs...))
+    axs, points = generateAxes(occupancy)
     dims = Tuple(length.(axs))
     μ, _ = beliefModel(tuple.(vec(points), 1))
     pred_map = reshape(μ, dims)

@@ -5,7 +5,7 @@ if mod_dir ∉ LOAD_PATH
     push!(LOAD_PATH, mod_dir)
 end
 
-using Maps: res
+using Maps: res, generateAxes
 using Missions: Mission
 using BeliefModels: BeliefModel, fullyConnectedCovMat
 using Samples: Sample
@@ -98,8 +98,7 @@ plot([x->f(x) for f in fs2], 0, 1;
 savefig(output_dir * "linear_models/from_samples_and_kernel.svg")
 
 ## linear model --- GP predictions
-axs = range.(occ.lb, occ.ub, size(occ))
-points = collect.(Iterators.product(axs...))
+axs, points = generateAxes(occ)
 dims = Tuple(length.(axs))
 
 weights = σ -> @. 1/σ^2 # inverse variance

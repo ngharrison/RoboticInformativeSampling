@@ -11,7 +11,7 @@ using LinearAlgebra: I
 using Statistics: cor
 using Plots
 
-using Maps: Map, GaussGroundTruth, Peak
+using Maps: Map, GaussGroundTruth, Peak, generateAxes
 using Samples: Sample, MapsSampler
 
 seed_val=3; num_peaks=4; priors=Bool[1,1,1];
@@ -28,8 +28,7 @@ occupancy = Map(zeros(Bool, 100, 100), lb, ub)
 peaks = [Peak(rand(2).*(ub-lb) .+ lb, 0.02*(rand()+0.5)*I, rand())
          for i in 1:num_peaks]
 ggt = GaussGroundTruth(peaks)
-axs = range.(lb, ub, size(occupancy))
-points = collect.(Iterators.product(axs...))
+axs, points = generateAxes(occupancy)
 mat = ggt(points)
 map0 = Map(mat./maximum(mat), lb, ub)
 
