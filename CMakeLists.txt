@@ -13,6 +13,13 @@ find_package(catkin REQUIRED COMPONENTS
   geometry_msgs
 )
 
+# set custom build command that should always be run
+add_custom_target(instantiate ALL
+  COMMAND julia --project=${CMAKE_CURRENT_SOURCE_DIR} -e "using Pkg\; Pkg.instantiate\\(\\)"
+  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+  COMMENT "Instantiating Julia project"
+)
+
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
 
