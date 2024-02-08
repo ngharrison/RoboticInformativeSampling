@@ -93,8 +93,7 @@ function (R::ROSConnection)(new_loc::Location)
 
     # get values, creates a list of tuples of (value, error)
     observations = [
-        (rospy.wait_for_message(val_topic, std_msg.Float32, timeout=20).data,
-         rospy.wait_for_message(err_topic, std_msg.Float32, timeout=20).data)
+        rospy.wait_for_message(val_topic, std_msg.Float32, timeout=20).data
         for (val_topic, err_topic) in R.sub_topics]
 
     @debug "received values:" observations
@@ -126,10 +125,10 @@ function (R::ROSConnection)(new_index::SampleInput)
     # get value
     (val_topic, err_topic) = R.sub_topics[quantity]
     value = rospy.wait_for_message(val_topic, std_msg.Float32, timeout=20).data
-    error = rospy.wait_for_message(err_topic, std_msg.Float32, timeout=20).data
-    @debug "received value:" value, error
+    # error = rospy.wait_for_message(err_topic, std_msg.Float32, timeout=20).data
+    @debug "received value:" value# , error
 
-    return value, error
+    return value# , error
 end
 
 """

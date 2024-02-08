@@ -414,7 +414,7 @@ function conradMission()
                    start_loc)
 end
 
-function rosMission()
+function rosMission(; num_samples=4)
 
     # this allows loading a module from within this function
     # it runs this block in the global namespace of this module
@@ -432,7 +432,7 @@ function rosMission()
         sampler = ROSConnection(sub_topics)
     end
 
-    lb = [0.0, 0.0]; ub = [20.0, 20.0]
+    lb = [1.0, 1.0]; ub = [9.0, 9.0]
 
     occupancy = Map(zeros(Bool, 100, 100), lb, ub)
 
@@ -441,8 +441,7 @@ function rosMission()
 
     ## initialize alg values
     weights = (; μ=1, σ=5e3, τ=1, d=0) # mean, std, dist, prox
-    start_loc = [0.0, 0.0]
-    num_samples = 4
+    start_loc = [1.0, 1.0]
 
     return Mission(; occupancy,
                    sampler,

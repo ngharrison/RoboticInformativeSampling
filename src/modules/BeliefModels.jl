@@ -178,7 +178,7 @@ end
 function (beliefModel::BeliefModelSimple)(X::Vector{SampleInput}; full_cov=false)
     func = full_cov ? mean_and_cov : mean_and_var
     μ, σ² = func(beliefModel.gp, X)
-    return μ, .√σ²
+    return μ, .√clamp!(σ², 0.0, Inf) # avoid negative variances
 end
 
 """
