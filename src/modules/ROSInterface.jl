@@ -3,7 +3,7 @@
 module ROSInterface
 
 using RobotOS
-@rosimport geometry_msgs.msg: Pose, Point, Quaternion
+@rosimport geometry_msgs.msg: Pose, PoseStamped, Point, Quaternion
 rostypegen(@__MODULE__)
 using .geometry_msgs.msg
 
@@ -30,7 +30,7 @@ struct ROSConnection
     "vector of topic names that will be subscribed to to receive measurements"
     sub_topics::Vector{Tuple{String, String}}
     "name of topic to publish next sample location to"
-    publisher::Publisher{Pose}
+    publisher::Publisher{PoseStamped}
 end
 
 """
@@ -47,7 +47,7 @@ function ROSConnection(sub_topics)
     init_node("adaptive_sampling")
 
     # this will pass the full goal pose, no quantity id
-    publisher = Publisher{Pose}("latest_sample", queue_size=1, latch=true)
+    publisher = Publisher{PoseStamped}("latest_sample", queue_size=1, latch=true)
 
     # create connection object
     rosConnection = ROSConnection(sub_topics, publisher)
@@ -136,7 +136,7 @@ $(TYPEDSIGNATURES)
 
 Internal function used to send the next location to Swagbot.
 """
-function publishNextLocation(publisher::Publisher{Pose}, new_loc::Location)
+function publishNextLocation(publisher::Publisher{PoseStamped}, new_loc::Location)
     # create Point and Quaternion and put them together
     p = Point(new_loc..., 0)
     # TODO use real orientation
@@ -144,7 +144,11 @@ function publishNextLocation(publisher::Publisher{Pose}, new_loc::Location)
     orientation = 0
     q = Quaternion(params(QuatRotation(RotZ(orientation)))...)
     pose = Pose(p, q)
-    publish(publisher, pose)
+    poseStamped = PoseStamped()
+    poseStamped.header.stamp = RobotOS.now()
+    poseStamped.header.frame_id = "map"
+    poseStamped.pose = pose
+    publish(publisher, poseStamped)
     @debug "published next location:" pose
 end
 
