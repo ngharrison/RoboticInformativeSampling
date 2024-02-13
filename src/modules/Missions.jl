@@ -95,25 +95,26 @@ function (M::Mission)(; samples=Sample[], beliefs=BeliefModel[], seed_val=0, vis
     sampleCost = nothing
 
     println("Mission started")
-    println()
 
     for i in 1:M.num_samples
+        println()
         println("Sample number $i")
 
         # new sample location
         if beliefModel !== nothing # prior belief exists
             sampleCost = M.sampleCostType(M, samples, beliefModel, quantities)
             new_loc = selectSampleLocation(sampleCost, lb, ub)
-            @debug "new location: $new_loc"
             @debug "cost function values: $(Tuple(values(sampleCost, new_loc)))"
             @debug "cost function weights: $(Tuple(M.weights))"
             @debug "cost function terms: $(Tuple(values(sampleCost, new_loc)) .* Tuple(M.weights))"
             @debug "cost function value: $(sampleCost(new_loc))"
         end
+        println("Next sample location: $new_loc")
 
         # sample all quantities
         new_samples = takeSamples(new_loc, M.sampler)
         append!(samples, new_samples)
+        println("Sample values: $(getfield.(new_samples, :y))")
 
         # new belief
         beliefModel = BeliefModel([M.prior_samples; samples], lb, ub)
