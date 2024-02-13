@@ -3,7 +3,7 @@ module Missions
 using LinearAlgebra: I, norm
 using Images: load, imresize, Gray, gray
 using DelimitedFiles: readdlm
-using Statistics: cor
+using Statistics: mean, cor
 using Random: seed!
 using DocStringExtensions: TYPEDSIGNATURES, TYPEDFIELDS
 
@@ -156,8 +156,12 @@ function simMission(; seed_val=0, num_samples=30, num_peaks=3, priors=Bool[1,1,1
     ## initialize ground truth
 
     # simulated
-    peaks = [Peak(rand(2).*(ub-lb) .+ lb, 0.02*(rand()+0.5)*I, rand())
-             for i in 1:num_peaks]
+    peaks = map(1:num_peaks) do _
+        μ = rand(2).*(ub-lb) .+ lb
+        Σ = 0.02*(rand()+0.5)*mean(ub-lb)^2*I
+        h = rand()
+        Peak(μ, Σ, h)
+    end
     ggt = GaussGroundTruth(peaks)
     axs, points = generateAxes(occupancy)
     mat = ggt(points)
@@ -184,8 +188,12 @@ function simMission(; seed_val=0, num_samples=30, num_peaks=3, priors=Bool[1,1,1
     # push!(prior_maps, [zeros(size(map0,1),t) map0[:,1:end-t]]) # shift
 
     # random peaks
-    peaks = [Peak(rand(2).*(ub-lb) .+ lb, 0.02*(rand()+0.5)*I, rand())
-             for i in 1:num_peaks]
+    peaks = map(1:num_peaks) do _
+        μ = rand(2).*(ub-lb) .+ lb
+        Σ = 0.02*(rand()+0.5)*mean(ub-lb)^2*I
+        h = rand()
+        Peak(μ, Σ, h)
+    end
     tggt = GaussGroundTruth(peaks)
     tmat = tggt(points)
     m = Map(tmat./maximum(tmat), lb, ub)

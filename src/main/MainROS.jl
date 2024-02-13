@@ -20,6 +20,7 @@ mission = rosMission()
 
 ## run search alg
 @time samples, beliefs = mission(visuals=false, sleep_time=0.0);
+# save(mission, samples, beliefs)
 
 ## save outputs
 # saveBeliefMapToPng(beliefModel, occupancy)
