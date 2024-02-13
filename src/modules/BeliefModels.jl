@@ -213,9 +213,10 @@ function initHyperparams(X, Y_vals, lb, ub; kwargs...)
     n = fullyConnectedCovNum(T)
     # NOTE may change to all just 0.5
     # σ = (length(Y_vals)>1 ? std(Y_vals) : 0.5)/sqrt(2) * ones(n)
+    # a = mean(ub .- lb)
+    # ℓ = length(X)==1 ? a : a/length(X) + mean(std(first.(X)))*(1-1/length(X))
     σ = 0.5/sqrt(2) * ones(n)
-    a = mean(ub .- lb)
-    ℓ = length(X)==1 ? a : a/length(X) + mean(std(first.(X)))*(1-1/length(X))
+    ℓ = mean(ub .- lb)
     return (; σ, ℓ, kwargs...)
 end
 
@@ -228,9 +229,10 @@ function initHyperparamsSLFM(X, Y_vals, lb, ub; kwargs...)
     T = maximum(last, X) # number of outputs
     # NOTE may change to all just 0.5
     # σ = (length(first.(Y_vals))>1 ? std(first.(Y_vals)) : 0.5)/sqrt(2) * ones(n)
+    # a = mean(ub .- lb)
+    # ℓ = (length(X)==1 ? a : a/length(X) + mean(std(first.(X)))*(1-1/length(X))) * ones(T)
     σ = 0.5/sqrt(2) * ones(T,T)
-    a = mean(ub .- lb)
-    ℓ = (length(X)==1 ? a : a/length(X) + mean(std(first.(X)))*(1-1/length(X))) * ones(T)
+    ℓ = mean(ub .- lb) * ones(T)
     return (; σ, ℓ, kwargs...)
 end
 
