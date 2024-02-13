@@ -272,10 +272,10 @@ function createLossFunc(X, Y_vals, Y_errs, kernel)
             # for PosDefException
             # this seems to happen when θ.σ is extremely large and θ.ℓ is
             # much bigger than the search region dimensions
-            @error e θ X Y_vals, Y_errs
+            @error e θ X Y_vals Y_errs
 
             # NOTE this will probably break if reached with the multiKernel
-            fx = buildPriorGP(X, Y_errs, kernel, θ, 1e-1*θ.σ)
+            fx = buildPriorGP(X, Y_errs, kernel, θ, 1e-1*maximum(θ.σ))
             return -logpdf(fx, Y_vals)
         end
     end
