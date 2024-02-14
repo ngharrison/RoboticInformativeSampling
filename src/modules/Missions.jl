@@ -12,7 +12,6 @@ using Samples: Sample, MapsSampler, selectSampleLocation, takeSamples
 using SampleCosts: SampleCost, values, BasicSampleCost,
                    NormedSampleCost, MIPTSampleCost, EIGFSampleCost
 using BeliefModels: BeliefModel, outputCorMat
-using Visualization: visualize
 
 export simMission, ausMission, nswMission, conradMission, rosMission,
        Mission, maps_dir
@@ -79,7 +78,8 @@ mission = simMission(num_samples=10) # create the specific mission
 samples, beliefs = mission(visuals=true, sleep_time=0.5) # run the mission
 ```
 """
-function (M::Mission)(; samples=Sample[], beliefs=BeliefModel[], seed_val=0, visuals=false, sleep_time=0)
+function (M::Mission)(func=Returns(nothing);
+                      samples=Sample[], beliefs=BeliefModel[], seed_val=0, sleep_time=0)
     M.occupancy(M.start_loc) && error("start location is within obstacle")
 
     # initialize
@@ -89,44 +89,51 @@ function (M::Mission)(; samples=Sample[], beliefs=BeliefModel[], seed_val=0, vis
     quantities = eachindex(M.sampler) # all current available quantities
 
     beliefModel = nothing
-    if !isempty(samples)
-        beliefModel = BeliefModel([M.prior_samples; samples], lb, ub)
-    end
     sampleCost = nothing
 
     println("Mission started")
 
     for i in 1:M.num_samples
+        if !isempty(samples)
+            # new belief
+            beliefModel = BeliefModel([M.prior_samples; samples], lb, ub)
+            push!(beliefs, beliefModel)
+
+            if i < M.num_samples
+                # new sample location
+                sampleCost = M.sampleCostType(M, samples, beliefModel, quantities)
+                new_loc = selectSampleLocation(sampleCost, lb, ub)
+
+                @debug "cost function values: $(Tuple(values(sampleCost, new_loc)))"
+                @debug "cost function weights: $(Tuple(M.weights))"
+                @debug "cost function terms: $(Tuple(values(sampleCost, new_loc)) .* Tuple(M.weights))"
+                @debug "cost function value: $(sampleCost(new_loc))"
+
+                # user-defined function (visualization, saving, etc.)
+                func(M, samples, beliefModel, sampleCost, new_loc)
+                @debug "output determination matrix:" outputCorMat(beliefs[end]).^2
+                sleep(sleep_time)
+            end
+        end
+
         println()
         println("Sample number $i")
 
-        # new sample location
-        if beliefModel !== nothing # prior belief exists
-            sampleCost = M.sampleCostType(M, samples, beliefModel, quantities)
-            new_loc = selectSampleLocation(sampleCost, lb, ub)
-            @debug "cost function values: $(Tuple(values(sampleCost, new_loc)))"
-            @debug "cost function weights: $(Tuple(M.weights))"
-            @debug "cost function terms: $(Tuple(values(sampleCost, new_loc)) .* Tuple(M.weights))"
-            @debug "cost function value: $(sampleCost(new_loc))"
-        end
         println("Next sample location: $new_loc")
 
         # sample all quantities
         new_samples = takeSamples(new_loc, M.sampler)
         append!(samples, new_samples)
         println("Sample values: $(getfield.(new_samples, :y))")
-
-        # new belief
-        beliefModel = BeliefModel([M.prior_samples; samples], lb, ub)
-        push!(beliefs, beliefModel)
-
-        # visualization
-        if visuals
-            display(visualize(M, beliefModel, sampleCost, samples, quantity=1))
-        end
-        @debug "output determination matrix:" outputCorMat(beliefs[end]).^2
-        sleep(sleep_time)
     end
+
+    # new belief
+    beliefModel = BeliefModel([M.prior_samples; samples], lb, ub)
+    push!(beliefs, beliefModel)
+
+    # user-defined function (visualization, saving, etc.)
+    func(M, samples, beliefModel, sampleCost, new_loc)
+    @debug "output determination matrix:" outputCorMat(beliefs[end]).^2
 
     println()
     println("Mission complete")
