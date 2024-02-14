@@ -124,6 +124,8 @@ checkBounds(x, map) # no error thrown
 ```
 """
 function checkBounds(x, map::Map)
+    length(x) == ndims(map) ||
+        throw(DomainError(x, "length doesn't match map dimensions: $(ndims(map))"))
     all(map.lb .<= x .<= map.ub) ||
         throw(DomainError(x, "out of map bounds: ($(map.lb), $(map.ub))"))
 end
