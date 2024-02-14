@@ -4,7 +4,8 @@ using Distributions: MvNormal, pdf
 using DocStringExtensions: TYPEDSIGNATURES, TYPEDFIELDS
 
 export Map, GaussGroundTruth, Peak, imgToMap,
-       res, pointToCell, cellToPoint, generateAxes
+       res, pointToCell, cellToPoint, generateAxes,
+       ConstantRegion
 
 """
 A general type for holding multidimensional data (usually a matrix) along with
@@ -210,5 +211,28 @@ Inputs:
 - `h`: the peak height
 """
 Peak(μ, Σ, h) = Peak(MvNormal(μ, Σ), h)
+
+"""
+$(TYPEDSIGNATURES)
+
+Type that can be called to return one value when within its bounds and another
+when without. Pass it a multi-dimensional point, like a location in space.
+"""
+struct ConstantRegion{T1, T2}
+    "single value that this type returns when within bounds"
+    in_bounds_value::T1
+    "single value that this type returns when out of bounds"
+    out_of_bounds_value::T1
+    "vector of lower bounds, defaults to zeros"
+    lb::Vector{T2}
+    "vector of upper bounds, defaults to ones"
+    ub::Vector{T2}
+end
+
+function (cr::ConstantRegion)(x)
+    all(cr.lb .<= x .<= cr.ub) ?
+        cr.in_bounds_value :
+        cr.out_of_bounds_value
+end
 
 end
