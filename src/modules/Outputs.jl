@@ -24,11 +24,12 @@ end
 
 function save(mission, samples, beliefs;
               animation=false,
+              sub_dir_name="",
               file_name=dateTimeString() * "_mission")
 
-    mkpath(output_dir * dirname(file_name))
+    mkpath(output_dir * sub_dir_name * "/" * dirname(file_name))
 
-    full_path_name = output_dir * file_name * output_ext
+    full_path_name = output_dir * sub_dir_name * "/" * file_name * output_ext
 
     jldsave(full_path_name; mission, samples, beliefs)
 
@@ -45,10 +46,10 @@ function save(mission, samples, beliefs;
 
 end
 
-function save(metrics; file_name=dateTimeString() * "_metrics")
+function save(metrics; sub_dir_name="", file_name=dateTimeString() * "_metrics")
     mkpath(output_dir * dirname(file_name))
 
-    full_path_name = output_dir * file_name * output_ext
+    full_path_name = output_dir * sub_dir_name * "/" * file_name * output_ext
 
     jldsave(full_path_name; metrics)
 end
