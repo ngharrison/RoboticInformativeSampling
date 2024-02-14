@@ -125,7 +125,7 @@ checkBounds(x, map) # no error thrown
 """
 function checkBounds(x, map::Map)
     all(map.lb .<= x .<= map.ub) ||
-        throw(BoundsError("location $x is out of map bounds: ($(map.lb), $(map.ub))"))
+        throw(DomainError(x, "out of map bounds: ($(map.lb), $(map.ub))"))
 end
 
 """
