@@ -118,7 +118,7 @@ Returns the sample location, a vector
 """
 function selectSampleLocation(sampleCost, lb, ub)
     # in future could optimize for measured quantity as well
-    loc0 = (ub .- lb)./2 # I think this value doesn't matter for PSO
+    loc0 = @. (ub - lb)/2 + lb
     opt = optimize(
         sampleCost,
         loc0,
