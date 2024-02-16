@@ -93,28 +93,17 @@ function (M::Mission)(func=Returns(nothing);
     beliefModel = nothing
     sampleCost = nothing
 
-    n = 10
-    points_sp = vec(collect.(Iterators.product(range.(lb, ub, (n,n))...)))
-    points_sp = map(1:n) do i
-        l = (i - 1) * n + 1
-        h = i * n
-        i%2==1 ? points_sp[l:h] : points_sp[h:-1:l]
-    end |> Iterators.flatten |> collect
-    points_sp = points_sp[81:100]
-    new_loc = points_sp[1]
-
     println("Mission started")
 
-    for i in 1:length(points_sp)
+    for i in 1:M.num_samples
         if !isempty(samples)
             # new belief
             beliefModel = BeliefModel([M.prior_samples; samples], lb, ub)
             push!(beliefs, beliefModel)
 
             # new sample location
-            # sampleCost = M.sampleCostType(M, samples, beliefModel, quantities)
-            # new_loc = selectSampleLocation(sampleCost, lb, ub)
-            new_loc = points_sp[i]
+            sampleCost = M.sampleCostType(M, samples, beliefModel, quantities)
+            new_loc = selectSampleLocation(sampleCost, lb, ub)
 
             @debug "cost function values: $(Tuple(values(sampleCost, new_loc)))"
             @debug "cost function weights: $(Tuple(M.weights))"
