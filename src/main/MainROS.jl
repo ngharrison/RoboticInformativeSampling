@@ -26,7 +26,7 @@ mission = pyeFarmMission()
     sleep_time=0.0
 ) do M, samples, beliefModel, sampleCost, new_loc
     display(visualize(beliefModel, samples, new_loc, M.occupancy, 1))
-    save(mission, samples, beliefModel)
+    save(M, samples, beliefModel)
 end;
 save(mission, samples, beliefs)
 

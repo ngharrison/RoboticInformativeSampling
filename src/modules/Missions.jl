@@ -90,7 +90,6 @@ function (M::Mission)(func=Returns(nothing);
     new_loc = M.start_loc
     quantities = eachindex(M.sampler) # all current available quantities
 
-    beliefModel = nothing
     sampleCost = nothing
 
     println("Mission started")
@@ -112,7 +111,7 @@ function (M::Mission)(func=Returns(nothing);
 
             # user-defined function (visualization, saving, etc.)
             func(M, samples, beliefModel, sampleCost, new_loc)
-            @debug "output determination matrix:" outputCorMat(beliefs[end]).^2
+            @debug "output determination matrix:" outputCorMat(beliefModel).^2
             sleep(sleep_time)
         end
 
@@ -133,7 +132,7 @@ function (M::Mission)(func=Returns(nothing);
 
     # user-defined function (visualization, saving, etc.)
     func(M, samples, beliefModel, sampleCost, new_loc)
-    @debug "output determination matrix:" outputCorMat(beliefs[end]).^2
+    @debug "output determination matrix:" outputCorMat(beliefModel).^2
 
     println()
     println("Mission complete")
