@@ -9,10 +9,7 @@ using Logging
 global_logger(ConsoleLogger(stderr, Logging.Info))
 
 using Missions: simMission, ausMission, nswMission, conradMission, rosMission
-using BeliefModels: outputCorMat
 using Visualization: visualize
-using Metrics: calcMetrics
-using Outputs: save
 
 ## initialize data for mission
 mission = simMission(num_samples=10)
@@ -22,11 +19,14 @@ mission = simMission(num_samples=10)
     display ∘ visualize;
     sleep_time=0.0
 );
-@debug "output determination matrix:" outputCorMat(beliefs[end]).^2
+
+
+# using Metrics: calcMetrics
+# using Outputs: save
+#
+# ## calculate errors
+# metrics = calcMetrics(mission, beliefs, 1)
+#
+# ## save outputs
 # save(mission, samples, beliefs; animation=true)
-
-## calculate errors
-metrics = calcMetrics(mission, beliefs, 1)
-
-## save outputs
-save(metrics)
+# save(metrics)

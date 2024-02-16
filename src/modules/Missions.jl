@@ -93,26 +93,6 @@ function (M::Mission)(func=Returns(nothing);
     println("Mission started")
 
     for i in 1:M.num_samples
-        if !isempty(samples)
-            # new belief
-            beliefModel = BeliefModel([M.prior_samples; samples], lb, ub)
-            push!(beliefs, beliefModel)
-
-            # new sample location
-            sampleCost = M.sampleCostType(M, samples, beliefModel, quantities)
-            new_loc = selectSampleLocation(sampleCost, lb, ub)
-
-            @debug "cost function values: $(Tuple(values(sampleCost, new_loc)))"
-            @debug "cost function weights: $(Tuple(M.weights))"
-            @debug "cost function terms: $(Tuple(values(sampleCost, new_loc)) .* Tuple(M.weights))"
-            @debug "cost function value: $(sampleCost(new_loc))"
-
-            # user-defined function (visualization, saving, etc.)
-            func(M, samples, beliefModel, sampleCost, new_loc)
-            @debug "output determination matrix:" outputCorMat(beliefModel).^2
-            sleep(sleep_time)
-        end
-
         println()
         println("Sample number $i")
 
@@ -122,15 +102,29 @@ function (M::Mission)(func=Returns(nothing);
         new_samples = takeSamples(new_loc, M.sampler)
         append!(samples, new_samples)
         println("Sample values: $(getfield.(new_samples, :y))")
+
+        # new belief
+        beliefModel = BeliefModel([M.prior_samples; samples], lb, ub)
+        push!(beliefs, beliefModel)
+
+        # new sample location
+        sampleCost = nothing
+        new_loc = nothing
+        if i < M.num_samples
+            sampleCost = M.sampleCostType(M, samples, beliefModel, quantities)
+            new_loc = selectSampleLocation(sampleCost, lb, ub)
+
+            @debug "cost function values: $(Tuple(values(sampleCost, new_loc)))"
+            @debug "cost function weights: $(Tuple(M.weights))"
+            @debug "cost function terms: $(Tuple(values(sampleCost, new_loc)) .* Tuple(M.weights))"
+            @debug "cost function value: $(sampleCost(new_loc))"
+        end
+
+        # user-defined function (visualization, saving, etc.)
+        func(M, samples, beliefModel, sampleCost, new_loc)
+        @debug "output determination matrix:" outputCorMat(beliefModel).^2
+        sleep(sleep_time)
     end
-
-    # new belief
-    beliefModel = BeliefModel([M.prior_samples; samples], lb, ub)
-    push!(beliefs, beliefModel)
-
-    # user-defined function (visualization, saving, etc.)
-    func(M, samples, beliefModel, nothing, nothing)
-    @debug "output determination matrix:" outputCorMat(beliefModel).^2
 
     println()
     println("Mission complete")
