@@ -90,8 +90,6 @@ function (M::Mission)(func=Returns(nothing);
     new_loc = M.start_loc
     quantities = eachindex(M.sampler) # all current available quantities
 
-    sampleCost = nothing
-
     println("Mission started")
 
     for i in 1:M.num_samples
@@ -131,7 +129,7 @@ function (M::Mission)(func=Returns(nothing);
     push!(beliefs, beliefModel)
 
     # user-defined function (visualization, saving, etc.)
-    func(M, samples, beliefModel, sampleCost, new_loc)
+    func(M, samples, beliefModel, nothing, nothing)
     @debug "output determination matrix:" outputCorMat(beliefModel).^2
 
     println()

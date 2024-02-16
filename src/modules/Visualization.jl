@@ -34,14 +34,14 @@ resolution when plotting continuous-valued functions and defaults to $(default_r
 If no ground truth is available, it is not plotted.
 """
 function visualize(md, samples, beliefModel::BeliefModel, sampleCost, new_loc; quantity=1)
-    a = visualize(beliefModel, samples, new_loc, md.occupancy; quantity)
+    a = visualize(beliefModel, samples, md.occupancy, new_loc; quantity)
     b = plot(legend=false, grid=false, foreground_color_subplot=:white) # blank plot
     # TODO this will need to be updated to test for actual types
     if hasmethod(getindex, Tuple{typeof(md.sampler), Integer})
         # we actually have ground truth
         b = visualize(md.sampler[quantity], "Quantity of Interest")
     end
-    c = visualize(sampleCost, samples, new_loc, md.occupancy)
+    c = visualize(sampleCost, samples, md.occupancy, new_loc)
     l = @layout [a ; b c]
     plot(a, b, c, layout=l, size=default_size, margin=default_margin)
 end
@@ -51,14 +51,14 @@ $(TYPEDSIGNATURES)
 """
 function visualize(md, samples, beliefModel::BeliefModel, new_loc; quantity=1)
     sampleCost = md.sampleCostType(md, samples, beliefModel, eachindex(md.sampler))
-    a = visualize(beliefModel, samples, new_loc, md.occupancy; quantity)
+    a = visualize(beliefModel, samples, md.occupancy, new_loc; quantity)
     b = plot(legend=false, grid=false, foreground_color_subplot=:white) # blank plot
     # TODO this will need to be updated to test for actual types
     if hasmethod(getindex, Tuple{typeof(md.sampler), Integer})
         # we actually have ground truth
         b = visualize(md.sampler[quantity], "Quantity of Interest")
     end
-    c = visualize(sampleCost, samples, new_loc, md.occupancy)
+    c = visualize(sampleCost, samples, md.occupancy, new_loc)
     l = @layout [a ; b c]
     plot(a, b, c, layout=l, size=default_size, margin=default_margin)
 end
@@ -126,7 +126,7 @@ $(TYPEDSIGNATURES)
 Method to show belief model values of mean and standard deviation and the sample
 locations that they were generated from. Shows two plots side-by-side.
 """
-function visualize(beliefModel::BeliefModel, samples, new_loc, occupancy; quantity=1)
+function visualize(beliefModel::BeliefModel, samples, occupancy, new_loc=nothing; quantity=1)
     axes, points = getAxes(occupancy)
     dims = Tuple(length.(axes))
     μ, σ = beliefModel(tuple.(vec(points), quantity))
@@ -138,32 +138,37 @@ function visualize(beliefModel::BeliefModel, samples, new_loc, occupancy; quanti
     err_map[occupancy] .= NaN
 
     xp = first.(getfield.(samples, :x))
-    x1 = [getindex.(xp, 1); new_loc[1]]
-    x2 = [getindex.(xp, 2); new_loc[2]]
+    x1 = getindex.(xp, 1)
+    x2 = getindex.(xp, 2)
 
     p1 = heatmap(axes..., pred_map')
-    scatter!(x1[begin:end-1], x2[begin:end-1];
+    scatter!(x1, x2;
              xlabel="x1",
              ylabel="x2",
              title="GP Mean",
              legend=nothing,
              color=sample_color,
              markersize=default_markersize)
-    scatter!([x1[end]], [x2[end]];
-             color=new_sample_color,
-             markersize=default_markersize)
+    if new_loc != nothing
+        scatter!([new_loc[1]], [new_loc[2]];
+                 color=new_sample_color,
+                 markersize=default_markersize)
+    end
+
 
     p2 = heatmap(axes..., err_map')
-    scatter!(x1[begin:end-1], x2[begin:end-1];
+    scatter!(x1, x2;
              xlabel="x1",
              ylabel="x2",
              title="GP Std",
              legend=nothing,
              color=sample_color,
              markersize=default_markersize)
-    scatter!([x1[end]], [x2[end]];
-             color=new_sample_color,
-             markersize=default_markersize)
+    if new_loc != nothing
+        scatter!([new_loc[1]], [new_loc[2]];
+                 color=new_sample_color,
+                 markersize=default_markersize)
+    end
 
     plot(p1, p2)
 end
@@ -174,7 +179,7 @@ $(TYPEDSIGNATURES)
 
 Method to show sample cost values.
 """
-function visualize(sampleCost, samples, new_loc, occupancy)
+function visualize(sampleCost, samples, occupancy, new_loc=nothing)
     isnothing(sampleCost) && return plot()
 
     axes, points = getAxes(occupancy)
@@ -184,18 +189,21 @@ function visualize(sampleCost, samples, new_loc, occupancy)
     data[occupancy] .= NaN
 
     xp = first.(getfield.(samples, :x))
-    x1 = [getindex.(xp, 1); new_loc[1]]
-    x2 = [getindex.(xp, 2); new_loc[2]]
+    x1 = getindex.(xp, 1)
+    x2 = getindex.(xp, 2)
 
     heatmap(axes..., data')
-    scatter!(x1[begin:end-1], x2[begin:end-1];
+    scatter!(x1, x2;
              xlabel="x1",
              ylabel="x2",
              title="Obj Function",
              legend=nothing,
              color=sample_color,
              markersize=default_markersize)
-    scatter!([x1[end]], [x2[end]], color=new_sample_color, markersize=default_markersize)
+    if new_loc != nothing
+        scatter!([new_loc[1]], [new_loc[2]], color=new_sample_color, markersize=default_markersize)
+    end
+
 end
 
 """
