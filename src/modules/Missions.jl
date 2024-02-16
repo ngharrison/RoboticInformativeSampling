@@ -12,9 +12,10 @@ using Samples: Sample, MapsSampler, selectSampleLocation, takeSamples
 using SampleCosts: SampleCost, values, BasicSampleCost,
                    NormedSampleCost, MIPTSampleCost, EIGFSampleCost
 using BeliefModels: BeliefModel, outputCorMat
+using Visualization: visualize
 
 export simMission, ausMission, nswMission, conradMission, rosMission,
-       Mission, maps_dir
+       pyeFarmMission, Mission, maps_dir
 
 const maps_dir = dirname(Base.active_project()) * "/maps/"
 
@@ -79,7 +80,8 @@ samples, beliefs = mission(visuals=true, sleep_time=0.5) # run the mission
 ```
 """
 function (M::Mission)(func=Returns(nothing);
-                      samples=Sample[], beliefs=BeliefModel[], seed_val=0, sleep_time=0)
+                      samples=Sample[], beliefs=BeliefModel[],
+                      seed_val=0, sleep_time=0)
     M.occupancy(M.start_loc) && error("start location is within obstacle")
 
     # initialize
@@ -91,29 +93,38 @@ function (M::Mission)(func=Returns(nothing);
     beliefModel = nothing
     sampleCost = nothing
 
+    n = 10
+    points_sp = vec(collect.(Iterators.product(range.(lb, ub, (n,n))...)))
+    points_sp = map(1:n) do i
+        l = (i - 1) * n + 1
+        h = i * n
+        i%2==1 ? points_sp[l:h] : points_sp[h:-1:l]
+    end |> Iterators.flatten |> collect
+    points_sp = points_sp[81:100]
+    new_loc = points_sp[1]
+
     println("Mission started")
 
-    for i in 1:M.num_samples
+    for i in 1:length(points_sp)
         if !isempty(samples)
             # new belief
             beliefModel = BeliefModel([M.prior_samples; samples], lb, ub)
             push!(beliefs, beliefModel)
 
-            if i < M.num_samples
-                # new sample location
-                sampleCost = M.sampleCostType(M, samples, beliefModel, quantities)
-                new_loc = selectSampleLocation(sampleCost, lb, ub)
+            # new sample location
+            # sampleCost = M.sampleCostType(M, samples, beliefModel, quantities)
+            # new_loc = selectSampleLocation(sampleCost, lb, ub)
+            new_loc = points_sp[i]
 
-                @debug "cost function values: $(Tuple(values(sampleCost, new_loc)))"
-                @debug "cost function weights: $(Tuple(M.weights))"
-                @debug "cost function terms: $(Tuple(values(sampleCost, new_loc)) .* Tuple(M.weights))"
-                @debug "cost function value: $(sampleCost(new_loc))"
+            @debug "cost function values: $(Tuple(values(sampleCost, new_loc)))"
+            @debug "cost function weights: $(Tuple(M.weights))"
+            @debug "cost function terms: $(Tuple(values(sampleCost, new_loc)) .* Tuple(M.weights))"
+            @debug "cost function value: $(sampleCost(new_loc))"
 
-                # user-defined function (visualization, saving, etc.)
-                func(M, samples, beliefModel, sampleCost, new_loc)
-                @debug "output determination matrix:" outputCorMat(beliefs[end]).^2
-                sleep(sleep_time)
-            end
+            # user-defined function (visualization, saving, etc.)
+            func(M, samples, beliefModel, sampleCost, new_loc)
+            @debug "output determination matrix:" outputCorMat(beliefs[end]).^2
+            sleep(sleep_time)
         end
 
         println()
@@ -442,7 +453,7 @@ function rosMission(; num_samples=4)
         # the topics that will be listened to for measurements
         sub_topics = [
             # Crop height avg and std in frame (excluding wheels)
-            ("/rss/gp/crop_height_avg", "/rss/gp/crop_height_std")
+            ("value1", "value2")
         ]
 
         sampler = ROSConnection(sub_topics)
@@ -450,19 +461,7 @@ function rosMission(; num_samples=4)
 
     lb = [1.0, 1.0]; ub = [9.0, 9.0]
 
-    # # read in elevation
-    # elev_img = load(maps_dir * "arthursleigh_shed_small.tif")
-    # elevMap = imgToMap(gray.(elev_img), lb, ub)
-    #
-    # # read in obstacles
-    # obs_img = load(maps_dir * "obstacles_fieldsouth_220727.tif")
-    # obs_img_res = imresize(obs_img, size(elev_img))
-    # # the image we have has zeros for obstacles, need to flip
-    # occ_mat = Matrix{Bool}(Gray.(obs_img_res) .== 0)
-    # occupancy = imgToMap(occ_mat, lb, ub)
-
     occupancy = Map(zeros(Bool, 100, 100), lb, ub)
-
 
     sampleCostType = EIGFSampleCost
 
@@ -476,6 +475,83 @@ function rosMission(; num_samples=4)
                    sampleCostType,
                    weights,
                    start_loc)
+end
+
+function pyeFarmMission(; num_samples=4)
+
+    # this allows loading a module from within this function
+    # it runs this block in the global namespace of this module
+    # the benefit is that it only gets used if this function is run
+    @eval begin
+        # this requires a working rospy installation
+        using ROSInterface: ROSConnection
+
+        # the topics that will be listened to for measurements
+        sub_topics = [
+            # Crop height avg and std in frame (excluding wheels)
+            ("/rss/gp/crop_height_avg", "/rss/gp/crop_height_std")
+        ]
+
+        sampler = ROSConnection(sub_topics)
+    end
+
+    # # full bounds
+    # lb = [284711.12, 6241319.42]
+    # ub = [284802.91, 6241403.93]
+    # lb = [284698., 6241343.]
+    # ub = [284805., 6241405.]
+
+    # smaller bounds
+    # lb = [284729., 6241334.]
+    # ub = [284742., 6241348.]
+    # lb = [284724., 6241344.]
+    # ub = lb .+ 10
+
+    # full space (alt2)
+    lb = [284725., 6241345.]
+    ub = [284775., 6241395.]
+
+    elev_img = load(maps_dir * "iros_alt2_dem.tif")
+    elevMap = imgToMap(gray.(elev_img), lb, ub)
+
+    # # small patch (alt3)
+    # lb = [284745., 6241345.]
+    # ub = [284760., 6241360.]
+    #
+    # elev_img = load(maps_dir * "iros_alt3_dem.tif")
+    # elevMap = imgToMap(gray.(elev_img), lb, ub)
+
+    prior_maps = [elevMap]
+
+    occupancy = Map(zeros(Bool, 100, 100), lb, ub)
+
+    # sample sparsely from the prior maps
+    # currently all data have the same sample numbers and locations
+    n = (7,7) # number of samples in each dimension
+    axs_sp = range.(lb, ub, n)
+    points_sp = vec(collect.(Iterators.product(axs_sp...)))
+    prior_samples = [Sample{Float64}((x, i+length(sampler)), d(x))
+                     for (i, d) in enumerate(prior_maps)
+                         for x in points_sp if !isnan(d(x))]
+    prior_samples = Sample{Float64}[]
+
+    display(visualize(elevMap; samples=points_sp))
+
+    num_samples = 30
+
+    sampleCostType = EIGFSampleCost
+
+    ## initialize alg values
+    weights = (; μ=1, σ=5e1, τ=1, d=1) # mean, std, dist, prox
+    start_loc = lb .+ 2
+
+    return Mission(; occupancy,
+                   sampler,
+                   num_samples,
+                   sampleCostType,
+                   weights,
+                   start_loc,
+                   prior_samples)
 end
 
 # helper methods

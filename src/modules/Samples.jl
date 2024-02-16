@@ -122,7 +122,7 @@ function selectSampleLocation(sampleCost, lb, ub)
     opt = optimize(
         sampleCost,
         loc0,
-        ParticleSwarm(; lower=lb, upper=ub, n_particles=20)
+        ParticleSwarm(; lower=lb, upper=ub, n_particles=40)
     )
     @debug "sample optimizer:" opt
     return opt.minimizer

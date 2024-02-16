@@ -146,7 +146,7 @@ function publishNextLocation(publisher::Publisher{PoseStamped}, new_loc::Locatio
     pose = Pose(p, q)
     poseStamped = PoseStamped()
     poseStamped.header.stamp = RobotOS.now()
-    poseStamped.header.frame_id = "map"
+    poseStamped.header.frame_id = "utm"
     poseStamped.pose = pose
     publish(publisher, poseStamped)
     @debug "published next location:" pose

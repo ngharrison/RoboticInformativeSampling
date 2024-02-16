@@ -13,16 +13,23 @@ using Outputs: save
 
 # set the logging level: Info or Debug
 using Logging
-global_logger(ConsoleLogger(stderr, Logging.Info))
+global_logger(ConsoleLogger(stderr, Logging.Debug))
 
-using Missions: rosMission
+using Missions: rosMission, pyeFarmMission
+using Visualization: visualize
 
 ## initialize data for mission
-mission = rosMission(num_samples=4)
+mission = pyeFarmMission()
 
 ## run search alg
-@time samples, beliefs = mission(visuals=false, sleep_time=0.0);
+@time samples, beliefs = mission(
+    sleep_time=0.0
+) do M, samples, beliefModel, sampleCost, new_loc
+    display(visualize(beliefModel, samples, new_loc, M.occupancy, 1))
+    save(mission, samples, beliefModel)
+end;
 save(mission, samples, beliefs)
 
 ## save outputs
 # saveBeliefMapToPng(beliefs[end], mission.occupancy)
+
