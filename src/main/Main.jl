@@ -19,10 +19,9 @@ mission = simMission(num_samples=10)
 
 ## run search alg
 @time samples, beliefs = mission(
+    display ∘ visualize;
     sleep_time=0.0
-) do args...
-    display(visualize(args...; quantity=1))
-end;
+);
 @debug "output determination matrix:" outputCorMat(beliefs[end]).^2
 # save(mission, samples, beliefs; animation=true)
 

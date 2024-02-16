@@ -33,8 +33,8 @@ resolution when plotting continuous-valued functions and defaults to $(default_r
 
 If no ground truth is available, it is not plotted.
 """
-function visualize(md, samples, beliefModel::BeliefModel, sampleCost, new_loc; quantity)
-    a = visualize(beliefModel, samples, new_loc, md.occupancy, quantity)
+function visualize(md, samples, beliefModel::BeliefModel, sampleCost, new_loc; quantity=1)
+    a = visualize(beliefModel, samples, new_loc, md.occupancy; quantity)
     b = plot(legend=false, grid=false, foreground_color_subplot=:white) # blank plot
     # TODO this will need to be updated to test for actual types
     if hasmethod(getindex, Tuple{typeof(md.sampler), Integer})
@@ -49,9 +49,9 @@ end
 """
 $(TYPEDSIGNATURES)
 """
-function visualize(md, samples, beliefModel::BeliefModel, new_loc; quantity)
+function visualize(md, samples, beliefModel::BeliefModel, new_loc; quantity=1)
     sampleCost = md.sampleCostType(md, samples, beliefModel, eachindex(md.sampler))
-    a = visualize(beliefModel, samples, new_loc, md.occupancy, quantity)
+    a = visualize(beliefModel, samples, new_loc, md.occupancy; quantity)
     b = plot(legend=false, grid=false, foreground_color_subplot=:white) # blank plot
     # TODO this will need to be updated to test for actual types
     if hasmethod(getindex, Tuple{typeof(md.sampler), Integer})
@@ -126,7 +126,7 @@ $(TYPEDSIGNATURES)
 Method to show belief model values of mean and standard deviation and the sample
 locations that they were generated from. Shows two plots side-by-side.
 """
-function visualize(beliefModel::BeliefModel, samples, new_loc, occupancy, quantity)
+function visualize(beliefModel::BeliefModel, samples, new_loc, occupancy; quantity=1)
     axes, points = getAxes(occupancy)
     dims = Tuple(length.(axes))
     μ, σ = beliefModel(tuple.(vec(points), quantity))
