@@ -593,8 +593,7 @@ function replay(M::Mission, full_samples, beliefs; sleep_time=0.0)
         beliefModel = beliefs[i]
         sampleCost = M.sampleCostType(M, samples, beliefModel, quantities)
 
-        # user-defined function (visualization, saving, etc.)
-        new_loc = i < M. num_samples ? full_samples[i+1].x[1] : nothing
+        new_loc = i < M.num_samples ? full_samples[i+1].x[1] : nothing
         display(visualize(M, samples, beliefModel, sampleCost, new_loc))
         @debug "output determination matrix:" outputCorMat(beliefModel).^2
         sleep(sleep_time)
