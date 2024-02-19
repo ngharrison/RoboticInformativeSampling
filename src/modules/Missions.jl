@@ -15,7 +15,7 @@ using BeliefModels: BeliefModel, outputCorMat
 using Visualization: visualize
 
 export simMission, ausMission, nswMission, conradMission, rosMission,
-       pyeFarmMission, Mission, maps_dir
+       pyeFarmMission, Mission, replay, maps_dir
 
 const maps_dir = dirname(Base.active_project()) * "/maps/"
 
@@ -556,6 +556,47 @@ function spatialAve(M, extent=1)
         N[i,j] = tot/count
     end
     return N
+end
+
+function replay(M::Mission, full_samples, beliefs; sleep_time=0.0)
+    lb, ub = M.occupancy.lb, M.occupancy.ub
+    quantities = eachindex(M.sampler) # all current available quantities
+
+    println("Mission started")
+
+    for i in 1:length(full_samples)
+        println()
+        println("Sample number $i")
+
+        sample = full_samples[i]
+
+        new_loc = sample.x[1]
+        println("Next sample location: $new_loc")
+
+        new_vals = sample.y
+        println("Sample values: $(new_vals)")
+
+        samples = full_samples[1:i]
+
+        beliefModel = beliefs[i]
+        sampleCost = M.sampleCostType(M, samples, beliefModel, quantities)
+
+        # user-defined function (visualization, saving, etc.)
+        new_loc = i < M. num_samples ? full_samples[i+1].x[1] : nothing
+        display(visualize(M, samples, beliefModel, sampleCost, new_loc))
+        @debug "output determination matrix:" outputCorMat(beliefModel).^2
+        sleep(sleep_time)
+    end
+
+    println()
+    println("Mission complete")
+end
+
+function replay(M::Mission, full_samples; sleep_time=0.0)
+    beliefs = map(1:length(full_samples)) do i
+        BeliefModel([M.prior_samples; full_samples[1:i]], M.occupancy.lb, M.occupancy.ub)
+    end
+    replay(M, full_samples, beliefs; sleep_time)
 end
 
 end
