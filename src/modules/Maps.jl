@@ -3,7 +3,7 @@ module Maps
 using Distributions: MvNormal, pdf
 using DocStringExtensions: TYPEDSIGNATURES, TYPEDFIELDS
 
-export Map, GaussGroundTruth, Peak, imgToMap,
+export Map, GaussGroundTruth, Peak, imgToMap, randomPoint,
        res, pointToCell, cellToPoint, generateAxes,
        ConstantRegion
 
@@ -89,8 +89,12 @@ rand(map)
 ```
 """
 function Base.rand(map::Map)
-    x = map.lb .+ rand(ndims(map)).*(map.ub .- map.lb)
+    x = randomPoint(map)
     return x, map(x)
+end
+
+function randomPoint(map::Map)
+    return map.lb .+ rand(ndims(map)).*(map.ub .- map.lb)
 end
 
 # helper methods used with maps
