@@ -4,11 +4,14 @@ if mod_dir ∉ LOAD_PATH
     push!(LOAD_PATH, mod_dir)
 end
 
+using Maps: Map
 using Missions: Mission
 using BeliefModels: BeliefModel
 using Samples: Sample
 using Outputs: output_dir, output_ext
 using ROSInterface: ROSConnection
+using Visualization
+using Outputs: save, saveBeliefMapToPng
 
 using Statistics: mean, std
 using FileIO: load
@@ -23,8 +26,6 @@ data = load(file_name)
 mission = data["mission"]
 beliefs = data["beliefs"]
 samples = data["samples"]
-
-using Visualization
 quantities = eachindex(mission.sampler)
 sampleCost = mission.sampleCostType(mission, samples, beliefs[end], quantities)
 display(visualize(mission, samples, beliefs[end], mission.occupancy.lb; quantity=1))
@@ -42,5 +43,15 @@ lb, ub = mission.occupancy.lb, mission.occupancy.ub
 beliefs = map(1:length(samples)) do i
     BeliefModel(samples[1:i], lb, ub)
 end
-using Outputs: save
 save(mission, samples, beliefs)
+
+## make png from proxy ground truth
+name = "2024-02-19-13-27-06_mission"
+file_name = output_dir * "$(name).jld2"
+data = load(file_name)
+mission = data["mission"]
+samples = data["samples"]
+lb, ub = mission.occupancy.lb, mission.occupancy.ub
+beliefModel = BeliefModel(samples, lb, ub)
+
+saveBeliefMapToPng(beliefModel, mission.occupancy, name)
