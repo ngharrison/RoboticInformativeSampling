@@ -32,8 +32,8 @@ display(visualize(mission, samples, beliefs[end], mission.occupancy.lb; quantity
 
 
 ## concatenate samples
-file_name1 = output_dir * "2024-02-15-17-26-06_mission.jld2"
-file_name2 = output_dir * "2024-02-15-18-26-15_mission.jld2"
+file_name1 = output_dir * "pye_farm_trial/2024-02-15-17-26-06_mission.jld2"
+file_name2 = output_dir * "pye_farm_trial/2024-02-15-18-26-15_mission.jld2"
 
 data1 = load(file_name1)
 data2 = load(file_name2)
@@ -46,7 +46,7 @@ end
 save(mission, samples, beliefs)
 
 ## make png from proxy ground truth
-name = "2024-02-19-13-27-06_mission"
+name = "pye_farm_trial/2024-02-19-13-27-06_mission"
 file_name = output_dir * "$(name).jld2"
 data = load(file_name)
 mission = data["mission"]
