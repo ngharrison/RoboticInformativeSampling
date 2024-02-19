@@ -192,7 +192,7 @@ function visualize(sampleCost, samples, occupancy, new_loc=nothing)
     x1 = getindex.(xp, 1)
     x2 = getindex.(xp, 2)
 
-    heatmap(axes..., data')
+    plt = heatmap(axes..., data')
     scatter!(x1, x2;
              xlabel="x1",
              ylabel="x2",
@@ -204,6 +204,7 @@ function visualize(sampleCost, samples, occupancy, new_loc=nothing)
         scatter!([new_loc[1]], [new_loc[2]], color=new_sample_color, markersize=default_markersize)
     end
 
+    return plt
 end
 
 """
