@@ -7,7 +7,8 @@ using Statistics: mean, cor
 using Random: seed!
 using DocStringExtensions: TYPEDSIGNATURES, TYPEDFIELDS
 
-using Maps: Map, imgToMap, GaussGroundTruth, Peak, pointToCell, cellToPoint, generateAxes
+using Maps: Map, imgToMap, GaussGroundTruth, Peak,
+            pointToCell, cellToPoint, generateAxes, randomPoint
 using Samples: Sample, MapsSampler, selectSampleLocation, takeSamples
 using SampleCosts: SampleCost, values, BasicSampleCost,
                    NormedSampleCost, MIPTSampleCost, EIGFSampleCost
@@ -30,7 +31,7 @@ mission = Mission(; occupancy,
                   num_samples,
                   sampleCostType,
                   weights,
-                  start_loc,
+                  start_locs,
                   prior_samples)
 ```
 """
@@ -45,8 +46,8 @@ mission = Mission(; occupancy,
     sampleCostType
     "weights for picking the next sample location"
     weights
-    "the starting location"
-    start_loc
+    "the locations that should be sampled first"
+    start_locs
     "any samples taken previously (default empty)"
     prior_samples = Sample[]
 end
@@ -82,12 +83,12 @@ samples, beliefs = mission(visuals=true, sleep_time=0.5) # run the mission
 function (M::Mission)(func=Returns(nothing);
                       samples=Sample[], beliefs=BeliefModel[],
                       seed_val=0, sleep_time=0)
-    M.occupancy(M.start_loc) && error("start location is within obstacle")
 
     # initialize
     seed!(seed_val)
+    new_loc = !isempty(M.start_locs) ? M.start_locs[1] : randomPoint(M.occupancy)
+
     lb, ub = M.occupancy.lb, M.occupancy.ub
-    new_loc = M.start_loc
     quantities = eachindex(M.sampler) # all current available quantities
 
     println("Mission started")
@@ -97,6 +98,9 @@ function (M::Mission)(func=Returns(nothing);
         println("Sample number $i")
 
         println("Next sample location: $new_loc")
+
+        # prevent invalid locations
+        M.occupancy(new_loc) && error("sample location is within obstacle")
 
         # sample all quantities
         new_samples = takeSamples(new_loc, M.sampler)
@@ -111,13 +115,17 @@ function (M::Mission)(func=Returns(nothing);
         sampleCost = nothing
         new_loc = nothing
         if i < M.num_samples
-            sampleCost = M.sampleCostType(M, samples, beliefModel, quantities)
-            new_loc = selectSampleLocation(sampleCost, lb, ub)
+            if i <= length(M.start_locs)
+                new_loc = M.start_locs[i]
+            else
+                sampleCost = M.sampleCostType(M, samples, beliefModel, quantities)
+                new_loc = selectSampleLocation(sampleCost, lb, ub)
 
-            @debug "cost function values: $(Tuple(values(sampleCost, new_loc)))"
-            @debug "cost function weights: $(Tuple(M.weights))"
-            @debug "cost function terms: $(Tuple(values(sampleCost, new_loc)) .* Tuple(M.weights))"
-            @debug "cost function value: $(sampleCost(new_loc))"
+                @debug "cost function values: $(Tuple(values(sampleCost, new_loc)))"
+                @debug "cost function weights: $(Tuple(M.weights))"
+                @debug "cost function terms: $(Tuple(values(sampleCost, new_loc)) .* Tuple(M.weights))"
+                @debug "cost function value: $(sampleCost(new_loc))"
+            end
         end
 
         # user-defined function (visualization, saving, etc.)
@@ -211,7 +219,11 @@ function simMission(; seed_val=0, num_samples=30, num_peaks=3, priors=Bool[1,1,1
     # weights = (; μ=1, σ=1e1, τ=1, d=0) # sogp
     weights = (; μ=1, σ=5e2, τ=1, d=0) # others
     # weights = (; μ=1, σ=1, τ=.1, d=1)
-    start_loc = [1.0, 0.0] # starting location
+    # start_locs = [[1.0, 0.0]] # starting location
+
+    n = (4,4) # number of samples in each dimension
+    axs_sp = range.(lb, ub, n)
+    start_locs = vec(collect.(Iterators.product(axs_sp...))) # starting locations
 
 
     # sample sparsely from the prior maps
@@ -236,7 +248,7 @@ function simMission(; seed_val=0, num_samples=30, num_peaks=3, priors=Bool[1,1,1
                    num_samples,
                    sampleCostType,
                    weights,
-                   start_loc,
+                   start_locs,
                    prior_samples)#, [cor(vec(map0), vec(d)).^2 for d in prior_maps]
 
 end
@@ -271,7 +283,7 @@ function ausMission(; seed_val=0, num_samples=30, priors=Bool[1,1,1])
     # weights = [1e-1, 6, 5e-1, 3e-3] # mean, std, dist, prox
     # weights = (; μ=1, σ=5e3, τ=1, d=1) # others
     weights = (; μ=1, σ=5e3, τ=1, d=1) # others
-    start_loc = [0.8, 0.6] # starting location
+    start_locs = [[0.8, 0.6]] # starting locations
 
 
     # sample sparsely from the prior maps
@@ -304,7 +316,7 @@ function ausMission(; seed_val=0, num_samples=30, priors=Bool[1,1,1])
                    num_samples,
                    sampleCostType,
                    weights,
-                   start_loc,
+                   start_locs,
                    prior_samples)
 end
 
@@ -340,7 +352,7 @@ function nswMission(; seed_val=0, num_samples=30, priors=Bool[1,1,1])
     # weights = [1e-1, 6, 5e-1, 3e-3] # mean, std, dist, prox
     # weights = (; μ=1, σ=5e3, τ=1, d=1) # others
     weights = (; μ=1, σ=5e3, τ=1, d=1) # others
-    start_loc = [1.0, 0.0] # starting location
+    start_locs = [[1.0, 0.0]] # starting locations
 
 
     # sample sparsely from the prior maps
@@ -369,7 +381,7 @@ function nswMission(; seed_val=0, num_samples=30, priors=Bool[1,1,1])
                    num_samples,
                    sampleCostType,
                    weights,
-                   start_loc,
+                   start_locs,
                    prior_samples)
 
 
@@ -408,7 +420,7 @@ function conradMission()
 
     ## initialize alg values
     weights = [1, 6, 1, 3e-3] # mean, std, dist, prox
-    start_loc = [0.8, 0.6] # starting location
+    start_locs = [[0.8, 0.6]] # starting locations
     num_samples = 20
 
     occupancy = Map(zeros(Bool, n, n), lb, ub)
@@ -418,7 +430,7 @@ function conradMission()
                    num_samples,
                    sampleCostType,
                    weights,
-                   start_loc)
+                   start_locs)
 end
 
 function rosMission(; num_samples=4)
@@ -447,14 +459,14 @@ function rosMission(; num_samples=4)
 
     ## initialize alg values
     weights = (; μ=1, σ=5e3, τ=1, d=1) # mean, std, dist, prox
-    start_loc = [1.0, 1.0]
+    start_locs = [[1.0, 1.0]]s
 
     return Mission(; occupancy,
                    sampler,
                    num_samples,
                    sampleCostType,
                    weights,
-                   start_loc)
+                   start_locs)
 end
 
 function pyeFarmMission(; num_samples=4)
@@ -523,14 +535,14 @@ function pyeFarmMission(; num_samples=4)
 
     ## initialize alg values
     weights = (; μ=1, σ=5e1, τ=1, d=1) # mean, std, dist, prox
-    start_loc = lb .+ 2
+    start_locs = [lb .+ 2]
 
     return Mission(; occupancy,
                    sampler,
                    num_samples,
                    sampleCostType,
                    weights,
-                   start_loc,
+                   start_locs,
                    prior_samples)
 end
 
