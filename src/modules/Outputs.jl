@@ -68,6 +68,9 @@ function saveBeliefMapToPng(beliefModel, occupancy,
     l, h = extrema(pred_map)
     amount = (pred_map .- l) ./ (h - l)
 
+    # map to image
+    amount = reverse(permutedims(amount, (2,1)), dims=1)
+
     map_img = stack((0.8*ones(size(pred_map)),
                      0.3*ones(size(pred_map)),
                      zeros(size(pred_map)),
