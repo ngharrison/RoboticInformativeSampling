@@ -5,7 +5,7 @@ if mod_dir ∉ LOAD_PATH
 end
 
 using Maps: Map
-using Missions: Mission
+using Missions: Mission, replay
 using BeliefModels: BeliefModel
 using Samples: Sample
 using Outputs: output_dir, output_ext
@@ -31,7 +31,7 @@ sampleCost = mission.sampleCostType(mission, samples, beliefs[end], quantities)
 display(visualize(mission, samples, beliefs[end], mission.occupancy.lb; quantity=1))
 
 
-## concatenate samples
+## concatenate split missions
 file_name1 = output_dir * "pye_farm_trial/2024-02-15-17-26-06_mission.jld2"
 file_name2 = output_dir * "pye_farm_trial/2024-02-15-18-26-15_mission.jld2"
 
@@ -45,13 +45,21 @@ beliefs = map(1:length(samples)) do i
 end
 save(mission, samples, beliefs)
 
-## make png from proxy ground truth
-name = "pye_farm_trial/2024-02-19-13-27-06_mission"
+## load mission data
+name = "pye_farm_trial/2024-02-15-16-03-26_mission"
 file_name = output_dir * "$(name).jld2"
 data = load(file_name)
 mission = data["mission"]
 samples = data["samples"]
+beliefs = data["beliefs"]
 lb, ub = mission.occupancy.lb, mission.occupancy.ub
-beliefModel = BeliefModel(samples, lb, ub)
 
-saveBeliefMapToPng(beliefModel, mission.occupancy, name)
+# set the logging level: Info or Debug
+using Logging
+global_logger(ConsoleLogger(stderr, Logging.Debug))
+
+## replay mission
+replay(mission, samples, beliefs; sleep_time=1.0)
+
+## make png from proxy ground truth
+saveBeliefMapToPng(beliefs[end], mission.occupancy, name)
