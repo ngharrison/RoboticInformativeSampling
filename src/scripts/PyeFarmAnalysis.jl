@@ -28,3 +28,19 @@ using Visualization
 quantities = eachindex(mission.sampler)
 sampleCost = mission.sampleCostType(mission, samples, beliefs[end], quantities)
 display(visualize(mission, samples, beliefs[end], mission.occupancy.lb; quantity=1))
+
+
+## concatenate samples
+file_name1 = output_dir * "2024-02-15-17-26-06_mission.jld2"
+file_name2 = output_dir * "2024-02-15-18-26-15_mission.jld2"
+
+data1 = load(file_name1)
+data2 = load(file_name2)
+samples = [data1["samples"]; data2["samples"]]
+mission = data1["mission"]
+lb, ub = mission.occupancy.lb, mission.occupancy.ub
+beliefs = map(1:length(samples)) do i
+    BeliefModel(samples[1:i], lb, ub)
+end
+using Outputs: save
+save(mission, samples, beliefs)
