@@ -4,7 +4,7 @@ if mod_dir ∉ LOAD_PATH
     push!(LOAD_PATH, mod_dir)
 end
 
-using Maps: Map
+using Maps: Map, imgToMap
 using Missions: Mission, replay
 using BeliefModels: BeliefModel
 using Samples: Sample
@@ -45,6 +45,17 @@ beliefs = map(1:length(samples)) do i
 end
 save(mission, samples, beliefs)
 
+## elevation maps
+using Missions: maps_dir
+
+elev_img = load(maps_dir * "iros_alt2_dem.tif")
+elevMap = imgToMap(gray.(elev_img), lb, ub)
+display(visualize(elevMap))
+
+elev_img = load(maps_dir * "iros_alt3_dem.tif")
+elevMap = imgToMap(gray.(elev_img), lb, ub)
+display(visualize(elevMap))
+
 ## load mission data
 name = "pye_farm_trial/2024-02-15-16-03-26_mission"
 file_name = output_dir * "$(name).jld2"
@@ -54,9 +65,8 @@ samples = data["samples"]
 beliefs = data["beliefs"]
 lb, ub = mission.occupancy.lb, mission.occupancy.ub
 
-# set the logging level: Info or Debug
 using Logging
-global_logger(ConsoleLogger(stderr, Logging.Debug))
+global_logger(ConsoleLogger(stderr, Debug))
 
 ## replay mission
 replay(mission, samples, beliefs; sleep_time=1.0)
