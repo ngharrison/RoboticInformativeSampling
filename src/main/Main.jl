@@ -9,14 +9,14 @@ using Logging
 global_logger(ConsoleLogger(stderr, Logging.Info))
 
 using Missions: simMission, ausMission, nswMission, conradMission, rosMission
-using Visualization: visualize
+using Visualization: vis
 
 ## initialize data for mission
 mission = simMission(num_samples=10)
 
 ## run search alg
 @time samples, beliefs = mission(
-    display ∘ visualize;
+    vis;
     sleep_time=0.0
 );
 
