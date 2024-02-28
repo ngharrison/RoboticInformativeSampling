@@ -40,11 +40,11 @@ save(mission, samples, beliefs; sub_dir_name="pye_farm_trial_gen")
 
 ## elevation maps
 
-elev_img = load(maps_dir * "iros_alt2_dem.tif")
+elev_img = load(maps_dir * "dem_50x50.tif")
 elevMap = imgToMap(gray.(elev_img), lb, ub)
 vis(elevMap)
 
-elev_img = load(maps_dir * "iros_alt3_dem.tif")
+elev_img = load(maps_dir * "dem_15x15.tif")
 elevMap = imgToMap(gray.(elev_img), lb, ub)
 vis(elevMap)
 
@@ -95,7 +95,7 @@ samples = data["samples"]
 beliefs = data["beliefs"]
 lb, ub = mission.occupancy.lb, mission.occupancy.ub
 
-elev_img = load(maps_dir * "iros_alt3_dem.tif")
+elev_img = load(maps_dir * "dem_15x15.tif")
 elevMap = imgToMap(gray.(elev_img), lb, ub)
 prior_maps = [elevMap]
 
@@ -247,10 +247,10 @@ heatmap.([pred_map, pred_map])
 
 ## combined satellite and elevation map
 lb, ub = [0.0, 0.0], [50.0, 50.0]
-elev_img = Float64.(gray.(load(maps_dir * "iros_alt3_dem.tif")))
+elev_img = Float64.(gray.(load(maps_dir * "dem_50x50.tif")))
 elevMap = imgToMap((elev_img.-minimum(elev_img)).*100, lb, ub)
 
-sat_img = load(maps_dir * "satellite_50x50.jpg")
+sat_img = load(maps_dir * "satellite_50x50.tif")
 
 # sample sparsely from the prior maps
 # currently all data have the same sample numbers and locations
@@ -262,21 +262,22 @@ p1 = plot(sat_img;
           title="Satellite Image")
 p2 = heatmap(range.(lb, ub, size(elevMap))..., elevMap;
              title="Elevation Change (cm)",
-             colorbar_tickfontsize=20,
-             aspect_ratio=:equal,
-             left_margin=10mm,
+             colorbar_tickfontsize=18,
+             # aspect_ratio=:equal,
+             # left_margin=10mm,
              c=:oslo
              )
-scatter!(getindex.(points_sp, 1), getindex.(points_sp, 2);
-         label=false,
-         color=:green,
-         markersize=8)
+# scatter!(getindex.(points_sp, 1), getindex.(points_sp, 2);
+#          label=false,
+#          color=:green,
+#          markersize=8)
 p = plot(p1, p2;
-     size=(825, 350),
-     titlefontsize=20,
+     size=(750, 300),
+     titlefontsize=18,
      framestyle=:none,
+         margin_top=
      )
-# savefig(expanduser("~/Projects/sampling_system_paper/figures/sat_elev_samples_50x50.png"))
+savefig(expanduser("~/Projects/sampling_system_paper/figures/sat_elev_50x50.png"))
 display(p)
 
 ## test correlations
