@@ -258,26 +258,33 @@ n = (7,7) # number of samples in each dimension
 axs_sp = range.(lb, ub, n)
 points_sp = vec(collect.(Iterators.product(axs_sp...)))
 
+x0, y0, w, h = 10 .* (20, 50-15, 15, 15)
+x, y = (x0 .+ [0,w,w,0,0], y0 .+ [0,0,h,h,0])
+
 p1 = plot(sat_img;
-          title="Satellite Image")
+          title="Satellite Image",
+          left_margin=-10mm
+          )
+plot!(p1, x, y,
+      legend=false,
+      linewidth=3
+      )
 p2 = heatmap(range.(lb, ub, size(elevMap))..., elevMap;
              title="Elevation Change (cm)",
-             colorbar_tickfontsize=18,
-             # aspect_ratio=:equal,
-             # left_margin=10mm,
+             # left_margin=-5mm,
+             ytickfontsize=12,
              c=:oslo
              )
-# scatter!(getindex.(points_sp, 1), getindex.(points_sp, 2);
-#          label=false,
-#          color=:green,
-#          markersize=8)
+scatter!(getindex.(points_sp, 1), getindex.(points_sp, 2);
+         label=false,
+         color=:green,
+         markersize=8)
 p = plot(p1, p2;
-     size=(750, 300),
-     titlefontsize=18,
-     framestyle=:none,
-         margin_top=
-     )
-savefig(expanduser("~/Projects/sampling_system_paper/figures/sat_elev_50x50.png"))
+         size=(700, 300),
+         titlefontsize=16,
+         framestyle=:none,
+         )
+# savefig(expanduser("~/Projects/sampling_system_paper/figures/sat_elev_50x50.png"))
 display(p)
 
 ## test correlations
@@ -296,3 +303,169 @@ outputCorMat(bm)
 vis(bm, [], Map(zeros(Bool,size(elev_img)), lb, ub); quantity=1)
 
 # still not getting consistent or expected results
+
+## averages predicted values over entire maps
+
+names = ["30samples_15x15_1", "30samples_15x15_2", "30samples_15x15_priors",
+         "30samples_50x50", "30samples_50x50_priors", "100samples_50x50_grid"]
+
+names15 = names[1:3]
+names50 = names[4:6]
+
+# names for 15x15, load each, combine samples, calculate average
+all_vals15 = Float64[]
+pred_means15 = Vector{Float64}[]
+for name in names15
+    file_name = output_dir * "pye_farm_trial_named/" * name * output_ext
+    data = load(file_name)
+    append!(all_vals15, getfield.(data["samples"], :y))
+    beliefs = data["beliefs"]
+    occ = data["mission"].occupancy
+    axs, points = generateAxes(occ)
+    ss = vec(tuple.(points, 1))
+    push!(pred_means15, [mean(belief(ss)[1]) for belief in beliefs])
+end
+
+all_vals15 |> mean
+
+all_vals15 |> histogram |> display
+
+all_vals50 = Float64[]
+pred_means50 = Vector{Float64}[]
+for name in names50
+    file_name = output_dir * "pye_farm_trial_named/" * name * output_ext
+    data = load(file_name)
+    append!(all_vals50, getfield.(data["samples"], :y))
+    beliefs = data["beliefs"]
+    occ = data["mission"].occupancy
+    axs, points = generateAxes(occ)
+    ss = vec(tuple.(points, 1))
+    push!(pred_means50, [mean(belief(ss)[1]) for belief in beliefs])
+end
+
+# plot belief map average after each sample
+
+p = hline([mean(all_vals15)],
+       label="Sample Ave",
+       width=4)
+plot!(
+    pred_means15[2:3],
+    title="Mean Predicted Map Values",
+    xlabel="Sample Number",
+    ylabel="Height (mm)",
+    marker=true,
+    # ylim=(0,.5),
+    titlefontsize=18,
+    markersize=8,
+    tickfontsize=14,
+    labelfontsize=16,
+    legendfontsize=14,
+    margin=5mm,
+    linewidth=4,
+    framestyle=:box,
+    labels=["Priors" "No Priors"],
+    # size=(width, height)
+)
+savefig("/home/nicholash/Projects/sampling_system_paper/figures/aves_15x15.png")
+display(p)
+
+p = hline([mean(all_vals50)],
+          label="Sample Ave",
+          width=4)
+plot!(
+    pred_means50[1:2],
+    title="Mean Predicted Map Values",
+    xlabel="Sample Number",
+    ylabel="Height (mm)",
+    marker=true,
+    # ylim=(0,.5),
+    titlefontsize=18,
+    markersize=8,
+    tickfontsize=14,
+    labelfontsize=16,
+    legendfontsize=14,
+    margin=5mm,
+    linewidth=4,
+    framestyle=:box,
+    labels=["Priors" "No Priors"],
+    # size=(width, height)
+)
+savefig("/home/nicholash/Projects/sampling_system_paper/figures/aves_50x50.png")
+display(p)
+
+## estimated correlations with elevation
+
+name_run15 = "30samples_15x15_priors"
+name_run50 = "30samples_50x50_priors"
+
+# load mission, get beliefs, extract correlation for each, plot
+
+name = name_run15
+file_name = output_dir * "pye_farm_trial_named/" * name * output_ext
+data = load(file_name)
+cors15 = [outputCorMat(b)[2,1] for b in data["beliefs"]]
+
+name = name_run50
+file_name = output_dir * "pye_farm_trial_named/" * name * output_ext
+data = load(file_name)
+cors50 = [outputCorMat(b)[2,1] for b in data["beliefs"]]
+
+p = plot(
+    cors15,
+    title="Estimated Correlation to Elevation",
+    xlabel="Sample Number",
+    marker=true,
+    ylim=(0,1.05),
+    titlefontsize=18,
+    markersize=8,
+    tickfontsize=14,
+    labelfontsize=16,
+    legendfontsize=14,
+    margin=5mm,
+    linewidth=4,
+    framestyle=:box,
+    legend=false,
+    # size=(width, height)
+)
+savefig("/home/nicholash/Projects/sampling_system_paper/figures/cors_15x15.png")
+display(p)
+
+p = plot(
+    cors50,
+    title="Estimated Correlation to Elevation",
+    xlabel="Sample Number",
+    marker=true,
+    ylim=(0,1.05),
+    titlefontsize=18,
+    markersize=8,
+    tickfontsize=14,
+    labelfontsize=16,
+    legendfontsize=14,
+    margin=5mm,
+    linewidth=4,
+    framestyle=:box,
+    legend=false,
+    # size=(width, height)
+)
+savefig("/home/nicholash/Projects/sampling_system_paper/figures/cors_50x50.png")
+display(p)
+
+## look at data
+
+names = ["30samples_15x15_1", "30samples_15x15_2", "30samples_15x15_priors",
+         "30samples_50x50", "30samples_50x50_priors", "100samples_50x50_grid"]
+
+data = load(output_dir * "pye_farm_trial_named/" * names[5] * output_ext)
+mission = data["mission"]
+samples = data["samples"]
+beliefs = data["beliefs"]
+lb, ub = mission.occupancy.lb, mission.occupancy.ub
+
+samples[1:2]
+beliefs[2]
+mission.prior_samples
+
+vis(beliefs[2], [], mission.occupancy; quantity=1)
+outputCorMat(beliefs[2])
+
+## re-run

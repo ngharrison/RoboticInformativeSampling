@@ -72,18 +72,5 @@ p = plot(p1, p2,
          legendfontsize=14,
          aspect_ratio=:equal
          )
-# savefig("/home/nicholash/Projects/sampling_system_paper/figures/30samples_50x50.png")
+# savefig("/home/nicholash/Projects/sampling_system_paper/figures/$(mname).png")
 display(p)
-
-# p = plot(p1, p2,
-#          layout=(2,1),
-#          framestyle=:none,
-#          ticks=false,
-#          size=(450, 800),
-#          titlefontsize=21,
-#          colorbar_tickfontsize=20,
-#          legendfontsize=14,
-#          aspect_ratio=:equal
-#          )
-# savefig("/home/nicholash/Projects/sampling_system_paper/figures/30samples_50x50_stacked.png")
-# display(p)
