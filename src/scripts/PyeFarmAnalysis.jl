@@ -6,7 +6,7 @@ end
 
 using Maps, Missions, BeliefModels, Samples, Outputs, ROSInterface, Visualization, Outputs
 
-using Statistics, FileIO, Plots, Images
+using Statistics, FileIO, Plots, Images, Logging
 using Plots: mm
 
 # pyplot()
@@ -57,7 +57,6 @@ samples = data["samples"]
 beliefs = data["beliefs"]
 lb, ub = mission.occupancy.lb, mission.occupancy.ub
 
-using Logging
 global_logger(ConsoleLogger(stderr, Debug))
 
 ## replay mission
@@ -149,7 +148,8 @@ display(scatter(x, y, legend=false))
 
 display(scatter3d(x, y, z, legend=false))
 
-data = load(output_dir * "pye_farm_trial_named/" * names[end] * output_ext)
+name = names[end]
+data = load(output_dir * "pye_farm_trial_named/" * name * output_ext)
 mission = data["mission"]
 samples = data["samples"]
 beliefs = data["beliefs"]
@@ -200,18 +200,6 @@ maes = map(beliefs) do belief
 end
 
 display(scatter(maes))
-
-## create slides
-
-names = ["30samples_15x15_1", "30samples_15x15_2", "30samples_15x15_priors",
-         "30samples_50x50", "30samples_50x50_priors", "100samples_50x50_grid"]
-
-all_samples = map(names) do name
-    name = names[1]
-    file_name = output_dir * "pye_farm_trial_named/" * name * output_ext
-    data = load(file_name)
-    beliefs = data["beliefs"]
-end |> Iterators.flatten |> collect
 
 ## other plots
 using Statistics, FileIO, GLMakie, Images
@@ -319,8 +307,11 @@ for name in names15
     file_name = output_dir * "pye_farm_trial_named/" * name * output_ext
     data = load(file_name)
     append!(all_vals15, getfield.(data["samples"], :y))
-    beliefs = data["beliefs"]
-    occ = data["mission"].occupancy
+    mission = data["mission"]
+    beliefs = map(1:mission.num_samples) do i
+        BeliefModel([mission.prior_samples; samples[1:i]], lb, ub)
+    end
+    occ = mission.occupancy
     axs, points = generateAxes(occ)
     ss = vec(tuple.(points, 1))
     push!(pred_means15, [mean(belief(ss)[1]) for belief in beliefs])
@@ -336,8 +327,11 @@ for name in names50
     file_name = output_dir * "pye_farm_trial_named/" * name * output_ext
     data = load(file_name)
     append!(all_vals50, getfield.(data["samples"], :y))
-    beliefs = data["beliefs"]
-    occ = data["mission"].occupancy
+    mission = data["mission"]
+    beliefs = map(1:mission.num_samples) do i
+        BeliefModel([mission.prior_samples; samples[1:i]], lb, ub)
+    end
+    occ = mission.occupancy
     axs, points = generateAxes(occ)
     ss = vec(tuple.(points, 1))
     push!(pred_means50, [mean(belief(ss)[1]) for belief in beliefs])
@@ -403,19 +397,29 @@ name_run50 = "30samples_50x50_priors"
 name = name_run15
 file_name = output_dir * "pye_farm_trial_named/" * name * output_ext
 data = load(file_name)
-cors15 = [outputCorMat(b)[2,1] for b in data["beliefs"]]
+mission = data["mission"]
+samples = data["samples"]
+cors15 = map(1:mission.num_samples) do i
+    bm = BeliefModel([mission.prior_samples; samples[1:i]], lb, ub)
+    outputCorMat(bm)[2,1]
+end
 
 name = name_run50
 file_name = output_dir * "pye_farm_trial_named/" * name * output_ext
 data = load(file_name)
-cors50 = [outputCorMat(b)[2,1] for b in data["beliefs"]]
+mission = data["mission"]
+samples = data["samples"]
+cors50 = map(1:mission.num_samples) do i
+    bm = BeliefModel([mission.prior_samples; samples[1:i]], lb, ub)
+    outputCorMat(bm)[2,1]
+end
 
 p = plot(
     cors15,
     title="Estimated Correlation to Elevation",
     xlabel="Sample Number",
     marker=true,
-    ylim=(0,1.05),
+    ylim=(-1.05, 0),
     titlefontsize=18,
     markersize=8,
     tickfontsize=14,
@@ -435,7 +439,7 @@ p = plot(
     title="Estimated Correlation to Elevation",
     xlabel="Sample Number",
     marker=true,
-    ylim=(0,1.05),
+    ylim=(-1.05, 0),
     titlefontsize=18,
     markersize=8,
     tickfontsize=14,
@@ -455,7 +459,8 @@ display(p)
 names = ["30samples_15x15_1", "30samples_15x15_2", "30samples_15x15_priors",
          "30samples_50x50", "30samples_50x50_priors", "100samples_50x50_grid"]
 
-data = load(output_dir * "pye_farm_trial_named/" * names[5] * output_ext)
+name = names[5]
+data = load(output_dir * "pye_farm_trial_named/" * name * output_ext)
 mission = data["mission"]
 samples = data["samples"]
 beliefs = data["beliefs"]
@@ -468,4 +473,171 @@ mission.prior_samples
 vis(beliefs[2], [], mission.occupancy; quantity=1)
 outputCorMat(beliefs[2])
 
-## re-run
+## re-run with randomized and negative initial hyperparameters
+
+gr()
+
+name = names[5]
+data = load(output_dir * "pye_farm_trial_named/" * name * output_ext)
+mission = data["mission"]
+samples = data["samples"]
+lb, ub = mission.occupancy.lb, mission.occupancy.ub
+
+global_logger(ConsoleLogger(stderr, Debug))
+
+new_beliefs = map(1:mission.num_samples) do i
+    bm = BeliefModel([mission.prior_samples; samples[1:i]], lb, ub; σn=1)
+    vis(bm, samples[1:i], mission.occupancy)
+    @debug bm.θ.σ
+    @debug outputCorMat(bm)
+    sleep(1)
+    bm
+end
+
+beliefModel = BeliefModel([mission.prior_samples[[1,end]]; samples[1:2]], lb, ub)
+
+vis(beliefModel, samples[1:2], mission.occupancy)
+
+outputCorMat(beliefModel)
+
+T = floor(Int, sqrt(length(a)*2)) # (T+1)*T/2 in matrix
+
+# cholesky factorization technique to create a free-form covariance matrix
+# that is positive semidefinite
+L = [(v<=u ? a[u*(u-1)÷2 + v] : 0.0) for u in 1:T, v in 1:T]
+A = L*L' # lower triangular times upper
+
+cov_mat = A + √eps()*I
+
+cov_mat = fullyConnectedCovMat(beliefModel.θ.σ)
+vars = diag(cov_mat)
+cor_mat = @. cov_mat / √(vars * vars') # broadcast shorthand
+# correlation matrix calculation is fine
+
+using LinearAlgebra: diag
+using AbstractGPs: logpdf
+
+function outputCorMatVec(a)
+    cov_mat = BeliefModels.fullyConnectedCovMat(a)
+    vars = diag(cov_mat)
+    return @. cov_mat / √(vars * vars') # broadcast shorthand
+end
+
+mission.occupancy.lb
+mission.occupancy.ub
+
+X = getfield.([mission.prior_samples[[1,end]]; samples[1:2]], :x)
+Y_vals = getfield.([mission.prior_samples[[1,end]]; samples[1:2]], :y)
+Y_errs = 0.0
+kernel = BeliefModels.multiKernel
+
+θ = (σ = [55.82592833071618, 32.44570139050765, 6.617717042512063],
+     ℓ = -3.963171016628482,
+     σn = 1.2337243317000441)
+outputCorMatVec(θ.σ)
+fx = BeliefModels.buildPriorGP(X, Y_errs, kernel, θ)
+-logpdf(fx, Y_vals)
+
+# negate parameter to make it negatively correlated
+θ = (σ = [55.82592833071618, -32.44570139050765, 6.617717042512063],
+     ℓ = -3.963171016628482,
+     σn = 1.2337243317000441)
+outputCorMatVec(θ.σ)
+fx = BeliefModels.buildPriorGP(X, Y_errs, kernel, θ)
+-logpdf(fx, Y_vals)
+# unexpectedly, positively-correlated hyperparameters have greater marginal likelihood
+
+## plot the functions
+plot(-100, 100) do v
+    θ = (σ = [55.82592833071618, v, 6.617717042512063],
+         ℓ = -3.963171016628482,
+         σn = 1.2337243317000441)
+    fx = BeliefModels.buildPriorGP(X, Y_errs, kernel, θ)
+    -logpdf(fx, Y_vals)
+end |> display
+
+## now look at straight correlation between points
+
+lb, ub = mission.occupancy.lb, mission.occupancy.ub
+elev_img = Float64.(gray.(load(maps_dir * "dem_50x50.tif")))
+elevMap = imgToMap(elev_img, lb, ub)
+
+elev_vals = [elevMap(l) for l in first.(getfield.(samples, :x))]
+
+cor(getfield.(samples, :y), elev_vals)
+
+belief_vals = new_beliefs[end](tuple.(first.(getfield.(mission.prior_samples, :x)), 1))[1]
+
+cor(belief_vals, getfield.(mission.prior_samples, :y))
+
+# both are slightly negative
+
+## now train a gp on the matching points
+
+elev_samples = Sample.(tuple.(first.(getfield.(samples, :x)), 2), elev_vals)
+
+bm1 = BeliefModel([elev_samples; samples], lb, ub)
+outputCorMat(bm1)
+
+bm2 = BeliefModel([mission.prior_samples; samples], lb, ub)
+outputCorMat(bm2)
+
+# and with only two samples each
+
+plot(
+    visualize(bm1, samples, mission.occupancy; quantity=1),
+    visualize(bm2, samples, mission.occupancy; quantity=1),
+    layout=(2,1)
+) |> display
+
+bm1 = BeliefModel([elev_samples[1:2]; samples[1:2]], lb, ub)
+outputCorMat(bm1)
+
+bm2 = BeliefModel([mission.prior_samples[[1,end]]; samples[1:2]], lb, ub)
+outputCorMat(bm2)
+
+plot(
+    visualize(bm1, samples[1:2], mission.occupancy; quantity=1),
+    visualize(bm2, samples[1:2], mission.occupancy; quantity=1),
+    layout=(2,1)
+) |> display
+
+## belief model with multi-mean
+
+names = ["30samples_15x15_1", "30samples_15x15_2", "30samples_15x15_priors",
+         "30samples_50x50", "30samples_50x50_priors", "100samples_50x50_grid"]
+
+name = names[3]
+data = load(output_dir * "pye_farm_trial_named/" * name * output_ext)
+mission = data["mission"]
+samples = data["samples"]
+lb, ub = mission.occupancy.lb, mission.occupancy.ub
+
+bm = BeliefModel([mission.prior_samples; samples], lb, ub)
+
+vis(bm, samples, mission.occupancy)
+outputCorMat(bm)
+
+@info "start"
+new_beliefs = map(1:mission.num_samples) do i
+    @info "sample" i
+    ss = [mission.prior_samples; samples[1:i]]
+    bm = BeliefModel(ss, lb, ub)
+    vis(bm, samples[1:i], mission.occupancy)
+    X = getfield.(ss, :x)
+    Y = getfield.(ss, :y)
+    m = BeliefModels.multiMeanAve(X, Y)
+    @info "calculated means" m.f.(tuple.(0, 1:2))
+    # @info "learned means" bm.θ.β
+    @info "matrix" outputCorMat(bm)
+    sleep(1.5)
+    bm
+end
+
+plot(getindex.(outputCorMat.(new_beliefs), 2), ylim=(-1.05,1.05))|>display
+
+plot([abs(bm.θ.ℓ) for bm in new_beliefs])|>display
+
+replay(mission, samples; sleep_time=1.0)
+
+# things are much better with that: multi-mean, no noise
