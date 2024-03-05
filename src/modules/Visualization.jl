@@ -1,7 +1,7 @@
 module Visualization
 
 using Plots: plot, heatmap, scatter!, @layout, mm, grid
-using DocStringExtensions: TYPEDSIGNATURES
+using DocStringExtensions: TYPEDSIGNATURES, TYPEDEF
 
 using Maps: GroundTruth, Map, res, generateAxes
 using BeliefModels: BeliefModel
@@ -39,7 +39,7 @@ function visualize(md, samples, beliefModel::BeliefModel, sampleCost, new_loc; q
     # TODO this will need to be updated to test for actual types
     if hasmethod(getindex, Tuple{typeof(md.sampler), Integer})
         # we actually have ground truth
-        b = visualize(md.sampler[quantity]; title="Quantity of Interest")
+        b = visualize(md.sampler[quantity], "Quantity of Interest")
     end
     c = visualize(sampleCost, samples, md.occupancy, new_loc)
     l = @layout [a ; b c]
@@ -73,8 +73,8 @@ function visualize(maps::Map...;
                    titles=["Quantity of Interest"; ["Prior $i" for i in 1:length(maps)-1]],
                    points=[])
     plot(
-        visualize(maps[1]; title=titles[1], clim=extrema(maps[1])),
-        visualize.(maps[2:end]; title=titles[2:end], points, clim=extrema(maps[1]))...,
+        visualize(maps[1], titles[1]),
+        visualize.(maps[2:end], titles[2:end]; points)...,
         layout=grid(2,2),
         size=default_size,
         margin=default_margin
@@ -88,7 +88,7 @@ $(TYPEDSIGNATURES)
 
 Method to show any Map data.
 """
-function visualize(map::Map; title="Map", points=[], clim=nothing)
+function visualize(map::Map, title="Map"; points=[], clim=nothing)
     axes = range.(map.lb, map.ub, size(map))
     plt = heatmap(axes..., map';
                   xlabel="x1",
@@ -226,6 +226,11 @@ function getAxes(map)
     return axes, points
 end
 
+"""
+$(TYPEDEF)
+Simple convenience function that also displays the output of any visualize
+function. See those.
+"""
 const vis = display ∘ visualize
 
 end
