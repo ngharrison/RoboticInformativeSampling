@@ -26,7 +26,7 @@ using Outputs: save
 
     ## run search alg
     @time samples, beliefs = mission(visuals=true, sleep_time=0.0);
-    @debug "output determination matrix:" outputCorMat(beliefs[end]).^2
+    @debug "output correlation matrix:" outputCorMat(beliefs[end])
     # save(mission, samples, beliefs; animation=true)
 
     ## calculate errors

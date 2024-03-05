@@ -25,7 +25,7 @@ metrics = Array{Any, 2}(undef, (length(mission_peaks), num_runs))
         for j in 1:num_runs
             ## run search alg
             @time samples, beliefs = mission(seed_val=j, visuals=false, sleep_time=0.0);
-            @debug "output determination matrix:" outputCorMat(beliefs[end]).^2
+            @debug "output correlation matrix:" outputCorMat(beliefs[end])
             # save(mission, samples, beliefs; animation=true)
             ## calculate errors
             metrics[i,j] = calcMetrics(mission, beliefs, 1)

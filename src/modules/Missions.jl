@@ -122,7 +122,7 @@ function (M::Mission)(func=Returns(nothing);
 
         # user-defined function (visualization, saving, etc.)
         func(M, samples, beliefModel, sampleCost, new_loc)
-        @debug "output determination matrix:" outputCorMat(beliefModel).^2
+        @debug "output correlation matrix:" outputCorMat(beliefModel)
         sleep(sleep_time)
     end
 
@@ -584,7 +584,7 @@ function replay(M::Mission, full_samples, beliefs; sleep_time=0.0)
         # user-defined function (visualization, saving, etc.)
         new_loc = i < M. num_samples ? full_samples[i+1].x[1] : nothing
         vis(M, samples, beliefModel, sampleCost, new_loc)
-        @debug "output determination matrix:" outputCorMat(beliefModel).^2
+        @debug "output correlation matrix:" outputCorMat(beliefModel)
         sleep(sleep_time)
     end
 
