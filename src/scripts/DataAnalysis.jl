@@ -40,7 +40,7 @@ t^2*(err_stds[p,a]^2 + err_stds[p,b]^2)/(err_means[p,a] - err_means[p,b])^2
 
 
 ## Aus
-dir = "aus_ave"
+dir = "aus_ave_means_noise"
 # file_name = output_dir * "2023-08-28-16-58-29_metrics" * output_ext
 file_name_s = output_dir * "$dir/metrics_000" * output_ext
 file_name_m = output_dir * "$dir/metrics_111" * output_ext
@@ -62,7 +62,8 @@ plot(
     xlabel="Sample Number",
     ylabel="Correlation",
     seriescolors=[RGB(0.4, 0.2, 0.1) RGB(0.9, 0.4, 0.0) RGB(0.1,0.3,1)],
-    # legend=:right,
+    legend=(0.73,0.42),
+    framestyle=:box,
     marker=true,
     ylim=(-1,1),
     titlefontsize=24,
@@ -74,6 +75,7 @@ plot(
     linewidth=4,
     size=(width, height)
 )
+gui()
 
 savefig(output_dir * "$dir/$(dir)_correlations.png")
 
@@ -84,6 +86,7 @@ p = plot(
     ylabel="Mean Absolute Map Error",
     labels=["No Priors" "Priors"],
     seriescolors=[:black RGB(0.1,0.7,0.2)],
+    framestyle=:box,
     marker=true,
     # ylim=(0,.5),
     titlefontsize=24,
@@ -95,11 +98,12 @@ p = plot(
     linewidth=4,
     size=(width, height)
 )
+gui()
 
 savefig(output_dir * "$dir/$(dir)_errors.png")
 
 ## Batch
-dir = "batch"
+dir = "batch_means_noise_1e2"
 
 p_err = Vector{Any}(undef, 8)
 p_cor = Vector{Any}(undef, 8)
@@ -139,6 +143,7 @@ for (i, p) in enumerate(priors)
 
     plt = plot(hcat((c[2:end] for c in mean(dets))...)',
                ribbon=hcat((c[2:end] for c in stdM(dets))...)',
+               framestyle=:box,
                labels=false,
                markers=true,
                left_margin=(i∈(2,4,6,8) ? 5mm : 0mm),
@@ -178,6 +183,7 @@ plot(
     # layout=@layout([grid(3,2){0.75h}; _ a{0.5w} b]),
     size=(width, height)
 )
+gui()
 
 savefig(output_dir * "$dir/hypothesis_scores.png")
 
@@ -187,9 +193,10 @@ plot(
     xlabel="Sample Number",
     ylabel="Mean Absolute Map Error",
     title="Prediction Errors",
-    ylim=(0,0.4),
+    ylim=(0,.3),
     seriescolors=[(RGB((p.*0.8)...) for p in priors)...;;],
     labels=[replace([join(c for (p, c) in zip(p, chars) if p==1) for p in priors], ""=>"none")...;;],
+    framestyle=:box,
     markers=true,
     legendcolumns=2, # OR layout=2,
     titlefontsize=24,
@@ -201,6 +208,7 @@ plot(
     linewidth=4,
     size=(width, height)
 )
+gui()
 
 savefig(output_dir * "$dir/errors.png")
 
