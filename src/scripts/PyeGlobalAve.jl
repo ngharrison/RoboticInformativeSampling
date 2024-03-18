@@ -72,5 +72,5 @@ p = plot(p1, p2,
          legendfontsize=14,
          aspect_ratio=:equal
          )
-# savefig("/home/nicholash/Projects/sampling_system_paper/figures/$(mname).png")
+# savefig(output_dir * "iros_2024/$(mname).png")
 display(p)

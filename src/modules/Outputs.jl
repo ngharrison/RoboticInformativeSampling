@@ -8,7 +8,7 @@ using Plots
 using Maps: generateAxes
 using Visualization: visualize
 
-export save, output_dir, output_ext
+export save, output_dir, output_ext, saveBeliefMapToPng
 
 const output_dir = dirname(Base.active_project()) * "/output/"
 const output_ext = ".jld2"
@@ -71,10 +71,10 @@ function saveBeliefMapToPng(beliefModel, occupancy,
     # map to image
     amount = reverse(permutedims(amount, (2,1)), dims=1)
 
-    map_img = stack((0.8*ones(size(pred_map)),
-                     0.3*ones(size(pred_map)),
+    map_img = stack((0.8*amount,
+                     0.3*amount,
                      zeros(size(pred_map)),
-                     amount), dims=1)
+                     ones(size(pred_map))), dims=1)
 
     saveImg("$(output_dir)$(file_name).png",
             colorview(RGBA, map_img))

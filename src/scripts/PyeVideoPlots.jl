@@ -28,7 +28,7 @@ names = ["30samples_15x15_1", "30samples_15x15_2", "30samples_15x15_priors",
 
 ## load mission
 dir = "pye_farm_trial_named"
-mname = names[5]
+mname = names[3]
 file_name = output_dir * "$dir/$(mname)" * output_ext
 
 data = load(file_name)
@@ -56,17 +56,22 @@ end
 pred_ticks = createColorbarTicks(pred_range)
 err_ticks = createColorbarTicks(err_range)
 
-mkdir(output_dir * "$dir/frames/$(mname)_frames/")
+mkdir(output_dir * "$dir/frames/$(mname)_stacked/")
 for i in eachindex(beliefs)
     # GP maps
     axs, points = generateAxes(occ)
-    μ, σ = beliefs[i](tuple.(vec(points), 1))
     dims = Tuple(length.(axs))
-    pred_map = reshape(μ, dims)
-    err_map = reshape(σ, dims)
+    # μ, σ = beliefs[i](tuple.(vec(points), 1))
+    # pred_map = reshape(μ, dims)
+    # err_map = reshape(σ, dims)
+    i = 0
+    pred_map = zeros(dims)
+    err_map = zeros(dims)
 
     p1 = heatmap(axs..., pred_map';
-                 title="Average Height (mm)",
+                 title="Heights (mm)",
+                 clim=pred_range,
+                 colorbar_ticks=pred_ticks,
                  colorbar_titlefontsize=17
                  )
     scatter!(x1[begin:i*num_quant], x2[begin:i*num_quant];
@@ -76,7 +81,9 @@ for i in eachindex(beliefs)
              markersize=8)
 
     p2 = heatmap(axs..., err_map';
-                 title="Uncertainty (mm)",
+                 title="Uncertainties (mm)",
+                 clim=err_range,
+                 colorbar_ticks=err_ticks,
                  colorbar_titlefontsize=17
                  )
     scatter!(x1[begin:i*num_quant], x2[begin:i*num_quant];
@@ -90,14 +97,13 @@ for i in eachindex(beliefs)
          framestyle=:none,
          ticks=false,
          size=(450, 800),
-         titlefontsize=21,
+         titlefontsize=24,
          colorbar_tickfontsize=20,
          legendfontsize=14,
          aspect_ratio=:equal
          )
-    savefig("/home/nicholash/Projects/sampling_system_paper/figures/30samples_50x50_stacked.png")
 
-    savefig(output_dir * "$dir/frames/$(mname)_final.png")
+    savefig(output_dir * "$dir/frames/$(mname)_stacked/$(lpad(i, 2, '0')).png")
 end
 
 # ## load missions
