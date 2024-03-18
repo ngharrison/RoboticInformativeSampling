@@ -1,11 +1,11 @@
 module BeliefModels
 
-using LinearAlgebra: I, diag
+using LinearAlgebra: I, diag, PosDefException
 using AbstractGPs: GP, posterior, mean_and_var, mean_and_cov, logpdf, with_lengthscale,
-                   SqExponentialKernel, IntrinsicCoregionMOKernel
+                   SqExponentialKernel, IntrinsicCoregionMOKernel, CustomMean
 using Statistics: mean, std
 using Optim: optimize, Options, NelderMead, LBFGS
-using ParameterHandling: value_flatten
+using ParameterHandling: value_flatten, fixed, value
 using DocStringExtensions: TYPEDSIGNATURES, TYPEDEF
 
 using Samples: SampleInput
@@ -112,45 +112,27 @@ function BeliefModel(samples, lb, ub; σn=1e-3, kernel=multiKernel)
     X = getfield.(samples, :x)
     Y = getfield.(samples, :y)
 
-    f_post, θ = buildOptimizedGP(X, Y, lb, ub; σn, kernel)
+    if Y isa AbstractArray{<:NTuple{2, <:Real}}
+        Y_vals, Y_errs = first.(Y), last.(Y)
+        θ0 = initHyperparams(X, Y_vals, lb, ub; σn=fixed(Y_errs)) # no noise to learn
+    else
+        Y_vals = Y
+        θ0 = initHyperparams(X, Y_vals, lb, ub; σn=fixed(0.0)) # no noise to learn
+    end
+
+    # optimize hyperparameters (train)
+    θ = optimizeLoss(createLossFunc(X, Y_vals, kernel), θ0)
+
+    # produce optimized gp belief model
+    fx = buildPriorGP(X, Y_vals, kernel, θ)
+    f_post = posterior(fx, Y_vals) # gp conditioned on training samples
+
     return BeliefModelSimple(f_post, θ)
 end
 
-# no measurement noise
-function buildOptimizedGP(X, Y_vals::AbstractArray{<:Real}, lb, ub; σn, kernel)
-    Y_errs = 0.0
-
-    θ0 = initHyperparams(X, Y_vals, lb, ub; σn)
-
-    # optimize hyperparameters (train)
-    θ = optimizeLoss(createLossFunc(X, Y_vals, Y_errs, kernel), θ0)
-
-    # produce optimized gp belief model
-    fx = buildPriorGP(X, Y_errs, kernel, θ)
-    f_post = posterior(fx, Y_vals) # gp conditioned on training samples
-
-    return f_post, θ
-end
-
-# with measurement noise
-function buildOptimizedGP(X, Y::AbstractArray{<:NTuple{2, <:Real}}, lb, ub; σn, kernel)
-    Y_vals, Y_errs = first.(Y), last.(Y)
-
-    θ0 = initHyperparams(X, Y_vals, lb, ub) # no noise to learn
-
-    # optimize hyperparameters (train)
-    θ = optimizeLoss(createLossFunc(X, Y_vals, Y_errs, kernel), θ0)
-
-    # produce optimized gp belief model
-    fx = buildPriorGP(X, Y_errs, kernel, θ)
-    f_post = posterior(fx, Y_vals) # gp conditioned on training samples
-
-    return f_post, θ
-end
-
-function buildPriorGP(X, Y_errs, kernel, θ, ϵ=0.0)
-    f = GP(kernel(θ))
-    f(X, Y_errs.^2 .+ √eps() .+ ϵ) # eps to prevent numerical issues
+function buildPriorGP(X, Y_vals, kernel, θ, ϵ=0.0)
+    f = GP(multiMeanAve(X, Y_vals), kernel(θ)) # calculate
+    f(X, value(θ.σn).^2 .+ √eps() .+ ϵ) # eps to prevent numerical issues
 end
 
 """
@@ -244,7 +226,7 @@ Routine to optimize the lossFunc and return the optimal parameters `θ`.
 Can pass in a different solver. NelderMead is picked as default for better speed
 with about the same performance as LFBGS.
 """
-function optimizeLoss(lossFunc, θ0; solver=NelderMead, iterations=1_500)
+function optimizeLoss(lossFunc, θ0; solver=NelderMead, iterations=5_000)
     options = Options(; iterations)
 
     θ0_flat, unflatten = value_flatten(θ0)
@@ -262,27 +244,44 @@ $(TYPEDSIGNATURES)
 This function creates the loss function for training the GP. The negative log
 marginal likelihood is used.
 """
-function createLossFunc(X, Y_vals, Y_errs, kernel)
+function createLossFunc(X, Y_vals, kernel)
     # returns a function for the negative log marginal likelihood
     θ -> begin
         try
-            fx = buildPriorGP(X, Y_errs, kernel, θ)
+            fx = buildPriorGP(X, Y_vals, kernel, θ)
             return -logpdf(fx, Y_vals)
         catch e
             # for PosDefException
             # this seems to happen when θ.σ is extremely large and θ.ℓ is
             # much bigger than the search region dimensions
-            @error e θ X Y_vals Y_errs
+            @error e θ X Y_vals
 
             # NOTE this will probably break if reached with the multiKernel
-            fx = buildPriorGP(X, Y_errs, kernel, θ, 1e-1*maximum(θ.σ))
+            fx = buildPriorGP(X, Y_vals, kernel, θ, 1e-1*maximum(θ.σ))
             return -logpdf(fx, Y_vals)
         end
     end
 end
 
 
-## Kernel stuff
+## Mean and kernel stuff
+
+function multiMeanAve(X, Y)
+    # calculate means
+    T = maximum(last, X)
+    mean_vals = zeros(T)
+    nums = zeros(Int, T)
+    for ((_, q), y) in zip(X, Y)
+        mean_vals[q] += y
+        nums[q] += 1
+    end
+    mean_vals ./= nums
+
+    # return function inside CustomMean
+    CustomMean() do x
+        mean_vals[x[2]]
+    end
+end
 
 """
 $(TYPEDSIGNATURES)

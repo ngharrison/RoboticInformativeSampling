@@ -24,13 +24,13 @@ metrics = Array{Any, 2}(undef, (length(mission_peaks), num_runs))
         mission = simMission(; seed_val=i, num_peaks, priors=collect(Bool, priors))
         for j in 1:num_runs
             ## run search alg
-            @time samples, beliefs = mission(seed_val=j, visuals=false, sleep_time=0.0);
-            @debug "output determination matrix:" outputCorMat(beliefs[end]).^2
+            @time samples, beliefs = mission(seed_val=j, sleep_time=0.0);
+            @debug "output correlation matrix:" outputCorMat(beliefs[end])
             # save(mission, samples, beliefs; animation=true)
             ## calculate errors
             metrics[i,j] = calcMetrics(mission, beliefs, 1)
         end
     end
     ## save outputs
-    save(metrics; file_name="batch/metrics_$(join(priors))")
+    save(metrics; file_name="batch_means_noise_1e2/metrics_$(join(priors))")
 end

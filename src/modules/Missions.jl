@@ -13,7 +13,7 @@ using Samples: Sample, MapsSampler, selectSampleLocation, takeSamples
 using SampleCosts: SampleCost, values, BasicSampleCost,
                    NormedSampleCost, MIPTSampleCost, EIGFSampleCost
 using BeliefModels: BeliefModel, outputCorMat
-using Visualization: visualize
+using Visualization: vis
 
 export simMission, ausMission, nswMission, conradMission, rosMission,
        pyeFarmMission, Mission, replay, maps_dir
@@ -130,7 +130,7 @@ function (M::Mission)(func=Returns(nothing);
 
         # user-defined function (visualization, saving, etc.)
         func(M, samples, beliefModel, sampleCost, new_loc)
-        @debug "output determination matrix:" outputCorMat(beliefModel).^2
+        @debug "output correlation matrix:" outputCorMat(beliefModel)
         sleep(sleep_time)
     end
 
@@ -217,7 +217,7 @@ function simMission(; seed_val=0, num_samples=30, num_peaks=3, priors=Bool[1,1,1
     # weights = (; μ=17, σ=1.5, τ=7)
     # weights = (; μ=3, σ=1, τ=.5, d=1)
     # weights = (; μ=1, σ=1e1, τ=1, d=0) # sogp
-    weights = (; μ=1, σ=5e2, τ=1, d=0) # others
+    weights = (; μ=1, σ=1e2, τ=1, d=0) # others
     # weights = (; μ=1, σ=1, τ=.1, d=1)
     # start_locs = [[1.0, 0.0]] # starting location
 
@@ -239,9 +239,9 @@ function simMission(; seed_val=0, num_samples=30, num_peaks=3, priors=Bool[1,1,1
     @debug [cor(map0.(points_sp), d.(points_sp)) for d in prior_maps]
     # @debug [cor(vec(map0), vec(d)) for d in prior_maps]
 
-    display(visualize(sampler.maps..., prior_maps...;
-                      samples=points_sp,
-                      titles=["QOI", "Scaling Factor", "Additive Noise", "Random Map"]))
+    # vis(sampler.maps..., prior_maps...;
+    #                   points=points_sp,
+    #                   titles=["QOI", "Scaling Factor", "Additive Noise", "Random Map"])
 
     return Mission(; occupancy,
                    sampler,
@@ -282,7 +282,7 @@ function ausMission(; seed_val=0, num_samples=30, priors=Bool[1,1,1])
     ## initialize alg values
     # weights = [1e-1, 6, 5e-1, 3e-3] # mean, std, dist, prox
     # weights = (; μ=1, σ=5e3, τ=1, d=1) # others
-    weights = (; μ=1, σ=5e3, τ=1, d=1) # others
+    weights = (; μ=1, σ=1e2, τ=1, d=1) # others
     start_locs = [[0.8, 0.6]] # starting locations
 
 
@@ -307,9 +307,9 @@ function ausMission(; seed_val=0, num_samples=30, priors=Bool[1,1,1])
     [cor(vec(map0[.!occupancy]), vec(d[.!occupancy])) for d in prior_maps]
     # scatter(vec(map0[.!occupancy]), [vec(d[.!occupancy]) for d in prior_maps], layout=3)
 
-    display(visualize(sampler.maps..., prior_maps...;
+    vis(sampler.maps..., prior_maps...;
               titles=["Vegetation", "Elevation", "Ground Temperature", "Rainfall"],
-              samples=points_sp))
+              points=points_sp)
 
     return Mission(; occupancy,
                    sampler,
@@ -334,7 +334,7 @@ function nswMission(; seed_val=0, num_samples=30, priors=Bool[1,1,1])
 
     images = readdlm.(maps_dir .* file_names, ',')
 
-    ims_sm = spatialAve.(images, 3)
+    ims_sm = images
 
     lb = [0.0, 0.0]; ub = [1.0, 1.0]
 
@@ -351,7 +351,7 @@ function nswMission(; seed_val=0, num_samples=30, priors=Bool[1,1,1])
     ## initialize alg values
     # weights = [1e-1, 6, 5e-1, 3e-3] # mean, std, dist, prox
     # weights = (; μ=1, σ=5e3, τ=1, d=1) # others
-    weights = (; μ=1, σ=5e3, τ=1, d=1) # others
+    weights = (; μ=1, σ=5e2, τ=1, d=1) # others
     start_locs = [[1.0, 0.0]] # starting locations
 
 
@@ -372,9 +372,9 @@ function nswMission(; seed_val=0, num_samples=30, priors=Bool[1,1,1])
     [cor(vec(map0[.!occupancy]), vec(d[.!occupancy])) for d in prior_maps]
     # scatter(vec(map0[.!occupancy]), [vec(d[.!occupancy]) for d in prior_maps], layout=3)
 
-    display(visualize(sampler.maps..., prior_maps...;
+    vis(sampler.maps..., prior_maps...;
               titles=["Vegetation", "Elevation", "Ground Temperature", "Rainfall"],
-              samples=points_sp))
+              points=points_sp)
 
     return Mission(; occupancy,
                    sampler,
@@ -527,7 +527,7 @@ function pyeFarmMission(; num_samples=4)
                          for x in points_sp if !isnan(d(x))]
     prior_samples = Sample{Float64}[]
 
-    display(visualize(elevMap; samples=points_sp))
+    vis(elevMap; points=points_sp)
 
     num_samples = 30
 
@@ -594,8 +594,8 @@ function replay(M::Mission, full_samples, beliefs; sleep_time=0.0)
         sampleCost = M.sampleCostType(M, samples, beliefModel, quantities)
 
         new_loc = i < M.num_samples ? full_samples[i+1].x[1] : nothing
-        display(visualize(M, samples, beliefModel, sampleCost, new_loc))
-        @debug "output determination matrix:" outputCorMat(beliefModel).^2
+        vis(M, samples, beliefModel, sampleCost, new_loc)
+        @debug "output correlation matrix:" outputCorMat(beliefModel)
         sleep(sleep_time)
     end
 
