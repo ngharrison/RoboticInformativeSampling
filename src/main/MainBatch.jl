@@ -8,11 +8,12 @@ end
 using Logging
 global_logger(ConsoleLogger(stderr, Logging.Info))
 
-using Missions: simMission, ausMission, conradMission, rosMission
 using BeliefModels: outputCorMat
 using Visualization: visualize
 using Metrics: calcMetrics
 using Outputs: save
+
+include("../missions/sim.jl")
 
 mission_peaks = [3,3,4,4,5,5]
 num_runs = 3

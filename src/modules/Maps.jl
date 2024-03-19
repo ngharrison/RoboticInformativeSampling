@@ -7,6 +7,8 @@ export Map, GaussGroundTruth, Peak, imgToMap, randomPoint,
        res, pointToCell, cellToPoint, generateAxes,
        ConstantRegion
 
+const maps_dir = dirname(Base.active_project()) * "/maps/"
+
 """
 A general type for holding multidimensional data (usually a matrix) along with
 associated dimension bounds. It's main purpose is to handle the conversion

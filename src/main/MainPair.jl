@@ -8,11 +8,13 @@ end
 using Logging
 global_logger(ConsoleLogger(stderr, Logging.Info))
 
-using Missions: simMission, ausMission, nswMission, conradMission, rosMission
 using BeliefModels: outputCorMat
 using Visualization: vis
 using Metrics: calcMetrics
 using Outputs: save
+
+include("../missions/aus.jl")
+include("../missions/nsw.jl")
 
 @time for priors in [(0,0,0), (1,1,1)]
     ## initialize data for mission

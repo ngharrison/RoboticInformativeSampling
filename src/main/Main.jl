@@ -8,8 +8,9 @@ end
 using Logging
 global_logger(ConsoleLogger(stderr, Logging.Info))
 
-using Missions: simMission, ausMission, nswMission, conradMission, rosMission
 using Visualization: vis
+
+include("../missions/sim.jl")
 
 ## initialize data for mission
 mission = simMission(num_samples=10)

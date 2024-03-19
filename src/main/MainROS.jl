@@ -9,14 +9,14 @@ if mod_dir ∉ LOAD_PATH
     push!(LOAD_PATH, mod_dir)
 end
 
-using Outputs: save
-
 # set the logging level: Info or Debug
 using Logging
 global_logger(ConsoleLogger(stderr, Logging.Debug))
 
-using Missions: rosMission, pyeFarmMission
-using Visualization: visualize
+using Visualization: vis
+using Outputs: save
+
+include("../missions/pye_farm.jl")
 
 ## initialize data for mission
 mission = pyeFarmMission()
