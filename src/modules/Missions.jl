@@ -115,8 +115,8 @@ function (M::Mission)(func=Returns(nothing);
         sampleCost = nothing
         new_loc = nothing
         if i < M.num_samples
-            if i <= length(M.start_locs)
-                new_loc = M.start_locs[i]
+            if i < length(M.start_locs)
+                new_loc = M.start_locs[i+1]
             else
                 sampleCost = M.sampleCostType(M, samples, beliefModel, quantities)
                 new_loc = selectSampleLocation(sampleCost, lb, ub)
