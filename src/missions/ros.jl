@@ -30,7 +30,7 @@ function rosMission(; num_samples=4)
 
     ## initialize alg values
     weights = (; μ=1, σ=5e3, τ=1, d=1) # mean, std, dist, prox
-    start_locs = [[1.0, 1.0]]s
+    start_locs = [[1.0, 1.0]]
 
     return Mission(; occupancy,
                    sampler,
@@ -56,12 +56,10 @@ mission = rosMission()
 
 ## run search alg
 @time samples, beliefs = mission(
+    # vis;
     sleep_time=0.0
-) do M, samples, beliefModel, sampleCost, new_loc
-    vis(beliefModel, samples, new_loc, M.occupancy, 1)
-    save(M, samples, beliefModel)
-end;
-save(mission, samples, beliefs)
+)
+# save(mission, samples, beliefs)
 
 ## save outputs
 # saveBeliefMapToPng(beliefs[end], mission.occupancy)
