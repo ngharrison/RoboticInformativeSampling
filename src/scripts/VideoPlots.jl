@@ -12,7 +12,7 @@ using Plots
 using Plots: mm
 using Printf
 
-pythonplot()
+pyplot()
 
 # r is the range, contains the min and max values
 function createColorbarTicks(r)
