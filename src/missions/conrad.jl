@@ -1,3 +1,4 @@
+
 using DelimitedFiles: readdlm
 
 using AdaptiveSampling: Maps, Samples, SampleCosts, Missions, Visualization
@@ -53,3 +54,22 @@ function conradMission()
                    start_locs)
 end
 
+
+#* Run
+
+# set the logging level: Info or Debug
+using Logging
+global_logger(ConsoleLogger(stderr, Logging.Info))
+
+using AdaptiveSampling: Visualization
+
+using .Visualization: vis
+
+## initialize data for mission
+mission = conradMission()
+
+## run search alg
+@time samples, beliefs = mission(
+    vis;
+    sleep_time=0.0
+);

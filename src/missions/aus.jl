@@ -1,3 +1,4 @@
+
 using LinearAlgebra: norm
 using DelimitedFiles: readdlm
 using Statistics: cor
@@ -80,3 +81,55 @@ function ausMission(; seed_val=0, num_samples=30, priors=Bool[1,1,1])
                    prior_samples)
 end
 
+
+#* Run
+
+# set the logging level: Info or Debug
+using Logging
+global_logger(ConsoleLogger(stderr, Logging.Info))
+
+using AdaptiveSampling: Visualization
+
+using .Visualization: vis
+
+## initialize data for mission
+mission = ausMission(num_samples=10)
+
+## run search alg
+@time samples, beliefs = mission(
+    vis;
+    sleep_time=0.0
+);
+
+
+#* Pair
+
+# set the logging level: Info or Debug
+using Logging
+global_logger(ConsoleLogger(stderr, Logging.Info))
+
+using AdaptiveSampling: BeliefModels, Visualization, Metrics, Outputs
+
+using .BeliefModels: outputCorMat
+using .Visualization: vis
+using .Metrics: calcMetrics
+using .Outputs: save
+
+@time for priors in [(0,0,0), (1,1,1)]
+    ## initialize data for mission
+    priors = (0,0,0)
+    mission = ausMission(priors=collect(Bool, priors))
+    # empty!(mission.prior_samples)
+
+    ## run search alg
+    @time samples, beliefs = mission(vis, sleep_time=0.0);
+    @debug "output correlation matrix:" outputCorMat(beliefs[end])
+    # save(mission, samples, beliefs; animation=true)
+
+    ## calculate errors
+    metrics = calcMetrics(mission, beliefs, 1)
+
+    ## save outputs
+    save(metrics; file_name="aus_ave_means_noise/metrics_$(join(priors))")
+    save(mission, samples, beliefs; file_name="aus_ave_means_noise/mission_$(join(priors))")
+end
