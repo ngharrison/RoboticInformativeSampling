@@ -119,7 +119,8 @@ function simMission(; seed_val=0, num_samples=30, num_peaks=3, priors=Bool[1,1,1
                    sampleCostType,
                    weights,
                    start_locs,
-                   prior_samples)#, [cor(vec(map0), vec(d)).^2 for d in prior_maps]
+                   prior_samples,
+                   noise=true)
 
 end
 

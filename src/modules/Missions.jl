@@ -5,7 +5,7 @@ using DocStringExtensions: TYPEDSIGNATURES, TYPEDFIELDS
 
 using ..Maps: randomPoint
 using ..Samples: Sample, selectSampleLocation, takeSamples
-using ..BeliefModels: BeliefModel, outputCorMat
+using ..BeliefModels: BeliefModel, outputCorMat, multiKernel
 
 export Mission, replay, maps_dir
 
@@ -39,6 +39,10 @@ mission = Mission(; occupancy,
     start_locs
     "any samples taken previously (default empty)"
     prior_samples = Sample[]
+    "whether noise should be learned or not (default false)"
+    noise = false
+    "the kernel to be used in the belief model (default multiKernel)"
+    kernel = multiKernel
 end
 
 """
@@ -97,7 +101,7 @@ function (M::Mission)(func=Returns(nothing);
         println("Sample values: $(getfield.(new_samples, :y))")
 
         # new belief
-        beliefModel = BeliefModel([M.prior_samples; samples], lb, ub)
+        beliefModel = BeliefModel([M.prior_samples; samples], lb, ub; M.noise, M.kernel)
         push!(beliefs, beliefModel)
 
         # new sample location

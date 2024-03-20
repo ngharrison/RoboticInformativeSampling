@@ -88,12 +88,12 @@ beliefModel = BeliefModel(samples, M.prior_samples, lb, ub)
 beliefModel = BeliefModel([M.prior_samples; samples], lb, ub)
 ```
 """
-function BeliefModel(samples, prior_samples, lb, ub; σn=fixed(0.0), kernel=multiKernel)
+function BeliefModel(samples, prior_samples, lb, ub; noise, kernel=multiKernel)
     # create a simple belief model for the current samples
-    current = BeliefModel(samples, lb, ub; σn, kernel)
+    current = BeliefModel(samples, lb, ub; noise, kernel)
     isempty(prior_samples) && return current
     # create a simple belief model for the prior current samples combined
-    combined = BeliefModel([prior_samples; samples], lb, ub; σn, kernel)
+    combined = BeliefModel([prior_samples; samples], lb, ub; noise, kernel)
     # split is a combination of the two
     return BeliefModelSplit(current, combined)
 end
@@ -107,7 +107,7 @@ conditioned on the samples given.
 A noise standard deviation can optionally be passed in either as a single scalar
 value for all samples or a vector of values, one for each sample.
 """
-function BeliefModel(samples, lb, ub; σn=fixed(0.0), kernel=multiKernel)
+function BeliefModel(samples, lb, ub; noise, kernel=multiKernel)
     # set up training data
     X = getfield.(samples, :x)
     Y = getfield.(samples, :y)
@@ -117,6 +117,7 @@ function BeliefModel(samples, lb, ub; σn=fixed(0.0), kernel=multiKernel)
         θ0 = initHyperparams(X, Y_vals, lb, ub; σn=fixed(Y_errs)) # no noise to learn
     else
         Y_vals = Y
+        σn = (noise ? 0.0 : fixed(0.0))
         θ0 = initHyperparams(X, Y_vals, lb, ub; σn) # no noise to learn
     end
 
