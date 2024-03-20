@@ -22,7 +22,7 @@ samples = data["samples"]
 bm = BeliefModel([mission.prior_samples; samples], lb, ub)
 
 occupancy = mission.occupancy
-lb, ub = occupancy.lb, occupancy.ub
+lb, ub = bounds(occupancy)
 axs, points = generateAxes(occupancy)
 dims = Tuple(length.(axs))
 μ, σ = bm(tuple.(vec(points), 1))

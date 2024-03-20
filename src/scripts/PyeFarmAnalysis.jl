@@ -18,7 +18,7 @@ beliefs = data["beliefs"]
 samples = data["samples"]
 quantities = eachindex(mission.sampler)
 sampleCost = mission.sampleCostType(mission, samples, beliefs[end], quantities)
-vis(mission, samples, beliefs[end], mission.occupancy.lb; quantity=1)
+vis(mission, samples, beliefs[end], nothing; quantity=1)
 
 
 ## concatenate split missions
@@ -29,7 +29,7 @@ data1 = load(file_name1)
 data2 = load(file_name2)
 samples = [data1["samples"]; data2["samples"]]
 mission = data1["mission"]
-lb, ub = mission.occupancy.lb, mission.occupancy.ub
+lb, ub = bounds(mission.occupancy)
 beliefs = map(1:length(samples)) do i
     BeliefModel(samples[1:i], lb, ub)
 end
@@ -52,7 +52,7 @@ data = load(file_name)
 mission = data["mission"]
 samples = data["samples"]
 beliefs = data["beliefs"]
-lb, ub = mission.occupancy.lb, mission.occupancy.ub
+lb, ub = bounds(mission.occupancy)
 
 global_logger(ConsoleLogger(stderr, Debug))
 
@@ -75,7 +75,7 @@ z = getfield.(all_samples, :y)
 display(scatter3d(x, y, z, legend=false))
 
 mission = load(readdir(output_dir * "pye_farm_trial", join=true)[end-1])["mission"]
-lb, ub = mission.occupancy.lb, mission.occupancy.ub
+lb, ub = bounds(mission.occupancy)
 beliefModel = BeliefModel(all_samples, lb, ub)
 
 vis(beliefModel, [], mission.occupancy)
@@ -89,7 +89,7 @@ data = load(file_name)
 mission = data["mission"]
 samples = data["samples"]
 beliefs = data["beliefs"]
-lb, ub = mission.occupancy.lb, mission.occupancy.ub
+lb, ub = bounds(mission.occupancy)
 
 elev_img = load(maps_dir * "dem_15x15.tif")
 elevMap = imgToMap(gray.(elev_img), lb, ub)
@@ -150,7 +150,7 @@ data = load(output_dir * "pye_farm_trial_named/" * name * output_ext)
 mission = data["mission"]
 samples = data["samples"]
 beliefs = data["beliefs"]
-lb, ub = mission.occupancy.lb, mission.occupancy.ub
+lb, ub = bounds(mission.occupancy)
 
 beliefs[end]
 
@@ -169,7 +169,7 @@ gt_data = load(output_dir * "pye_farm_trial_named/" * gt_name * output_ext)
 gt_belief = gt_data["beliefs"][end]
 mission = gt_data["mission"]
 occupancy = mission.occupancy
-lb, ub = occupancy.lb, occupancy.ub
+lb, ub = bounds(occupancy)
 
 axes, points = generateAxes(occupancy)
 dims = Tuple(length.(axes))
@@ -213,7 +213,7 @@ mission = data["mission"]
 samples = data["samples"]
 beliefs = data["beliefs"]
 occupancy = mission.occupancy
-lb, ub = occupancy.lb, occupancy.ub
+lb, ub = bounds(occupancy)
 axes, points = generateAxes(occupancy)
 dims = Tuple(length.(axes))
 μ, σ = beliefs[15](tuple.(vec(points), 1))
@@ -254,7 +254,7 @@ samples = data["samples"]
 bm = BeliefModel([mission.prior_samples; samples], lb, ub)
 
 occupancy = mission.occupancy
-lb, ub = occupancy.lb, occupancy.ub
+lb, ub = bounds(occupancy)
 axs, points = generateAxes(occupancy)
 dims = Tuple(length.(axes))
 μ, σ = bm(tuple.(vec(points), 1))
@@ -504,7 +504,7 @@ data = load(output_dir * "pye_farm_trial_named/" * name * output_ext)
 mission = data["mission"]
 samples = data["samples"]
 beliefs = data["beliefs"]
-lb, ub = mission.occupancy.lb, mission.occupancy.ub
+lb, ub = bounds(mission.occupancy)
 
 samples[1:2]
 beliefs[2]
@@ -521,7 +521,7 @@ name = names[5]
 data = load(output_dir * "pye_farm_trial_named/" * name * output_ext)
 mission = data["mission"]
 samples = data["samples"]
-lb, ub = mission.occupancy.lb, mission.occupancy.ub
+lb, ub = bounds(mission.occupancy)
 
 global_logger(ConsoleLogger(stderr, Debug))
 
@@ -598,7 +598,7 @@ end |> display
 
 ## now look at straight correlation between points
 
-lb, ub = mission.occupancy.lb, mission.occupancy.ub
+lb, ub = bounds(mission.occupancy)
 elev_img = Float64.(gray.(load(maps_dir * "dem_50x50.tif")))
 elevMap = imgToMap(elev_img, lb, ub)
 
@@ -656,7 +656,7 @@ name = names[4]
 data = load(output_dir * "pye_farm_trial_named/" * name * output_ext)
 mission = data["mission"]
 samples = data["samples"]
-lb, ub = mission.occupancy.lb, mission.occupancy.ub
+lb, ub = bounds(mission.occupancy)
 bm = BeliefModel([mission.prior_samples; samples], lb, ub)
 vis(bm, samples, mission.occupancy)
 axs, points = generateAxes(mission.occupancy)
@@ -729,7 +729,7 @@ name = names[6]
 data = load(output_dir * "pye_farm_trial_named/" * name * output_ext)
 mission = data["mission"]
 samples = data["samples"]
-lb, ub = mission.occupancy.lb, mission.occupancy.ub
+lb, ub = bounds(mission.occupancy)
 
 new_beliefs = map(1:mission.num_samples) do i
     BeliefModel([mission.prior_samples; samples[1:i]], lb, ub)
@@ -745,7 +745,7 @@ name = names[5]
 data = load(output_dir * "pye_farm_trial_named/" * name * output_ext)
 mission = data["mission"]
 samples = data["samples"]
-lb, ub = mission.occupancy.lb, mission.occupancy.ub
+lb, ub = bounds(mission.occupancy)
 
 vals = map(1:mission.num_samples) do i
     ss = [mission.prior_samples; samples[1:i]]
@@ -771,7 +771,7 @@ hs = map(1:6) do i
     data = load(output_dir * "pye_farm_trial_named/" * name * output_ext)
     mission = data["mission"]
     samples = data["samples"]
-    lb, ub = mission.occupancy.lb, mission.occupancy.ub
+    lb, ub = bounds(mission.occupancy)
     bm = BeliefModel([mission.prior_samples; samples], lb, ub)
 
     axs, points = generateAxes(mission.occupancy)

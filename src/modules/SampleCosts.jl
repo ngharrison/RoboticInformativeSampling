@@ -4,7 +4,7 @@ using LinearAlgebra: norm
 using Statistics: mean
 using DocStringExtensions: TYPEDSIGNATURES
 
-using ..Maps: pointToCell, cellToPoint, res
+using ..Maps: pointToCell, cellToPoint, res, bounds
 using ..Paths: PathCost
 
 export SampleCost, values, BasicSampleCost,
@@ -66,7 +66,8 @@ function values(sc::BasicSampleCost, loc)
 
     τ = sc.pathCost(pointToCell(loc, sc.occupancy)) # distance to location
 
-    radius = minimum(sc.occupancy.ub .- sc.occupancy.lb)/4
+    lb, ub = bounds(sc.occupancy)
+    radius = minimum(ub .- lb)/4
     dists = norm.(sample.x[1] - loc for sample in sc.samples)
     P = sum((radius./dists).^3) # proximity to other points
 
@@ -101,7 +102,8 @@ function values(sc::NormedSampleCost, loc)
 
     τ_norm = sc.occupancy(loc) ? Inf : 0.0
     # τ = sc.pathCost(pointToCell(loc, sc.occupancy)) # distance to location
-    # τ_norm = τ / mean(sc.occupancy.ub .- sc.occupancy.lb) # normalized
+    # lb, ub = bounds(sc.occupancy)
+    # τ_norm = τ / mean(ub .- lb) # normalized
 
     return (-μ_norm, -log(σ_norm), τ_norm, 0.0)
 end
@@ -130,7 +132,8 @@ end
 
 function values(sc::MIPTSampleCost, loc)
     # τ = sc.pathCost(pointToCell(loc, sc.occupancy)) # distance to location
-    # τ_norm = τ / mean(sc.occupancy.ub .- sc.occupancy.lb)
+    # lb, ub = bounds(sc.occupancy)
+    # τ_norm = τ / mean(ub .- lb) # normalized
     τ_norm = sc.occupancy(loc) ? Inf : 0.0
     d = minimum(norm(sample.x[1] - loc) for sample in sc.samples)
     return (0.0, 0.0, τ_norm, -d)
@@ -163,7 +166,8 @@ function values(sc::EIGFSampleCost, loc)
     μ_norm, σ_norm = mean.(beliefs)
 
     # τ = sc.pathCost(pointToCell(loc, sc.occupancy)) # distance to location
-    # τ_norm = τ / mean(sc.occupancy.ub .- sc.occupancy.lb)
+    # lb, ub = bounds(sc.occupancy)
+    # τ_norm = τ / mean(ub .- lb) # normalized
     τ_norm = sc.occupancy(loc) ? Inf : 0.0
 
     closest_sample = argmin(sample -> norm(sample.x[1] - loc), sc.samples)

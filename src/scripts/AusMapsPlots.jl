@@ -6,7 +6,7 @@ using Plots
 
 using AdaptiveSampling: Maps, Missions, Samples, Visualization, Outputs
 
-using .Maps: Map, imgToMap
+using .Maps: Map, imgToMap, bounds
 using .Missions: maps_dir, normalize, spatialAve
 using .Samples: Sample, MapsSampler, selectSampleLocation
 using .Visualization: visualize
@@ -58,7 +58,7 @@ prior_samples = [Sample((x, i+length(sampler)), d(x))
 points_sp = Vector{Float64}[]
 sampleCost = x -> occupancy(x) ? Inf : -minimum(norm(loc - x) for loc in points_sp; init=Inf)
 for _ in 1:25
-    x = selectSampleLocation(sampleCost, occupancy.lb, occupancy.ub)
+    x = selectSampleLocation(sampleCost, bounds(occupancy)...)
     push!(points_sp, x)
 end
 prior_samples = [Sample((x, i+length(sampler)), d(x))

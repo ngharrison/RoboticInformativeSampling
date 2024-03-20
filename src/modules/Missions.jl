@@ -3,7 +3,7 @@ module Missions
 using Random: seed!
 using DocStringExtensions: TYPEDSIGNATURES, TYPEDFIELDS
 
-using ..Maps: randomPoint
+using ..Maps: randomPoint, bounds
 using ..Samples: Sample, selectSampleLocation, takeSamples
 using ..BeliefModels: BeliefModel, outputCorMat
 using ..Kernels: multiKernel
@@ -82,7 +82,7 @@ function (M::Mission)(func=Returns(nothing);
     seed!(seed_val)
     new_loc = !isempty(M.start_locs) ? M.start_locs[1] : randomPoint(M.occupancy)
 
-    lb, ub = M.occupancy.lb, M.occupancy.ub
+    lb, ub = bounds(M.occupancy)
     quantities = eachindex(M.sampler) # all current available quantities
 
     println("Mission started")
@@ -135,7 +135,7 @@ function (M::Mission)(func=Returns(nothing);
 end
 
 function replay(M::Mission, full_samples, beliefs; sleep_time=0.0)
-    lb, ub = M.occupancy.lb, M.occupancy.ub
+    lb, ub = bounds(M.occupancy)
     quantities = eachindex(M.sampler) # all current available quantities
 
     println("Mission started")
@@ -169,7 +169,7 @@ end
 
 function replay(M::Mission, full_samples; sleep_time=0.0)
     beliefs = map(1:length(full_samples)) do i
-        BeliefModel([M.prior_samples; full_samples[1:i]], M.occupancy.lb, M.occupancy.ub)
+        BeliefModel([M.prior_samples; full_samples[1:i]], bounds(M.occupancy)...)
     end
     replay(M, full_samples, beliefs; sleep_time)
 end

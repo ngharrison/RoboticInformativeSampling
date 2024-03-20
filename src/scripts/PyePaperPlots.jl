@@ -22,7 +22,7 @@ name = names[2]
 data = load(output_dir * "pye_farm_trial_named/" * name * output_ext)
 mission = data["mission"]
 samples = data["samples"]
-lb, ub = mission.occupancy.lb, mission.occupancy.ub
+lb, ub = bounds(mission.occupancy)
 
 i = 2
 
@@ -32,7 +32,7 @@ for i in [1,3,4,5,6]
     name = names[i]
     data = load(output_dir * "pye_farm_trial_named/" * name * output_ext)
     mission = data["mission"]
-    lb, ub = mission.occupancy.lb, mission.occupancy.ub
+    lb, ub = bounds(mission.occupancy)
 
     axs, points = generateAxes(mission.occupancy)
     pred, _ = data["beliefs"][end](tuple.(vec(points), 1))
@@ -51,7 +51,7 @@ plts = map([1,3,4,5]) do i
     data = load(output_dir * "pye_farm_trial_named/" * name * output_ext)
     mission = data["mission"]
     samples = data["samples"]
-    lb, ub = mission.occupancy.lb, mission.occupancy.ub
+    lb, ub = bounds(mission.occupancy)
     # bm = BeliefModel([mission.prior_samples; samples], lb, ub)
     bm = data["beliefs"][end]
 
@@ -102,7 +102,7 @@ name = names[6]
 data = load(output_dir * "pye_farm_trial_named/" * name * output_ext)
 mission = data["mission"]
 samples = data["samples"]
-lb, ub = mission.occupancy.lb, mission.occupancy.ub
+lb, ub = bounds(mission.occupancy)
 # bm = BeliefModel([mission.prior_samples; samples], lb, ub)
 bm = data["beliefs"][end]
 
@@ -143,7 +143,7 @@ name = names[2]
 data = load(output_dir * "pye_farm_trial_named/" * name * output_ext)
 mission = data["mission"]
 samples = data["samples"]
-lb, ub = mission.occupancy.lb, mission.occupancy.ub
+lb, ub = bounds(mission.occupancy)
 
 bm = data["beliefs"][end]
 axs = range.(lb, ub, size(mission.occupancy).+1)

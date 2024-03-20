@@ -20,7 +20,7 @@ for i in 4:6
     data = load(output_dir * "pye_farm_trial_named/" * name * output_ext)
     mission = data["mission"]
     samples = data["samples"]
-    lb, ub = mission.occupancy.lb, mission.occupancy.ub
+    lb, ub = bounds(mission.occupancy)
 
     axs, points = generateAxes(mission.occupancy)
     bm = BeliefModel([mission.prior_samples; samples], lb, ub)
@@ -49,7 +49,7 @@ samples = data["samples"]
 bm = BeliefModel([mission.prior_samples; samples], lb, ub)
 
 occupancy = mission.occupancy
-lb, ub = occupancy.lb, occupancy.ub
+lb, ub = bounds(occupancy)
 axs, points = generateAxes(occupancy)
 dims = Tuple(length.(axs))
 μ, σ = bm(tuple.(vec(points), 1))

@@ -6,7 +6,7 @@ using Random: seed!
 
 using AdaptiveSampling: Maps, Samples, SampleCosts, Missions, Visualization
 
-using .Maps: Map, imgToMap, maps_dir
+using .Maps: Map, imgToMap, maps_dir, bounds
 using .Samples: Sample, MapsSampler, selectSampleLocation
 using .SampleCosts: EIGFSampleCost
 using .Missions: Mission
@@ -54,7 +54,7 @@ function ausMission(; seed_val=0, num_samples=30, priors=Bool[1,1,1])
     points_sp = Vector{Float64}[]
     sampleCost = x -> occupancy(x) ? Inf : -minimum(norm(loc - x) for loc in points_sp; init=Inf)
     for _ in 1:25
-        x = selectSampleLocation(sampleCost, occupancy.lb, occupancy.ub)
+        x = selectSampleLocation(sampleCost, bounds(occupancy)...)
         push!(points_sp, x)
         # x, v = rand(occupancy)
         # !v && push!(points_sp, x)

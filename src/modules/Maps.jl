@@ -5,7 +5,7 @@ using DocStringExtensions: TYPEDSIGNATURES, TYPEDFIELDS
 
 export Map, GaussGroundTruth, Peak, imgToMap, randomPoint,
        res, pointToCell, cellToPoint, generateAxes,
-       ConstantRegion
+       ConstantRegion, bounds
 
 const maps_dir = dirname(Base.active_project()) * "/maps/"
 
@@ -116,6 +116,11 @@ map = imgToMap(image) # or auto bounds
 ```
 """
 imgToMap(img, args...) = Map(permutedims(reverse(img, dims=1), (2,1)), args...)
+
+"""
+Get the lower and upper bounds of the map.
+"""
+bounds(map::Map) = map.lb, map.ub
 
 """
 $(TYPEDSIGNATURES)
