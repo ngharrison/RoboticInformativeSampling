@@ -5,7 +5,8 @@ using DocStringExtensions: TYPEDSIGNATURES, TYPEDFIELDS
 
 using ..Maps: randomPoint
 using ..Samples: Sample, selectSampleLocation, takeSamples
-using ..BeliefModels: BeliefModel, outputCorMat, multiKernel
+using ..BeliefModels: BeliefModel, outputCorMat
+using ..Kernels: multiKernel
 
 export Mission, replay, maps_dir
 

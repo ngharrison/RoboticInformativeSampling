@@ -2,7 +2,8 @@ using AdaptiveSampling: Maps, Missions, BeliefModels, Samples, Outputs
 
 using .Maps: res, generateAxes
 using .Missions: Mission
-using .BeliefModels: BeliefModel, fullyConnectedCovMat
+using .BeliefModels: BeliefModel
+using .Kernels: fullyConnectedCovMat
 using .Samples: Sample
 using .Outputs: output_dir, output_ext
 
