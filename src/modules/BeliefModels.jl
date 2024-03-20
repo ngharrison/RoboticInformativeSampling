@@ -278,9 +278,7 @@ function multiMeanAve(X, Y)
     mean_vals ./= nums
 
     # return function inside CustomMean
-    CustomMean() do x
-        mean_vals[x[2]]
-    end
+    CustomMean(x->mean_vals[x[2]])
 end
 
 """
