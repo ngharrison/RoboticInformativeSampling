@@ -7,6 +7,7 @@ using ..Maps: randomPoint, bounds
 using ..Samples: Sample, selectSampleLocation, takeSamples
 using ..BeliefModels: BeliefModel, outputCorMat
 using ..Kernels: multiKernel
+using ..SampleCosts: values
 
 export Mission, replay, maps_dir
 
