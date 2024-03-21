@@ -74,7 +74,7 @@ function saveBeliefMapToPng(beliefModel, occupancy,
     map_img = stack((0.8*amount,
                      0.3*amount,
                      zeros(size(pred_map)),
-                     ones(size(pred_map))), dims=1)
+                     amount), dims=1)
 
     saveImg("$(output_dir)$(file_name).png",
             colorview(RGBA, map_img))
