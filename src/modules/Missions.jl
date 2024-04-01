@@ -9,7 +9,7 @@ using ..BeliefModels: BeliefModel, outputCorMat
 using ..Kernels: multiKernel
 using ..SampleCosts: values
 
-export Mission, replay, maps_dir
+export Mission, replay
 
 """
 Fields:
