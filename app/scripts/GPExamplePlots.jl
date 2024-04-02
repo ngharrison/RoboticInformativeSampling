@@ -4,7 +4,6 @@ using Plots: mm
 using AdaptiveSampling: Maps, Missions
 
 using .Maps: res, generateAxes
-using .Missions: simMission
 
 function copy_ticks(plt::Plots.Plot=current())
     sp::Plots.Subplot = plt[1]

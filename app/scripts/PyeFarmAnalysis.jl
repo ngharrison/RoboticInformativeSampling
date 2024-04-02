@@ -1,4 +1,4 @@
-using AdaptiveSampling: Maps, Missions, BeliefModels, Samples, ROSInterface, Visualization, Outputs
+using AdaptiveSampling: Maps, Missions, BeliefModels, Samples, ROSInterface, Visualization, Outputs, Kernels
 
 using Statistics, FileIO, Plots, Images, Logging
 using Plots: mm
@@ -558,7 +558,7 @@ using LinearAlgebra: diag
 using AbstractGPs: logpdf
 
 function outputCorMatVec(a)
-    cov_mat = BeliefModels.fullyConnectedCovMat(a)
+    cov_mat = fullyConnectedCovMat(a)
     vars = diag(cov_mat)
     return @. cov_mat / √(vars * vars') # broadcast shorthand
 end
@@ -569,7 +569,7 @@ mission.occupancy.ub
 X = getfield.([mission.prior_samples[[1,end]]; samples[1:2]], :x)
 Y_vals = getfield.([mission.prior_samples[[1,end]]; samples[1:2]], :y)
 Y_errs = 0.0
-kernel = BeliefModels.multiKernel
+kernel = multiKernel
 
 θ = (σ = [55.82592833071618, 32.44570139050765, 6.617717042512063],
      ℓ = -3.963171016628482,
@@ -687,7 +687,7 @@ end
 ss = [mission.prior_samples; samples[1:end-1]]
 X = getfield.(ss, :x)
 Y = getfield.(ss, :y)
-m = BeliefModels.multiMeanAve(X, Y)
+m = multiMeanAve(X, Y)
 m.f.(tuple.(0, 1:2))
 
 plot()

@@ -1,9 +1,9 @@
 using DelimitedFiles: readdlm, writedlm
 using Statistics: mean
 
-using AdaptiveSampling: Missions
+using AdaptiveSampling: Maps
 
-using .Missions: maps_dir
+using .Maps: maps_dir
 
 ## average over year
 # calculates the mean of a vector of matrices

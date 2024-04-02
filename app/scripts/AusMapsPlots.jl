@@ -6,11 +6,12 @@ using Plots
 
 using AdaptiveSampling: Maps, Missions, Samples, Visualization, Outputs
 
-using .Maps: Map, imgToMap, bounds
-using .Missions: maps_dir, normalize, spatialAve
+using .Maps: Map, imgToMap, bounds, maps_dir
 using .Samples: Sample, MapsSampler, selectSampleLocation
 using .Visualization: visualize
 using .Outputs: output_dir
+
+include("../utils/utils.jl")
 
 ## data
 seed_val=0; priors=Bool[1,1,1];

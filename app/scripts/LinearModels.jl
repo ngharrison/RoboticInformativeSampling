@@ -1,4 +1,4 @@
-using AdaptiveSampling: Maps, Missions, BeliefModels, Samples, Outputs
+using AdaptiveSampling: Maps, Missions, BeliefModels, Samples, Outputs, Kernels
 
 using .Maps: res, generateAxes
 using .Missions: Mission
@@ -7,7 +7,7 @@ using .Kernels: fullyConnectedCovMat
 using .Samples: Sample
 using .Outputs: output_dir, output_ext
 
-using Statistics: mean
+using Statistics: mean, std
 using StatsBase: mean_and_cov, AnalyticWeights
 using FileIO: load
 using Plots
