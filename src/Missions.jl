@@ -135,7 +135,7 @@ function (M::Mission)(func=Returns(nothing);
     return samples, beliefs
 end
 
-function replay(M::Mission, full_samples, beliefs; sleep_time=0.0)
+function replay(M::Mission, full_samples, beliefs; func=Returns(nothing), sleep_time=0.0)
     quantities = eachindex(M.sampler) # all current available quantities
 
     println("Mission started")
@@ -158,7 +158,7 @@ function replay(M::Mission, full_samples, beliefs; sleep_time=0.0)
         sampleCost = M.sampleCostType(M, samples, beliefModel, quantities)
 
         new_loc = i < M.num_samples ? full_samples[i+1].x[1] : nothing
-        vis(M, samples, beliefModel, sampleCost, new_loc)
+        func(M, samples, beliefModel, sampleCost, new_loc)
         @debug "output correlation matrix:" outputCorMat(beliefModel)
         sleep(sleep_time)
     end
