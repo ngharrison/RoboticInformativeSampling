@@ -136,12 +136,11 @@ function (M::Mission)(func=Returns(nothing);
 end
 
 function replay(M::Mission, full_samples, beliefs; sleep_time=0.0)
-    lb, ub = bounds(M.occupancy)
     quantities = eachindex(M.sampler) # all current available quantities
 
     println("Mission started")
 
-    for i in 1:length(full_samples)
+    for i in eachindex(full_samples)
         println()
         println("Sample number $i")
 
