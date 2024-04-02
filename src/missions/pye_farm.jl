@@ -1,11 +1,10 @@
 
 using FileIO: load
-using Maps: Map, imgToMap, maps_dir
 using Images: gray
 
-using AdaptiveSampling: Maps, Samples, SampleCosts, Missions, Visualization
+using AdaptiveSampling: Maps, Samples, SampleCosts, Missions, Visualization, ROSInterface
 
-using .Maps: Map
+using .Maps: Map, imgToMap, maps_dir
 using .SampleCosts: EIGFSampleCost
 using .Samples: Sample
 using .SampleCosts: EIGFSampleCost
@@ -13,7 +12,7 @@ using .Missions: Mission
 using .Visualization: vis
 
 # this requires a working rospy installation
-using ROSInterface: ROSConnection
+using .ROSInterface: ROSConnection
 
 function pyeFarmMission(; num_samples=4)
 
