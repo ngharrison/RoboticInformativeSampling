@@ -159,8 +159,7 @@ mission = simMission(num_samples=10)
 #* Batch
 
 # set the logging level: Info or Debug
-using Logging
-global_logger(ConsoleLogger(stderr, Logging.Info))
+global_logger(ConsoleLogger(stderr, Info))
 
 using AdaptiveSampling: BeliefModels, Visualization, Metrics, Outputs
 

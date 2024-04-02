@@ -104,8 +104,7 @@ mission = nswMission(num_samples=10)
 #* Pair
 
 # set the logging level: Info or Debug
-using Logging
-global_logger(ConsoleLogger(stderr, Logging.Info))
+global_logger(ConsoleLogger(stderr, Info))
 
 using AdaptiveSampling: BeliefModels, Visualization, Metrics, Outputs
 
