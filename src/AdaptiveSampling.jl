@@ -14,7 +14,7 @@ include("Metrics.jl")
 include("Visualization.jl")
 include("Outputs.jl")
 
-export Maps, Paths, SampleCosts, Samples, BeliefModels,
+export Maps, Paths, SampleCosts, Samples, BeliefModels, Kernels,
        Metrics, Visualization, Outputs, ROSInterface, Missions
 
 end

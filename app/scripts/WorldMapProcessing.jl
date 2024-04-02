@@ -1,7 +1,7 @@
 using DelimitedFiles: readdlm, writedlm
 using Statistics: mean
 
-using AdaptiveSampling: Maps
+using AdaptiveSampling
 
 using .Maps: maps_dir
 

@@ -5,7 +5,7 @@ Pkg.activate(Base.source_dir() * "/../..")
 
 using Logging: global_logger, ConsoleLogger, Info, Debug
 
-using AdaptiveSampling: Maps, SampleCosts, ROSInterface, Missions
+using AdaptiveSampling
 
 using .Maps: Map
 using .SampleCosts: EIGFSampleCost
@@ -46,8 +46,6 @@ end
 
 # set the logging level: Info or Debug
 global_logger(ConsoleLogger(stderr, Debug))
-
-using AdaptiveSampling: Visualization, Outputs
 
 using .Visualization: vis
 using .Outputs: save

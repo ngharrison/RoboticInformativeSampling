@@ -1,4 +1,4 @@
-using AdaptiveSampling: Maps, Missions, BeliefModels, Samples, Outputs
+using AdaptiveSampling
 
 using .Maps: generateAxes
 using .Missions: Mission

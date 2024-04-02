@@ -1,6 +1,6 @@
 using Test
 
-using AdaptiveSampling: Paths
+using AdaptiveSampling
 using .Paths: PathCost
 
 @testset "Paths tests" begin

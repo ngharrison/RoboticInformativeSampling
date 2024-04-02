@@ -2,7 +2,7 @@
 using Logging: global_logger, ConsoleLogger, Info, Debug
 using DelimitedFiles: readdlm
 
-using AdaptiveSampling: Maps, Samples, SampleCosts, Missions, Visualization
+using AdaptiveSampling
 
 using .Maps: Map, pointToCell
 using .Samples: MapsSampler
@@ -60,8 +60,6 @@ end
 
 # set the logging level: Info or Debug
 global_logger(ConsoleLogger(stderr, Info))
-
-using AdaptiveSampling: Visualization
 
 using .Visualization: vis
 

@@ -5,7 +5,7 @@ using DelimitedFiles: readdlm
 using Statistics: cor
 using Random: seed!
 
-using AdaptiveSampling: Maps, Samples, SampleCosts, Missions, Visualization
+using AdaptiveSampling
 
 using .Maps: Map, imgToMap, maps_dir, bounds
 using .Samples: Sample, MapsSampler, selectSampleLocation
@@ -88,8 +88,6 @@ end
 # set the logging level: Info or Debug
 global_logger(ConsoleLogger(stderr, Info))
 
-using AdaptiveSampling: Visualization
-
 using .Visualization: vis
 
 ## initialize data for mission
@@ -106,8 +104,6 @@ mission = ausMission(num_samples=10)
 
 # set the logging level: Info or Debug
 global_logger(ConsoleLogger(stderr, Info))
-
-using AdaptiveSampling: BeliefModels, Visualization, Metrics, Outputs
 
 using .BeliefModels: outputCorMat
 using .Visualization: vis

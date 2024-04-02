@@ -3,7 +3,7 @@ using Logging: global_logger, ConsoleLogger, Info, Debug
 using FileIO: load
 using Images: gray
 
-using AdaptiveSampling: Maps, Samples, SampleCosts, Missions, Visualization, ROSInterface
+using AdaptiveSampling
 
 using .Maps: Map, imgToMap, maps_dir
 using .SampleCosts: EIGFSampleCost
@@ -88,8 +88,6 @@ end
 
 # set the logging level: Info or Debug
 global_logger(ConsoleLogger(stderr, Debug))
-
-using AdaptiveSampling: Visualization, Outputs
 
 using .Visualization: vis
 using .Outputs: save

@@ -1,7 +1,7 @@
 using Plots
 using Plots: mm
 
-using AdaptiveSampling: Maps, Missions
+using AdaptiveSampling
 
 using .Maps: res, generateAxes
 

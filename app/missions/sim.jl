@@ -131,7 +131,7 @@ end
 # set the logging level: Info or Debug
 global_logger(ConsoleLogger(stderr, Info))
 
-using AdaptiveSampling: Visualization
+using AdaptiveSampling
 
 using .Visualization: vis
 
@@ -160,8 +160,6 @@ mission = simMission(num_samples=10)
 
 # set the logging level: Info or Debug
 global_logger(ConsoleLogger(stderr, Info))
-
-using AdaptiveSampling: BeliefModels, Visualization, Metrics, Outputs
 
 using .BeliefModels: outputCorMat
 using .Visualization: visualize

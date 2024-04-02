@@ -3,11 +3,11 @@ using LinearAlgebra: I
 using Statistics: cor
 using Plots
 
-using AdaptiveSampling: Maps, Samples, Outputs
+using AdaptiveSampling
 
 using .Maps: Map, GaussGroundTruth, Peak, generateAxes
 using .Samples: Sample, MapsSampler
-using Outputs: output_dir
+using .Outputs: output_dir
 
 ## data
 seed_val=3; num_peaks=4; priors=Bool[1,1,1];

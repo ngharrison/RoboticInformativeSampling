@@ -4,7 +4,7 @@ using Statistics: cor
 using DelimitedFiles: readdlm
 using Plots
 
-using AdaptiveSampling: Maps, Missions, Samples, Visualization, Outputs
+using AdaptiveSampling
 
 using .Maps: Map, imgToMap, bounds, maps_dir
 using .Samples: Sample, MapsSampler, selectSampleLocation

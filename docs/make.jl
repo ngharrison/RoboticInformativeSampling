@@ -1,6 +1,6 @@
 using Documenter
 
-using AdaptiveSampling: Maps, Missions, BeliefModels,
+using AdaptiveSampling
       Samples, SampleCosts, Paths, Visualization, ROSInterface
 
 makedocs(
