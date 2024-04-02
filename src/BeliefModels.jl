@@ -117,7 +117,7 @@ function BeliefModel(samples, lb, ub; noise, kernel=multiKernel)
         θ0 = initHyperparams(X, Y_vals, lb, ub; σn=fixed(Y_errs)) # no noise to learn
     else
         Y_vals = Y
-        σn = (noise ? 0.0 : fixed(0.0))
+        σn = (noise[2] == :learned ? noise[1] : fixed(noise[1]))
         θ0 = initHyperparams(X, Y_vals, lb, ub; σn) # no noise to learn
     end
 

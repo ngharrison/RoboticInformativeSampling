@@ -114,6 +114,8 @@ function simMission(; seed_val=0, num_samples=30, num_peaks=3, priors=Bool[1,1,1
     #                   points=points_sp,
     #                   titles=["QOI", "Scaling Factor", "Additive Noise", "Random Map"])
 
+    noise = (0.0, :learned)
+
     return Mission(; occupancy,
                    sampler,
                    num_samples,
@@ -121,7 +123,7 @@ function simMission(; seed_val=0, num_samples=30, num_peaks=3, priors=Bool[1,1,1
                    weights,
                    start_locs,
                    prior_samples,
-                   noise=true)
+                   noise)
 
 end
 
