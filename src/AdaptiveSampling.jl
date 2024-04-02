@@ -1,18 +1,18 @@
 module AdaptiveSampling
 
 # put all the code into the top namespace
-include("modules/Maps.jl")
-include("modules/Paths.jl")
-include("modules/SampleCosts.jl")
-include("modules/Samples.jl")
-include("modules/Kernels.jl")
-include("modules/BeliefModels.jl")
-include("modules/ROSInterface.jl")
-include("modules/Missions.jl")
+include("Maps.jl")
+include("Paths.jl")
+include("SampleCosts.jl")
+include("Samples.jl")
+include("Kernels.jl")
+include("BeliefModels.jl")
+include("ROSInterface.jl")
+include("Missions.jl")
 
-include("modules/Metrics.jl")
-include("modules/Visualization.jl")
-include("modules/Outputs.jl")
+include("Metrics.jl")
+include("Visualization.jl")
+include("Outputs.jl")
 
 export Maps, Paths, SampleCosts, Samples, BeliefModels,
        Metrics, Visualization, Outputs, ROSInterface, Missions
