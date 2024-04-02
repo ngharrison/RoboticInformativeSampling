@@ -3,6 +3,8 @@
 using Pkg
 Pkg.activate(Base.source_dir() * "/../..")
 
+using Logging: global_logger, ConsoleLogger, Info, Debug
+
 using AdaptiveSampling: Maps, SampleCosts, ROSInterface, Missions
 
 using .Maps: Map
@@ -43,8 +45,7 @@ end
 #* Run
 
 # set the logging level: Info or Debug
-using Logging
-global_logger(ConsoleLogger(stderr, Logging.Debug))
+global_logger(ConsoleLogger(stderr, Debug))
 
 using AdaptiveSampling: Visualization, Outputs
 

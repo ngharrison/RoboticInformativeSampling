@@ -1,4 +1,5 @@
 
+using Logging: global_logger, ConsoleLogger, Info, Debug
 using FileIO: load
 using Images: gray
 
@@ -86,8 +87,7 @@ end
 #* Run
 
 # set the logging level: Info or Debug
-using Logging
-global_logger(ConsoleLogger(stderr, Logging.Debug))
+global_logger(ConsoleLogger(stderr, Debug))
 
 using AdaptiveSampling: Visualization, Outputs
 

@@ -1,4 +1,5 @@
 
+using Logging: global_logger, ConsoleLogger, Info, Debug
 using LinearAlgebra: norm
 using DelimitedFiles: readdlm
 using Statistics: cor
@@ -85,7 +86,6 @@ end
 #* Run
 
 # set the logging level: Info or Debug
-using Logging
 global_logger(ConsoleLogger(stderr, Logging.Info))
 
 using AdaptiveSampling: Visualization
@@ -105,8 +105,7 @@ mission = ausMission(num_samples=10)
 #* Pair
 
 # set the logging level: Info or Debug
-using Logging
-global_logger(ConsoleLogger(stderr, Logging.Info))
+global_logger(ConsoleLogger(stderr, Info))
 
 using AdaptiveSampling: BeliefModels, Visualization, Metrics, Outputs
 

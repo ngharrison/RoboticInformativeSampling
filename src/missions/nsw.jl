@@ -1,4 +1,5 @@
 
+using Logging: global_logger, ConsoleLogger, Info, Debug
 using DelimitedFiles: readdlm
 using Statistics: cor
 using Random: seed!
@@ -84,8 +85,7 @@ end
 #* Run
 
 # set the logging level: Info or Debug
-using Logging
-global_logger(ConsoleLogger(stderr, Logging.Info))
+global_logger(ConsoleLogger(stderr, Info))
 
 using AdaptiveSampling: Visualization
 
