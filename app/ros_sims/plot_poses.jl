@@ -4,8 +4,6 @@
 using Pkg
 Pkg.activate(Base.source_dir() * "/..")
 
-using RobotOS
-
 using PyCall
 rospy = pyimport("rospy")
 geometry_msg = pyimport("geometry_msgs.msg")
@@ -43,11 +41,11 @@ function plotStuff()
 end
 
 function main()
-    init_node("pose_plotter")
-    loop_rate = Rate(20.0)
-    while !is_shutdown()
+    rospy.init_node("pose_plotter")
+    loop_rate = rospy.Rate(20.0)
+    while !rospy.is_shutdown()
         plotStuff()
-        rossleep(loop_rate)
+        loop_rate.sleep()
     end
 
 end

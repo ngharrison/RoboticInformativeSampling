@@ -2,7 +2,7 @@
 
 julia_version = "1.10.2"
 manifest_format = "2.0"
-project_hash = "ff155d5369e1ff6fb53e66176cfa87b51a9029ad"
+project_hash = "3285d8c2d7a5778630162fc57e7315126c693528"
 
 [[deps.ANSIColoredPrinters]]
 git-tree-sha1 = "574baf8110975760d391c710b6341da1afa48d8c"
@@ -42,7 +42,7 @@ weakdeps = ["StaticArrays"]
     AdaptStaticArraysExt = "StaticArrays"
 
 [[deps.AdaptiveSampling]]
-deps = ["AbstractGPs", "DataStructures", "Dates", "Distributions", "DocStringExtensions", "Documenter", "Images", "JLD2", "LinearAlgebra", "Optim", "ParameterHandling", "Plots", "PyCall", "Random", "RobotOS", "Rotations", "Statistics"]
+deps = ["AbstractGPs", "DataStructures", "Distributions", "DocStringExtensions", "Documenter", "LinearAlgebra", "Optim", "ParameterHandling", "PyCall", "Random", "RobotOS", "Rotations", "Statistics"]
 path = ".."
 uuid = "bfd01cc8-db36-4de5-b056-8ab04eef9441"
 version = "0.1.0"

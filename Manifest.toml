@@ -2,7 +2,7 @@
 
 julia_version = "1.10.2"
 manifest_format = "2.0"
-project_hash = "2e6052a0f9e05198ee3ad8f930b52ba8221b17f3"
+project_hash = "eb14c9812614afb0384093264dafecb9cdd53d89"
 
 [[deps.ANSIColoredPrinters]]
 git-tree-sha1 = "574baf8110975760d391c710b6341da1afa48d8c"
@@ -648,12 +648,6 @@ deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
 git-tree-sha1 = "6ed52fdd3382cf21947b15e8870ac0ddbff736da"
 uuid = "f50d1b31-88e8-58de-be2c-1cc44531875f"
 version = "0.4.0+0"
-
-[[deps.RobotOS]]
-deps = ["PyCall"]
-git-tree-sha1 = "1039c4c5f0e4ea43db9adda4d8e6be3a23db86db"
-uuid = "22415677-39a4-5241-a37a-00beabbbdae8"
-version = "0.7.2"
 
 [[deps.Rotations]]
 deps = ["LinearAlgebra", "Quaternions", "Random", "StaticArrays"]

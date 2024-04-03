@@ -2,18 +2,23 @@
 
 module ROSInterface
 
-using RobotOS
-@rosimport geometry_msgs.msg: Pose, PoseStamped, Point, Quaternion
-rostypegen(@__MODULE__)
-using .geometry_msgs.msg
-
-using PyCall: pyimport
+using PyCall: pyimport, PyNULL
 using Rotations: QuatRotation, RotZ, params
 using DocStringExtensions: TYPEDSIGNATURES, TYPEDFIELDS, FUNCTIONNAME
 
 using ..Samples: Location, SampleInput
 
 export ROSConnection
+
+const rospy = PyNULL()
+const std_msg = PyNULL()
+const geo_msg = PyNULL()
+
+function __init__()
+    copy!(rospy, pyimport("rospy"))
+    copy!(std_msg, pyimport("std_msgs.msg"))
+    copy!(geo_msg, pyimport("geometry_msgs.msg"))
+end
 
 """
 A struct that stores information for communicating with Swagbot.
@@ -30,7 +35,7 @@ struct ROSConnection
     "vector of topic names that will be subscribed to to receive measurements"
     sub_topics::Vector{Tuple{String, String}}
     "name of topic to publish next sample location to"
-    publisher::Publisher{PoseStamped}
+    publisher
 end
 
 """
@@ -44,10 +49,10 @@ node and sets up a publisher to "/latest_sample".
 """
 function ROSConnection(sub_topics)
     # initialize this node with its name
-    init_node("adaptive_sampling")
+    rospy.init_node("adaptive_sampling")
 
     # this will pass the full goal pose, no quantity id
-    publisher = Publisher{PoseStamped}("latest_sample", queue_size=1, latch=true)
+    publisher = rospy.Publisher("latest_sample", geo_msg.PoseStamped, queue_size=1, latch=true)
 
     # create connection object
     rosConnection = ROSConnection(sub_topics, publisher)
@@ -84,9 +89,6 @@ location = [.1, .3]
 """
 function (R::ROSConnection)(new_loc::Location)
     publishNextLocation(R.publisher, new_loc)
-
-    rospy = pyimport("rospy")
-    std_msg = pyimport("std_msgs.msg")
 
     rospy.wait_for_message("sortie_finished", std_msg.Bool) # a message means finished
     @debug "received sortie finished"
@@ -136,19 +138,19 @@ $(TYPEDSIGNATURES)
 
 Internal function used to send the next location to Swagbot.
 """
-function publishNextLocation(publisher::Publisher{PoseStamped}, new_loc::Location)
+function publishNextLocation(publisher, new_loc::Location)
     # create Point and Quaternion and put them together
-    p = Point(new_loc..., 0)
+    p = geo_msg.Point(new_loc..., 0)
     # TODO use real orientation
     # orientation = finalOrientation(pathCost, new_loc)
     orientation = 0
-    q = Quaternion(params(QuatRotation(RotZ(orientation)))...)
-    pose = Pose(p, q)
-    poseStamped = PoseStamped()
-    poseStamped.header.stamp = RobotOS.now()
+    q = geo_msg.Quaternion(params(QuatRotation(RotZ(orientation)))...)
+    pose = geo_msg.Pose(p, q)
+    poseStamped = geo_msg.PoseStamped()
+    poseStamped.header.stamp = rospy.Time.now()
     poseStamped.header.frame_id = "utm"
     poseStamped.pose = pose
-    publish(publisher, poseStamped)
+    publisher.publish(poseStamped)
     @debug "published next location:" pose
 end
 
