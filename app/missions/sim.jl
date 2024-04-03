@@ -5,11 +5,12 @@ using Statistics: mean, cor
 using Random: seed!
 
 using AdaptiveSampling
-
 using .Maps: Map, GaussGroundTruth, Peak, generateAxes
 using .Samples: Sample, MapsSampler
 using .SampleCosts: EIGFSampleCost
 using .Missions: Mission
+
+include("../utils/Visualization.jl")
 using .Visualization: vis
 
 function simMission(; seed_val=0, num_samples=30, num_peaks=3, priors=Bool[1,1,1])
@@ -40,7 +41,7 @@ function simMission(; seed_val=0, num_samples=30, num_peaks=3, priors=Bool[1,1,1
         Peak(μ, Σ, h)
     end
     ggt = GaussGroundTruth(peaks)
-    axs, points = generateAxes(occupancy)
+    _, points = generateAxes(occupancy)
     mat = ggt(points)
     map0 = Map(mat./maximum(mat), lb, ub)
 
@@ -133,10 +134,6 @@ end
 # set the logging level: Info or Debug
 global_logger(ConsoleLogger(stderr, Info))
 
-using AdaptiveSampling
-
-using .Visualization: vis
-
 ## initialize data for mission
 mission = simMission(num_samples=10)
 
@@ -147,8 +144,10 @@ mission = simMission(num_samples=10)
 );
 
 
-# using Metrics: calcMetrics
-# using Outputs: save
+# include("../utils/Metrics.jl")
+# using .Metrics: calcMetrics
+# include("../utils/DataIO.jl")
+# using .DataIO: save
 #
 # ## calculate errors
 # metrics = calcMetrics(mission, beliefs, 1)
@@ -164,9 +163,10 @@ mission = simMission(num_samples=10)
 global_logger(ConsoleLogger(stderr, Info))
 
 using .BeliefModels: outputCorMat
-using .Visualization: visualize
+include("../utils/Metrics.jl")
 using .Metrics: calcMetrics
-using .Outputs: save
+include("../utils/DataIO.jl")
+using .DataIO: save
 
 mission_peaks = [3,3,4,4,5,5]
 num_runs = 3

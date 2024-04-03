@@ -10,11 +10,7 @@ include("BeliefModels.jl")
 include("ROSInterface.jl")
 include("Missions.jl")
 
-include("Metrics.jl")
-include("Visualization.jl")
-include("Outputs.jl")
-
 export Maps, Paths, SampleCosts, Samples, BeliefModels, Kernels,
-       Metrics, Visualization, Outputs, ROSInterface, Missions
+       ROSInterface, Missions
 
 end

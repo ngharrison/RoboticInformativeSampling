@@ -5,14 +5,16 @@ using Statistics: cor
 using Random: seed!
 
 using AdaptiveSampling
-
-using .Maps: Map, imgToMap, maps_dir
+using .Maps: Map, imgToMap
 using .Samples: Sample, MapsSampler
 using .SampleCosts: EIGFSampleCost
 using .Missions: Mission
+
+include("../utils/Visualization.jl")
 using .Visualization: vis
 
-include("../utils/utils.jl")
+include("../utils/DataIO.jl")
+using .DataIO: normalize, maps_dir
 
 function nswMission(; seed_val=0, num_samples=30, priors=Bool[1,1,1])
     # have it run around australia
@@ -87,8 +89,6 @@ end
 # set the logging level: Info or Debug
 global_logger(ConsoleLogger(stderr, Info))
 
-using .Visualization: vis
-
 ## initialize data for mission
 mission = nswMission(num_samples=10)
 
@@ -105,9 +105,11 @@ mission = nswMission(num_samples=10)
 global_logger(ConsoleLogger(stderr, Info))
 
 using .BeliefModels: outputCorMat
-using .Visualization: vis
+
+include("../utils/Metrics.jl")
+include("../utils/DataIO.jl")
 using .Metrics: calcMetrics
-using .Outputs: save
+using .DataIO: save
 
 @time for priors in [(0,0,0), (1,1,1)]
     ## initialize data for mission

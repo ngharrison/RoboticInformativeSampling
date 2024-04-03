@@ -3,11 +3,13 @@ using Logging: global_logger, ConsoleLogger, Info, Debug
 using DelimitedFiles: readdlm
 
 using AdaptiveSampling
-
 using .Maps: Map, pointToCell
 using .Samples: MapsSampler
 using .SampleCosts: NormedSampleCost
 using .Missions: Mission
+
+include("../utils/DataIO.jl")
+using .DataIO: maps_dir
 
 function conradMission()
 
@@ -61,6 +63,7 @@ end
 # set the logging level: Info or Debug
 global_logger(ConsoleLogger(stderr, Info))
 
+include("../utils/Visualization.jl")
 using .Visualization: vis
 
 ## initialize data for mission

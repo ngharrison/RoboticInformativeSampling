@@ -4,16 +4,16 @@ using FileIO: load
 using Images: gray
 
 using AdaptiveSampling
-
 using .Maps: Map, imgToMap, maps_dir
 using .SampleCosts: EIGFSampleCost
 using .Samples: Sample
-using .SampleCosts: EIGFSampleCost
 using .Missions: Mission
-using .Visualization: vis
 
 # this requires a working rospy installation
 using .ROSInterface: ROSConnection
+
+include("../utils/Visualization.jl")
+using .Visualization: vis
 
 function pyeFarmMission(; num_samples=4)
 
@@ -67,8 +67,6 @@ function pyeFarmMission(; num_samples=4)
 
     vis(elevMap; points=points_sp)
 
-    num_samples = 30
-
     sampleCostType = EIGFSampleCost
 
     ## initialize alg values
@@ -89,8 +87,8 @@ end
 # set the logging level: Info or Debug
 global_logger(ConsoleLogger(stderr, Debug))
 
-using .Visualization: vis
-using .Outputs: save
+include("../utils/DataIO.jl")
+using .DataIO: save
 
 ## initialize data for mission
 mission = pyeFarmMission()

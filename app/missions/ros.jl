@@ -6,7 +6,6 @@ Pkg.activate(Base.source_dir() * "/../..")
 using Logging: global_logger, ConsoleLogger, Info, Debug
 
 using AdaptiveSampling
-
 using .Maps: Map
 using .SampleCosts: EIGFSampleCost
 using .Missions: Mission
@@ -47,8 +46,10 @@ end
 # set the logging level: Info or Debug
 global_logger(ConsoleLogger(stderr, Debug))
 
+include("../utils/Visualization.jl")
+include("../utils/DataIO.jl")
 using .Visualization: vis
-using .Outputs: save
+using .DataIO: save
 
 ## initialize data for mission
 mission = rosMission()

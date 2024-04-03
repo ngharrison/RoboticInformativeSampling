@@ -3,7 +3,7 @@ module Maps
 using Distributions: MvNormal, pdf
 using DocStringExtensions: TYPEDSIGNATURES, TYPEDFIELDS
 
-export Map, GaussGroundTruth, Peak, imgToMap, randomPoint,
+export Map, GaussGroundTruth, Peak, randomPoint,
        res, pointToCell, cellToPoint, generateAxes,
        ConstantRegion, bounds
 
@@ -96,24 +96,6 @@ end
 function randomPoint(map::Map)
     return map.lb .+ rand(ndims(map)).*(map.ub .- map.lb)
 end
-
-# helper methods used with maps
-"""
-Takes a matrix in the format created from an image, re-formats it, and returns a
-Map. Images view a matrix with its indexing top-down and left-right. Maps view a
-matrix with its indexing left-right and bottom-up.
-
-# Examples
-```julia
-using DelimitedFiles: readdlm
-
-image = readdlm(file_name, ',')
-lb = [0.0, 0.0]; ub = [1.0, 1.0]
-map = imgToMap(image, lb, ub)
-map = imgToMap(image) # or auto bounds
-```
-"""
-imgToMap(img, args...) = Map(permutedims(reverse(img, dims=1), (2,1)), args...)
 
 """
 Get the lower and upper bounds of the map.
