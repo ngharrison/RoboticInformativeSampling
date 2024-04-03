@@ -5,14 +5,14 @@ using Statistics: cor
 using Random: seed!
 
 using AdaptiveSampling
-using .Maps: Map, imgToMap
+using .Maps: Map
 using .Samples: Sample, MapsSampler
 using .SampleCosts: EIGFSampleCost
 using .Missions: Mission
 
 include("../utils/utils.jl")
 using .Visualization: vis
-using .DataIO: normalize, maps_dir
+using .DataIO: normalize, maps_dir, imgToMap
 
 function nswMission(; seed_val=0, num_samples=30, priors=Bool[1,1,1])
     # have it run around australia

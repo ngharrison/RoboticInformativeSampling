@@ -4,7 +4,7 @@ using FileIO: load
 using Images: gray
 
 using AdaptiveSampling
-using .Maps: Map, imgToMap, maps_dir
+using .Maps: Map, maps_dir
 using .SampleCosts: EIGFSampleCost
 using .Samples: Sample
 using .Missions: Mission
@@ -14,6 +14,7 @@ using .ROSInterface: ROSConnection
 
 include("../utils/utils.jl")
 using .Visualization: vis
+using .DataIO: imgToMap
 
 function pyeFarmMission(; num_samples=4)
 
