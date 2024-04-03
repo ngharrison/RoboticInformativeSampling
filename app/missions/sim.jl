@@ -18,17 +18,6 @@ function simMission(; seed_val=0, num_samples=30, num_peaks=3, priors=Bool[1,1,1
 
     lb = [0.0, 0.0]; ub = [1.0, 1.0]
 
-    # # read in elevation
-    # elev_img = load(maps_dir * "arthursleigh_shed_small.tif")
-    # elevMap = imgToMap(gray.(elev_img), lb, ub)
-
-    # # read in obstacles
-    # obs_img = load(maps_dir * "obstacles_fieldsouth_220727.tif")
-    # obs_img_res = imresize(obs_img, size(elev_img))
-    # # the image we have has zeros for obstacles, need to flip
-    # occ_mat = Matrix{Bool}(Gray.(obs_img_res) .== 0)
-    # occupancy = imgToMap(occ_mat, lb, ub)
-
     occupancy = Map(zeros(Bool, 100, 100), lb, ub)
 
     ## initialize ground truth
