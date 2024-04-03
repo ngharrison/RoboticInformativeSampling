@@ -13,12 +13,12 @@ find_package(catkin REQUIRED COMPONENTS
   geometry_msgs
 )
 
-# set custom build command that should always be run
-add_custom_target(setup ALL
-  COMMAND julia cmake_setup.jl
-  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-  COMMENT "Setting up project"
-)
+# # set custom build command that should always be run
+# add_custom_target(setup ALL
+#   COMMAND julia cmake_setup.jl
+#   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+#   COMMENT "Setting up project"
+# )
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
