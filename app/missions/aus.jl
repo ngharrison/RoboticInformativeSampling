@@ -11,10 +11,8 @@ using .Samples: Sample, MapsSampler, selectSampleLocation
 using .SampleCosts: EIGFSampleCost
 using .Missions: Mission
 
-include("../utils/Visualization.jl")
+include("../utils/utils.jl")
 using .Visualization: vis
-
-include("../utils/DataIO.jl")
 using .DataIO: normalize, maps_dir
 
 function ausMission(; seed_val=0, num_samples=30, priors=Bool[1,1,1])
@@ -107,7 +105,6 @@ global_logger(ConsoleLogger(stderr, Info))
 
 using .BeliefModels: outputCorMat
 
-include("../utils/Metrics.jl")
 using .Metrics: calcMetrics
 using .DataIO: save
 

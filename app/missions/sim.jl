@@ -10,7 +10,7 @@ using .Samples: Sample, MapsSampler
 using .SampleCosts: EIGFSampleCost
 using .Missions: Mission
 
-include("../utils/Visualization.jl")
+include("../utils/utils.jl")
 using .Visualization: vis
 
 function simMission(; seed_val=0, num_samples=30, num_peaks=3, priors=Bool[1,1,1])
@@ -144,9 +144,7 @@ mission = simMission(num_samples=10)
 );
 
 
-# include("../utils/Metrics.jl")
 # using .Metrics: calcMetrics
-# include("../utils/DataIO.jl")
 # using .DataIO: save
 #
 # ## calculate errors
@@ -163,9 +161,7 @@ mission = simMission(num_samples=10)
 global_logger(ConsoleLogger(stderr, Info))
 
 using .BeliefModels: outputCorMat
-include("../utils/Metrics.jl")
 using .Metrics: calcMetrics
-include("../utils/DataIO.jl")
 using .DataIO: save
 
 mission_peaks = [3,3,4,4,5,5]

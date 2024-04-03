@@ -46,8 +46,7 @@ end
 # set the logging level: Info or Debug
 global_logger(ConsoleLogger(stderr, Debug))
 
-include("../utils/Visualization.jl")
-include("../utils/DataIO.jl")
+include("../utils/utils.jl")
 using .Visualization: vis
 using .DataIO: save
 

@@ -12,7 +12,7 @@ using .Missions: Mission
 # this requires a working rospy installation
 using .ROSInterface: ROSConnection
 
-include("../utils/Visualization.jl")
+include("../utils/utils.jl")
 using .Visualization: vis
 
 function pyeFarmMission(; num_samples=4)
@@ -87,7 +87,6 @@ end
 # set the logging level: Info or Debug
 global_logger(ConsoleLogger(stderr, Debug))
 
-include("../utils/DataIO.jl")
 using .DataIO: save
 
 ## initialize data for mission
