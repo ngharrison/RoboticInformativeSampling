@@ -4,7 +4,7 @@
 # this file is just used for testing ROSInterface.jl
 
 using Pkg
-Pkg.activate(Base.source_dir() * "/../..")
+Pkg.activate(Base.source_dir() * "/..")
 
 using RobotOS
 @rosimport std_msgs.msg: Bool, Float64

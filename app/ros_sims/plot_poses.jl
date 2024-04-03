@@ -2,7 +2,7 @@
 # should be set and run as an executable
 
 using Pkg
-Pkg.activate(Base.source_dir() * "/../..")
+Pkg.activate(Base.source_dir() * "/..")
 
 using RobotOS
 

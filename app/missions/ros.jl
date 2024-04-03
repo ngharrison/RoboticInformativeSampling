@@ -1,7 +1,7 @@
 #!/usr/bin/env julia
 
 using Pkg
-Pkg.activate(Base.source_dir() * "/../..")
+Pkg.activate(Base.source_dir() * "/..")
 
 using Logging: global_logger, ConsoleLogger, Info, Debug
 
