@@ -57,7 +57,7 @@ lb, ub = bounds(mission.occupancy)
 global_logger(ConsoleLogger(stderr, Debug))
 
 ## replay mission
-replay(mission, samples, beliefs; sleep_time=1.0)
+replay(vis, mission, samples, beliefs; sleep_time=1.0)
 
 ## make png from proxy ground truth
 saveBeliefMapToPng(beliefs[end], mission.occupancy, name)
@@ -696,7 +696,7 @@ plot(getindex.(outputCorMat.(new_beliefs), 2), ylim=(-1.05,1.05))|>display
 
 plot([abs(bm.θ.ℓ) for bm in new_beliefs])|>display
 
-replay(mission, samples; sleep_time=1.0)
+replay(vis, mission, samples; sleep_time=1.0)
 
 # things are much better with that: multi-mean, no noise
 

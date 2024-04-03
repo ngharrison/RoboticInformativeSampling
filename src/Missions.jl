@@ -135,7 +135,7 @@ function (M::Mission)(func=Returns(nothing);
     return samples, beliefs
 end
 
-function replay(M::Mission, full_samples, beliefs; func=Returns(nothing), sleep_time=0.0)
+function replay(func, M::Mission, full_samples, beliefs; sleep_time=0.0)
     quantities = eachindex(M.sampler) # all current available quantities
 
     println("Mission started")
@@ -167,11 +167,19 @@ function replay(M::Mission, full_samples, beliefs; func=Returns(nothing), sleep_
     println("Mission complete")
 end
 
-function replay(M::Mission, full_samples; sleep_time=0.0)
+function replay(M::Mission, full_samples, beliefs; sleep_time=0.0)
+    replay(Returns(nothing), M, full_samples, beliefs; sleep_time)
+end
+
+function replay(func, M::Mission, full_samples; sleep_time=0.0)
     beliefs = map(1:length(full_samples)) do i
         BeliefModel([M.prior_samples; full_samples[1:i]], bounds(M.occupancy)...)
     end
-    replay(M, full_samples, beliefs; sleep_time)
+    replay(func, M, full_samples, beliefs; sleep_time)
+end
+
+function replay(M::Mission, full_samples; sleep_time=0.0)
+    replay(Returns(nothing), M, full_samples; sleep_time)
 end
 
 end
