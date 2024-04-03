@@ -49,12 +49,16 @@ function conradMission()
 
     occupancy = Map(zeros(Bool, n, n), lb, ub)
 
-    return Mission(; occupancy,
-                   sampler,
-                   num_samples,
-                   sampleCostType,
-                   weights,
-                   start_locs)
+    mission = Mission(;
+        occupancy,
+        sampler,
+        num_samples,
+        sampleCostType,
+        weights,
+        start_locs
+    )
+
+    return mission
 end
 
 

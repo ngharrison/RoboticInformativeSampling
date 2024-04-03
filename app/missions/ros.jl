@@ -33,12 +33,16 @@ function rosMission(; num_samples=4)
     weights = (; μ=1, σ=5e3, τ=1, d=1) # mean, std, dist, prox
     start_locs = [[1.0, 1.0]]
 
-    return Mission(; occupancy,
-                   sampler,
-                   num_samples,
-                   sampleCostType,
-                   weights,
-                   start_locs)
+    mission = Mission(;
+        occupancy,
+        sampler,
+        num_samples,
+        sampleCostType,
+        weights,
+        start_locs
+    )
+
+    return mission
 end
 
 #* Run

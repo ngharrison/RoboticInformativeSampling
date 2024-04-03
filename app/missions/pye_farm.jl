@@ -66,21 +66,23 @@ function pyeFarmMission(; num_samples=4)
                          for x in points_sp if !isnan(d(x))]
     prior_samples = Sample{Float64}[]
 
-    vis(elevMap; points=points_sp)
-
     sampleCostType = EIGFSampleCost
 
     ## initialize alg values
     weights = (; μ=1, σ=5e1, τ=1, d=1) # mean, std, dist, prox
     start_locs = [lb .+ 2]
 
-    return Mission(; occupancy,
-                   sampler,
-                   num_samples,
-                   sampleCostType,
-                   weights,
-                   start_locs,
-                   prior_samples)
+    mission = Mission(;
+        occupancy,
+        sampler,
+        num_samples,
+        sampleCostType,
+        weights,
+        start_locs,
+        prior_samples
+    )
+
+    return mission, prior_maps
 end
 
 #* Run
@@ -91,7 +93,9 @@ global_logger(ConsoleLogger(stderr, Debug))
 using .DataIO: save
 
 ## initialize data for mission
-mission = pyeFarmMission()
+mission, prior_maps = pyeFarmMission()
+
+vis(prior_maps[1]; points=first.(getfield.(mission.prior_samples, :x)))
 
 ## run search alg
 @time samples, beliefs = mission(

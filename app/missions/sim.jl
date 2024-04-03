@@ -100,20 +100,20 @@ function simMission(; seed_val=0, num_samples=30, num_peaks=3, priors=Bool[1,1,1
     @debug [cor(map0.(points_sp), d.(points_sp)) for d in prior_maps]
     # @debug [cor(vec(map0), vec(d)) for d in prior_maps]
 
-    # vis(sampler.maps..., prior_maps...;
-    #                   points=points_sp,
-    #                   titles=["QOI", "Scaling Factor", "Additive Noise", "Random Map"])
-
     noise = (0.0, :learned)
 
-    return Mission(; occupancy,
-                   sampler,
-                   num_samples,
-                   sampleCostType,
-                   weights,
-                   start_locs,
-                   prior_samples,
-                   noise)
+    mission = Mission(;
+        occupancy,
+        sampler,
+        num_samples,
+        sampleCostType,
+        weights,
+        start_locs,
+        prior_samples,
+        noise
+    )
+
+    return mission, prior_maps
 
 end
 
@@ -124,7 +124,11 @@ end
 global_logger(ConsoleLogger(stderr, Info))
 
 ## initialize data for mission
-mission = simMission(num_samples=10)
+mission, prior_maps = simMission(num_samples=10)
+
+vis(mission.sampler..., prior_maps...;
+    titles=["QOI", "Scaling Factor", "Additive Noise", "Random Map"],
+    points=first.(getfield.(mission.prior_samples, :x)))
 
 ## run search alg
 @time samples, beliefs = mission(

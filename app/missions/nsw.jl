@@ -66,17 +66,17 @@ function nswMission(; seed_val=0, num_samples=30, priors=Bool[1,1,1])
     [cor(vec(map0[.!occupancy]), vec(d[.!occupancy])) for d in prior_maps]
     # scatter(vec(map0[.!occupancy]), [vec(d[.!occupancy]) for d in prior_maps], layout=3)
 
-    vis(sampler.maps..., prior_maps...;
-              titles=["Vegetation", "Elevation", "Ground Temperature", "Rainfall"],
-              points=points_sp)
+    mission = Mission(;
+        occupancy,
+        sampler,
+        num_samples,
+        sampleCostType,
+        weights,
+        start_locs,
+        prior_samples
+    )
 
-    return Mission(; occupancy,
-                   sampler,
-                   num_samples,
-                   sampleCostType,
-                   weights,
-                   start_locs,
-                   prior_samples)
+    return mission, prior_maps
 
 
 end
@@ -88,7 +88,11 @@ end
 global_logger(ConsoleLogger(stderr, Info))
 
 ## initialize data for mission
-mission = nswMission(num_samples=10)
+mission, prior_maps = nswMission(num_samples=10)
+
+vis(mission.sampler..., prior_maps...;
+    titles=["Vegetation", "Elevation", "Ground Temperature", "Rainfall"],
+    points=first.(getfield.(mission.prior_samples, :x)))
 
 ## run search alg
 @time samples, beliefs = mission(
@@ -110,7 +114,7 @@ using .DataIO: save
 @time for priors in [(0,0,0), (1,1,1)]
     ## initialize data for mission
     priors = (0,0,0)
-    mission = nswMission(priors=collect(Bool, priors))
+    mission, _ = nswMission(priors=collect(Bool, priors))
     # empty!(mission.prior_samples)
 
     ## run search alg
