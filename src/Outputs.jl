@@ -8,8 +8,9 @@ using Plots
 using ..Maps: generateAxes
 using ..Visualization: visualize
 
-export save, output_dir, output_ext, saveBeliefMapToPng
+export save, maps_dir, output_dir, output_ext, saveBeliefMapToPng
 
+const maps_dir = dirname(Base.active_project()) * "/maps/"
 const output_dir = dirname(Base.active_project()) * "/output/"
 const output_ext = ".jld2"
 

@@ -5,9 +5,7 @@ using DocStringExtensions: TYPEDSIGNATURES, TYPEDFIELDS
 
 export Map, GaussGroundTruth, Peak, imgToMap, randomPoint,
        res, pointToCell, cellToPoint, generateAxes,
-       ConstantRegion, bounds, maps_dir
-
-const maps_dir = dirname(Base.active_project()) * "/maps/"
+       ConstantRegion, bounds
 
 """
 A general type for holding multidimensional data (usually a matrix) along with
