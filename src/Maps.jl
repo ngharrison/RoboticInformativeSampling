@@ -14,7 +14,13 @@ between world coordinates and grid indices internally. Converting between the
 two representations treats rows as the first variable (x-axis), columns as
 the second (y-axis), and so on.
 
-It's typical use is to act as a 2D map of some value that can be sampled.
+Its typical use is to act as a 2D map of some value that can be sampled. A Map
+will return the value of the grid cell that a given point falls within. In other
+words, the map value is constant within each cell.
+
+Each cell index is treated as the center of its cell. Thus the map's lower bound
+(lb) is at the center of the first cell and the map's upper bound (ub) is at the
+center of the last cell.
 
 Also made to function directly like a built-in N-dimensional array by sub-typing
 and implementing the base methods.

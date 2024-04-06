@@ -2,6 +2,7 @@ using Test
 
 using AdaptiveSampling
 using .Paths: PathCost
+using .Maps: Map, res, pointToCell, cellToPoint, generateAxes
 
 @testset "Paths" begin
     occupancy = zeros(Bool, 10, 10) # open area
@@ -49,4 +50,20 @@ using .Paths: PathCost
     @test pathCost(CartesianIndex(7,9)) ≈ 7 + 4√2
 
     @test pathCost(CartesianIndex(7,9)) ≈ 7 + 4√2 # retry
+end
+
+@testset "Maps" begin
+    n = 3
+    m = reshape(1:n^2, n,n)
+    map = Map(m, [1,1], 2 .* [n,n] .- 1)
+
+    @test all(res(map) .== [2.0, 2.0])
+
+    a = [CartesianIndex(i,j) for i in 1:n, j in 1:n]
+    b = cellToPoint.([CartesianIndex(i,j) for i in 1:n, j in 1:n], Ref(map))
+    c = pointToCell.(b, Ref(map))
+    @test a == c
+
+    axs, points = generateAxes(map)
+    @test b == points
 end
