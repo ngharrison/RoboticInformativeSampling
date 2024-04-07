@@ -1,7 +1,8 @@
+
 using Test
 
 using AdaptiveSampling
-using .Paths: PathCost
+using .Paths: PathCost, finalOrientation, getPath
 using .Maps: Map, res, pointToCell, cellToPoint, generateAxes
 
 @testset "Paths" begin
@@ -49,7 +50,25 @@ using .Maps: Map, res, pointToCell, cellToPoint, generateAxes
     pathCost = PathCost(start, occupancy, (1, 1))
     @test pathCost(CartesianIndex(7,9)) ≈ 7 + 4√2
 
-    @test pathCost(CartesianIndex(7,9)) ≈ 7 + 4√2 # retry
+    @test pathCost(CartesianIndex(7,9)) ≈ 7 + 4√2 # redo
+
+    path = [
+        CartesianIndex(4, 3),
+        CartesianIndex(5, 3),
+        CartesianIndex(6, 3),
+        CartesianIndex(7, 2),
+        CartesianIndex(8, 2),
+        CartesianIndex(9, 3),
+        CartesianIndex(9, 4),
+        CartesianIndex(9, 5),
+        CartesianIndex(9, 6),
+        CartesianIndex(9, 7),
+        CartesianIndex(8, 8),
+        CartesianIndex(7, 9)
+    ]
+
+    @test getPath(pathCost, CartesianIndex(7,9)) == path
+    @test finalOrientation(pathCost, CartesianIndex(7,9)) ≈ 3π / 4
 end
 
 @testset "Maps" begin
@@ -66,4 +85,15 @@ end
 
     axs, points = generateAxes(map)
     @test b == points
+
+    # inside and boundaries
+    @test pointToCell([1,1], map) == CartesianIndex(1,1)
+    @test pointToCell([1.99,1.99], map) == CartesianIndex(1,1)
+    @test pointToCell([2.01,2.01], map) == CartesianIndex(2,2)
+    @test pointToCell([3,3], map) == CartesianIndex(2,2)
+    @test pointToCell([3.99,3.99], map) == CartesianIndex(2,2)
+    @test pointToCell([4.01,4.01], map) == CartesianIndex(3,3)
+    @test pointToCell([5,5], map) == CartesianIndex(3,3)
 end
+
+# Missions: standard mission run remains the same (will break a lot)
