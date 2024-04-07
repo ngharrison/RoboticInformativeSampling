@@ -18,9 +18,9 @@ Its typical use is to act as a 2D map of some value that can be sampled. A Map
 will return the value of the grid cell that a given point falls within. In other
 words, the map value is constant within each cell.
 
-Each cell index is treated as the center of its cell. Thus the map's lower bound
-(lb) is at the center of the first cell and the map's upper bound (ub) is at the
-center of the last cell.
+Each cell index is treated as the center of its cell. The map's lower bound (lb)
+is at the bottom left of the first cell and the map's upper bound (ub) is at the
+top right of the last cell.
 
 Also made to function directly like a built-in N-dimensional array by sub-typing
 and implementing the base methods.
@@ -133,7 +133,7 @@ $(TYPEDSIGNATURES)
 
 Returns the resolution for each dimension of the given Map as a vector.
 """
-res(map) = (map.ub .- map.lb) ./ (size(map) .- 1)
+res(map) = (map.ub .- map.lb) ./ size(map)
 
 """
 $(TYPEDSIGNATURES)
@@ -141,14 +141,14 @@ $(TYPEDSIGNATURES)
 Takes in a point in world-coordinates and a Map and returns a CartesianIndex for
 the underlying array.
 """
-pointToCell(x, map) = CartesianIndex(Tuple(round.(Int, (x .- map.lb) ./ res(map)) .+ 1))
+pointToCell(x, map) = CartesianIndex(Tuple(Int.(fld.(x .- map.lb, res(map)) .+ 1)))
 
 """
 $(TYPEDSIGNATURES)
 
 Takes in a CartesianIndex and a Map and returns a point in world-coordinates.
 """
-cellToPoint(ci, map) = (collect(Tuple(ci)) .- 1) .* res(map) .+ map.lb
+cellToPoint(ci, map) = ((collect(Tuple(ci)) .- 1) .+ 0.5) .* res(map) .+ map.lb
 
 """
 $(TYPEDSIGNATURES)
@@ -156,7 +156,7 @@ $(TYPEDSIGNATURES)
 Method to generate the x, y, etc. axes and points of a Map. Useful for plotting.
 """
 function generateAxes(map)
-    axes = range.(map.lb, map.ub, size(map))
+    axes = range.(map.lb .+ res(map) / 2, map.ub .- res(map) / 2, size(map))
     points = collect.(Iterators.product(axes...))
     return axes, points
 end
