@@ -155,10 +155,10 @@ X = [([.1, .2], 1),
 function (beliefModel::BeliefModelSimple)(x::SampleInput; full_cov=false)
     func = full_cov ? mean_and_cov : mean_and_var
     μ, σ² = only.(func(beliefModel.gp, [x]))
-    return μ, .√σ²
+    return μ, √σ²
 end
 
-function (beliefModel::BeliefModelSimple)(X::Vector{SampleInput}; full_cov=false)
+function (beliefModel::BeliefModelSimple)(X::AbstractVector{SampleInput}; full_cov=false)
     func = full_cov ? mean_and_cov : mean_and_var
     μ, σ² = func(beliefModel.gp, X)
     return μ, .√clamp!(σ², 0.0, Inf) # avoid negative variances
