@@ -141,9 +141,7 @@ Internal function used to send the next location to Swagbot.
 function publishNextLocation(publisher, new_loc::Location)
     # create Point and Quaternion and put them together
     p = geo_msg.Point(new_loc..., 0)
-    # TODO use real orientation
-    # orientation = finalOrientation(pathCost, new_loc)
-    orientation = 0
+    orientation = 0 # orientation is ignored
     q = geo_msg.Quaternion(params(QuatRotation(RotZ(orientation)))...)
     pose = geo_msg.Pose(p, q)
     poseStamped = geo_msg.PoseStamped()
