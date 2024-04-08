@@ -1,0 +1,3 @@
+[deps]
+AdaptiveSampling = "bfd01cc8-db36-4de5-b056-8ab04eef9441"
+Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"

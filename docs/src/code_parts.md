@@ -93,17 +93,6 @@ Main public types and functions:
 Modules = [Paths]
 ```
 
-## Visualization.jl
-
-Methods to visualize mission data. The form displayed is determined by what data types are passed in.
-
-Main public types and functions:
-- `visualize`
-
-```@autodocs
-Modules = [Visualization]
-```
-
 ## ROSInterface.jl
 
 The interface for passing data to and from other ROS nodes. It sets up an `adaptive_sampling` node and provides methods to handle the data. This is designed specifically for communication with Swagbot.

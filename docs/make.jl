@@ -1,7 +1,8 @@
+
 using Documenter
 
-using AdaptiveSampling
-      Samples, SampleCosts, Paths, Visualization, ROSInterface
+using AdaptiveSampling: Maps, Missions, BeliefModels, Kernels,
+      Samples, SampleCosts, Paths, ROSInterface
 
 makedocs(
     sitename="AdaptiveSampling.jl",
