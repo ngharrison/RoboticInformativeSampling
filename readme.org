@@ -39,9 +39,9 @@ If you get: =Error: Unable to load the 'rospy' python package!=
 3. Restart the julia REPL
 
 *** Code reloading
-You'll want to install Revise.jl in order to reload code you've changed while using an open REPL. Follow these steps and you won't have to worry about it again.
+When developing the code, you'll want to install Revise.jl in order to reload code you've changed while using an open REPL. Follow these steps and you won't have to worry about it again.
 
-1. Start the julia REPL
+1. Start the julia REPL in the default environment (=julia=)
 2. Run =]add Revise=
 3. Exit the REPL (=C-d=)
 4. Run =mkdir -p ~/.julia/config && echo "using Revise" >> ~/.julia/config/startup.jl=

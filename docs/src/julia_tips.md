@@ -17,11 +17,11 @@ Type backspace or ctrl-c to exit a mode.
 
 Julia code gets compiled the first time you run it. This means the first run will be slower and later ones much faster. This is also true when loading packages with `using` or `import`. So the typical way to run julia code is through a REPL that is kept open between runs in order to not re-compile. If a script is run directly from the command line using the julia interpreter, it will be re-compiled every time. Running code within an IDE will typically keep a REPL open for you.
 
-Note: Julia 1.9 reduces the load and first-execution times considerably for modules that have not changed. Highly recommended.
+Note: Since Julia 1.9 load and first-execution times have been considerably reduced for modules that have not changed. It does this through pre-compilation and caching. Highly recommended. A few extra seconds on first run time are typical, similar to re-compiling C++ code before running it.
 
 ## Revise.jl
 
-This is a great package to use when developing code (not needed when only running it). Normally to update methods and variables that have changed, you have to manually re-run the changed code in the REPL. This package tracks modules that you have included with `using` or `import` and automatically updates the running environment with any changes. Simply run `using Revise` /before/ `using` anything else (i.e. running the Main.jl file) and all your changes within the project will be tracked.
+This is a great package to use when developing code (not needed when only running it). Normally to update methods and variables that have changed, you have to manually re-run the changed code in the REPL. This package tracks modules that you have included with `using` or `import` and automatically updates the running environment with any changes. Simply run `using Revise` _before_ `using` anything else (i.e. running the Main.jl file) and all your changes within the project will be tracked.
 
 ## Unchangeable stuff
 
