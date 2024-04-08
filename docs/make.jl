@@ -12,5 +12,6 @@ makedocs(
         "code_parts.md",
         "code_patterns.md",
         "julia_tips.md",
-    ]
+    ],
+    format = Documenter.HTML(prettyurls=false)
 )
