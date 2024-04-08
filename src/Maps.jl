@@ -155,8 +155,10 @@ $(TYPEDSIGNATURES)
 
 Method to generate the x, y, etc. axes and points of a Map. Useful for plotting.
 """
-function generateAxes(map)
-    axes = range.(map.lb, map.ub, size(map))
+generateAxes(map) = return generateAxes(map.lb, map.ub, size(map))
+
+function generateAxes(lb, ub, dims)
+    axes = range.(lb, ub, dims)
     points = collect.(Iterators.product(axes...))
     return axes, points
 end
