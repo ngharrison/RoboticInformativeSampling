@@ -9,8 +9,9 @@ makedocs(
     remotes=nothing,
     pages = [
         "index.md",
-        "code_parts.md",
+        "package.md",
         "code_patterns.md",
+        "application.md",
         "julia_tips.md",
     ],
     format = Documenter.HTML(prettyurls=false)

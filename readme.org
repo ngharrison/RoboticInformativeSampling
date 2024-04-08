@@ -20,12 +20,23 @@ Use git to clone the repository to a local directory:
 git clone https://gitlab.acfr.usyd.edu.au/nhar0989/AdaptiveSampling.git
 #+end_src
 
-This will create a directory called =AdaptiveSampling=.
+This will create a directory called =AdaptiveSampling=. Next run =julia AdaptiveSampling/setup.jl=. After that finishes, you should be good to go.
 
-1. Navigate into the =AdaptiveSampling= directory on the command line
-2. Run =julia --project= to enter the julia REPL and activate the project
-3. Run =]instantiate= to install all needed packages
-4. Exit the interactive Pkg mode by hitting backspace
+* Quick Start
+To see an example run of the project in its current state, after following the steps in [[*Installation and Setup][Installation and Setup]],
+
+1. Navigate into the =AdaptiveSampling/app= directory on the command line
+2. Run =julia --project missions/example.jl=
+
+
+Normally you will want to run code from within the REPL since this keeps data around after it finishes and saves compilation so it goes much faster on repeated runs. To do this,
+
+1. Navigate into the =AdaptiveSampling/app= directory on the command line
+2. Run =julia --project= to open the REPL with the app environment activated
+3. Run =incluce("missions/example.jl")=
+
+
+To understand more about the code and the Julia language in general, go to the [[*Documentation][documentation]].
 
 ** Extra notes
 *** Activating a project
@@ -49,20 +60,15 @@ When developing the code, you'll want to install Revise.jl in order to reload co
 
 You can read a bit more about this in the docs.
 
-* Quick Start
-To run the project in its current state, run =include("src/main/Main.jl")= at the julia REPL after following the steps in [[*Installation and Setup][Installation and Setup]].
-
-That should be enough to get you started. Go to the documentation to understand more about the code and the Julia language in general.
-
 * Using as a ROS Package
 The project includes code to communicate with other nodes in the Robot Operating System (ROS). These features will work just by running the code as normal from the command line or within the Julia REPL.
 
-In addition, this project can be used as a ROS package itself by simply putting it inside your workspace source directory (e.g. =catkin_ws/src=). It works similar to using a ROS python package because it uses rospy behind the scenes. If you want to run, for example, =MainROS.jl=:
+In addition, this project can be used as a ROS package itself by simply putting it inside your workspace source directory (e.g. =catkin_ws/src=). It works similar to using a ROS python package because it uses rospy behind the scenes. If you want to run, for example, =ros.jl=:
 
 1. Make sure the file is executable
 2. Run =catkin_make= from the workspace
 3. Source the workspace
-4. Run =rosrun adaptive_sampling MainROS.jl=
+4. Run =rosrun adaptive_sampling ros.jl=
 
 
 The file will need to have the following code at the top for this to work:
@@ -70,10 +76,10 @@ The file will need to have the following code at the top for this to work:
 #!/usr/bin/env julia
 
 using Pkg
-Pkg.activate(Base.source_dir() * "/../..")
+Pkg.activate(Base.source_dir() * "/..")
 #+end_src
 
-To see further examples of files that this works for, look in the =src/ros_sims= directory.
+To see further examples of files that this works for, look in the =app/ros_sims= directory.
 
 * Documentation
 
