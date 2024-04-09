@@ -3,7 +3,6 @@
 module ROSInterface
 
 using PyCall: pyimport, PyNULL
-using Rotations: QuatRotation, RotZ, params
 using DocStringExtensions: TYPEDSIGNATURES, TYPEDFIELDS, FUNCTIONNAME
 
 using ..Samples: Location, SampleInput
@@ -141,8 +140,7 @@ Internal function used to send the next location to Swagbot.
 function publishNextLocation(publisher, new_loc::Location)
     # create Point and Quaternion and put them together
     p = geo_msg.Point(new_loc..., 0)
-    orientation = 0 # orientation is ignored
-    q = geo_msg.Quaternion(params(QuatRotation(RotZ(orientation)))...)
+    q = geo_msg.Quaternion(1, 0, 0, 0) # orientation is ignored
     pose = geo_msg.Pose(p, q)
     poseStamped = geo_msg.PoseStamped()
     poseStamped.header.stamp = rospy.Time.now()
