@@ -4,12 +4,13 @@ using Statistics: mean, cor
 using Random: seed!
 
 using AdaptiveSampling
-using .Maps: Map, GaussGroundTruth, Peak, generateAxes
+using .Maps: Map, generateAxes
 using .Samples: Sample, MapsSampler
 using .SampleCosts: EIGFSampleCost
 using .Missions: Mission
 
 include("../utils/utils.jl")
+using .DataIO: GaussGroundTruth, Peak
 using .Visualization: vis
 
 function simMission(; seed_val=0, num_samples=30, num_peaks=3, priors=Bool[1,1,1])

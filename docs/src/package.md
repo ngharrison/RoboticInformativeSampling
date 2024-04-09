@@ -14,7 +14,6 @@ Main public types and functions:
 - `imgToMap`
 - `res`
 - `pointToCell`
-- `GroundTruth`
 
 ```@autodocs
 Modules = [Maps]

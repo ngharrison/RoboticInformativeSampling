@@ -2,7 +2,7 @@
 
 julia_version = "1.10.2"
 manifest_format = "2.0"
-project_hash = "3864ad33c2e4e036ff9e29cce6aa06245d2cfdf4"
+project_hash = "b9b9fc59081f4946a54400bf5eafb6716f481eb8"
 
 [[deps.AbstractGPs]]
 deps = ["ChainRulesCore", "Distributions", "FillArrays", "IrrationalConstants", "KernelFunctions", "LinearAlgebra", "PDMats", "Random", "RecipesBase", "Reexport", "Statistics", "StatsBase", "Test"]

@@ -1,5 +1,6 @@
 module DataIO
 
+using Distributions: MvNormal, pdf
 using JLD2: jldsave
 using Dates: now, year, month, day, hour, minute, second
 using Images: save as saveImg, colorview, RGBA
@@ -64,6 +65,53 @@ map = imgToMap(image) # or auto bounds
 ```
 """
 imgToMap(img, args...) = Map(permutedims(reverse(img, dims=1), (2,1)), args...)
+
+
+abstract type GroundTruth end
+
+"""
+Struct/function for generating ground truth values from a linear combination of
+gaussian peaks.
+
+# Examples
+```julia
+GaussGroundTruth(peaks) # pass in a list of Peaks
+```
+"""
+struct GaussGroundTruth <: GroundTruth
+    peaks
+end
+
+"""
+Produces ground-truth value(s) for a point or list of points. Accepts a single
+vector, a vector of vectors, or a matrix of column vectors.
+
+Each probability distribution component is divided by its own peak height and
+the highest of all the peaks before being added into the total. This causes the
+entire ground truth map to have a max value of (about) 1.
+"""
+function (ggt::GaussGroundTruth)(X)
+    h_max = maximum(p.h for p in ggt.peaks)
+    return sum(p.h*pdf(p.distr, X)/pdf(p.distr, p.distr.μ)/h_max for p in ggt.peaks)
+end
+
+"""
+Used within a GaussGroundTruth. Holds a 2D normal distribution and the
+desired height of the peak.
+"""
+struct Peak
+    distr
+    h
+end
+
+"""
+Inputs:
+- `μ`: the peak location (distribution mean)
+- `Σ`: the peak width (distribution covariance)
+- `h`: the peak height
+"""
+Peak(μ, Σ, h) = Peak(MvNormal(μ, Σ), h)
+
 
 
 """

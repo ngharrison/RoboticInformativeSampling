@@ -4,7 +4,7 @@ using Plots: plot, heatmap, scatter!, @layout, mm, grid
 using DocStringExtensions: TYPEDSIGNATURES, TYPEDEF
 
 using AdaptiveSampling
-using .Maps: GroundTruth, Map, res, generateAxes
+using .Maps: Map, res, generateAxes
 using .BeliefModels: BeliefModel
 using .SampleCosts: SampleCost
 
@@ -109,9 +109,9 @@ end
 """
 $(TYPEDSIGNATURES)
 
-Method to show ground truth data.
+Method to show ground truth data from a function.
 """
-function visualize(sampler::GroundTruth, map)
+function visualize(sampler, map)
     axes, points = getAxes(map)
     data = sampler(points)
     heatmap(axes..., data';
