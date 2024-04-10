@@ -4,6 +4,9 @@ using Test
 using AdaptiveSampling
 using .Paths: PathCost, finalOrientation, getPath
 using .Maps: Map, res, pointToCell, cellToPoint, generateAxes
+using .Missions: Mission
+using .Samples: MapsSampler
+using .SampleCosts: EIGFSampleCost
 
 @testset "Paths" begin
     occupancy = zeros(Bool, 10, 10) # open area
@@ -97,3 +100,31 @@ end
 end
 
 # Missions: standard mission run remains the same (will break a lot)
+@testset "Missions" begin
+    # set up mission
+    lb = [0.0, 0.0]; ub = [1.0, 1.0]
+    dims = (100, 100)
+    occupancy = Map(zeros(Bool, dims), lb, ub)
+
+    axs = range.(lb, ub, dims)
+    mat = [i*sin(10j) for i in axs[1], j in axs[2]]
+    map0 = Map(mat, lb, ub)
+    sampler = MapsSampler(map0)
+
+    sampleCostType = EIGFSampleCost
+
+    ## initialize alg values
+    weights = (; μ=1, σ=1e2, τ=1, d=0) # others
+    start_locs = [] # starting locations
+    num_samples = 5
+
+    mission = Mission(;
+        occupancy,
+        sampler,
+        num_samples,
+        sampleCostType,
+        weights,
+    )
+
+    @test_nowarn mission()
+end
