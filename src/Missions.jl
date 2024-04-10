@@ -38,7 +38,7 @@ mission = Mission(; occupancy,
     "weights for picking the next sample location"
     weights
     "the locations that should be sampled first"
-    start_locs
+    start_locs = []
     "any samples taken previously (default empty)"
     prior_samples = Sample[]
     "a tuple of global noise value and either :fixed or :learned (default (0.0, :fixed))"
