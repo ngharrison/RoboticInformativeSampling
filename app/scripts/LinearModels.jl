@@ -1,3 +1,4 @@
+
 using AdaptiveSampling
 
 using .Maps: res, generateAxes
@@ -5,7 +6,9 @@ using .Missions: Mission
 using .BeliefModels: BeliefModel
 using .Kernels: fullyConnectedCovMat
 using .Samples: Sample
-using .Outputs: output_dir, output_ext
+
+include("../utils/utils.jl")
+using .DataIO: output_dir, output_ext
 
 using Statistics: mean, std
 using StatsBase: mean_and_cov, AnalyticWeights
@@ -32,7 +35,7 @@ end
 
 (lm::LinearModel)(x) = lm.a + lm.b*x
 
-## load mission
+#* load mission
 dir = "aus_ave"
 mname = "111"
 file_name = output_dir * "$dir/mission_$(mname)" * output_ext
@@ -52,7 +55,7 @@ extrema.(vals)
 beliefModel = beliefs[end]
 A = fullyConnectedCovMat(beliefModel.θ.σ)
 
-## linear model --- measurements
+#* linear model --- measurements
 
 fs1 = []
 for k in 1:num_quant
@@ -73,7 +76,7 @@ plot([x->f(x) for f in fs1], 0, 1;
 
 savefig(output_dir * "linear_models/from_samples.svg")
 
-## linear model --- GP cov mat
+#* linear model --- GP cov mat
 
 fs2 = []
 for k in 1:num_quant
@@ -93,7 +96,7 @@ plot([x->f(x) for f in fs2], 0, 1;
 
 savefig(output_dir * "linear_models/from_samples_and_kernel.svg")
 
-## linear model --- GP predictions
+#* linear model --- GP predictions
 axs, points = generateAxes(occ)
 dims = Tuple(length.(axs))
 
@@ -127,13 +130,13 @@ plot([x->f(x) for f in fs3], 0, 1;
 
 savefig(output_dir * "linear_models/from_predictions.svg")
 
-## table
+#* table
 # 1. save csv
 #    coefficients
 #    r^2 values
 #    plots
 
-## plots
+#* plots
 # not functional yet
 all_samples[1]
 p1 = heatmap(axs..., map0', title="Vegetation (QOI)", ticks=false, framestyle=:none)

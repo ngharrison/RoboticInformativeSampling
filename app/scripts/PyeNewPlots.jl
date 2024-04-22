@@ -1,4 +1,9 @@
-using AdaptiveSampling: Maps, Missions, BeliefModels, Samples, Visualization, Outputs
+
+using AdaptiveSampling
+using .Maps, .Missions, .BeliefModels, .Samples, .Kernels
+
+include("../utils/utils.jl")
+using .DataIO, .Visualization
 
 using Statistics, FileIO, GLMakie, Images, Logging
 using GLMakie: Axis, save
@@ -6,7 +11,7 @@ using GLMakie: Axis, save
 names = ["30samples_15x15_1", "30samples_15x15_2", "30samples_15x15_priors",
          "30samples_50x50", "30samples_50x50_priors", "100samples_50x50_grid"]
 
-## combined satellite, elevation, and learned height maps
+#* combined satellite, elevation, and learned height maps
 lb, ub = [0.0, 0.0], [50.0, 50.0]
 elev_img = Float64.(gray.(load(maps_dir * "dem_50x50.tif")))
 elevMap = imgToMap((elev_img.-minimum(elev_img)).*100, lb, ub)

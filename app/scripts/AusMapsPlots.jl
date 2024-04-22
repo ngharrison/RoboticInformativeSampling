@@ -1,3 +1,4 @@
+
 using Random: seed!
 using LinearAlgebra: norm
 using Statistics: cor
@@ -6,14 +7,14 @@ using Plots
 
 using AdaptiveSampling
 
-using .Maps: Map, imgToMap, bounds, maps_dir
+using .Maps: Map, bounds
 using .Samples: Sample, MapsSampler, selectSampleLocation
-using .Visualization: visualize
-using .Outputs: output_dir
 
 include("../utils/utils.jl")
+using .Visualization: visualize
+using .DataIO: maps_dir, output_dir, imgToMap, spatialAve, normalize
 
-## data
+#* data
 seed_val=0; priors=Bool[1,1,1];
 
 seed!(seed_val)
@@ -79,7 +80,7 @@ prior_samples = [Sample((x, i+length(sampler)), d(x))
 #   0.07525846578605022
 
 
-## plot maps
+#* plot maps
 axs = range.(lb, ub, size(occupancy))
 p1 = heatmap(axs..., map0', title="Vegetation (QOI)", ticks=false, framestyle=:none)
 p2 = heatmap(axs..., prior_maps[1]', title="Elevation", ticks=false)

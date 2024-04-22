@@ -1,4 +1,9 @@
-using AdaptiveSampling: Maps, Missions, BeliefModels, Samples, ROSInterface, Visualization, Outputs, Kernels
+
+using AdaptiveSampling
+using .Maps, .Missions, .BeliefModels, .Samples, .ROSInterface, .Kernels
+
+include("../utils/utils.jl")
+using .DataIO, .Visualization
 
 using Statistics, FileIO, Plots, Images, Logging
 using Plots: mm
@@ -8,6 +13,7 @@ names = ["30samples_15x15_1", "30samples_15x15_2", "30samples_15x15_priors",
 
 # pyplot()
 
+#* data
 file_name = output_dir * "2024-02-15-12-02-46_mission.jld2"
 file_name = output_dir * "2024-02-15-12-22-16_mission.jld2"
 file_name = output_dir * "2024-02-15-12-56-06_mission.jld2"
@@ -21,7 +27,7 @@ sampleCost = mission.sampleCostType(mission, samples, beliefs[end], quantities)
 vis(mission, samples, beliefs[end], nothing; quantity=1)
 
 
-## concatenate split missions
+#* concatenate split missions
 file_name1 = output_dir * "pye_farm_trial/2024-02-15-17-26-06_mission.jld2"
 file_name2 = output_dir * "pye_farm_trial/2024-02-15-18-26-15_mission.jld2"
 
@@ -35,7 +41,7 @@ beliefs = map(1:length(samples)) do i
 end
 save(mission, samples, beliefs; sub_dir_name="pye_farm_trial_gen")
 
-## elevation maps
+#* elevation maps
 
 elev_img = load(maps_dir * "dem_50x50.tif")
 elevMap = imgToMap(gray.(elev_img), lb, ub)
@@ -45,7 +51,7 @@ elev_img = load(maps_dir * "dem_15x15.tif")
 elevMap = imgToMap(gray.(elev_img), lb, ub)
 vis(elevMap)
 
-## load mission data
+#* load mission data
 name = "pye_farm_trial_named/30samples_50x50_priors"
 file_name = output_dir * "$(name)" * output_ext
 data = load(file_name)
@@ -56,13 +62,13 @@ lb, ub = bounds(mission.occupancy)
 
 global_logger(ConsoleLogger(stderr, Debug))
 
-## replay mission
+#* replay mission
 replay(vis, mission, samples, beliefs; sleep_time=1.0)
 
-## make png from proxy ground truth
+#* make png from proxy ground truth
 saveBeliefMapToPng(beliefs[end], mission.occupancy, name)
 
-## look at every sample collected together
+#* look at every sample collected together
 all_samples = map(readdir(output_dir * "pye_farm_trial", join=true)[2:end]) do file_name
     data = load(file_name)
     data["samples"]
@@ -81,7 +87,7 @@ beliefModel = BeliefModel(all_samples, lb, ub)
 vis(beliefModel, [], mission.occupancy)
 
 
-## with different prior samples
+#* with different prior samples
 
 name = "pye_farm_trial_named/30samples_50x50_priors"
 file_name = output_dir * "$(name)" * output_ext
@@ -108,7 +114,7 @@ end
 
 vis(elevMap; points=points_sp)
 
-##
+#*
 cors = map(beliefs) do b
     outputCorMat(b)
 end
@@ -126,7 +132,7 @@ prior_belief = BeliefModel(prior_samples, lb, ub)
 vis(mission, prior_samples, prior_belief, nothing; quantity=2)
 
 
-## combined points
+#* combined points
 
 names = ["30samples_15x15_1", "30samples_15x15_2", "30samples_15x15_priors",
          "30samples_50x50", "30samples_50x50_priors", "100samples_50x50_grid"]
@@ -162,7 +168,7 @@ beliefModel = BeliefModel([prior_samples; samples], lb, ub)
 
 outputCorMat(beliefModel)
 
-##
+#*
 
 gt_name = "100samples_50x50_grid"
 gt_data = load(output_dir * "pye_farm_trial_named/" * gt_name * output_ext)
@@ -198,7 +204,7 @@ end
 
 display(scatter(maes))
 
-## other plots
+#* other plots
 using Statistics, FileIO, GLMakie, Images
 
 x = range(0, 10, length=100)
@@ -230,7 +236,7 @@ ax = GLMakie.Axis(f[1,1])
 
 heatmap.([pred_map, pred_map])
 
-## combined satellite, elevation, and learned height maps
+#* combined satellite, elevation, and learned height maps
 lb, ub = [0.0, 0.0], [50.0, 50.0]
 elev_img = Float64.(gray.(load(maps_dir * "dem_50x50.tif")))
 elevMap = imgToMap((elev_img.-minimum(elev_img)).*100, lb, ub)
@@ -294,7 +300,7 @@ p = plot(p1, p2, p3;
 # savefig(output_dir * "iros_2024/sat_elev_50x50.png")
 display(p)
 
-## test correlations
+#* test correlations
 axs, points = generateAxes(elevMap)
 ss = vec(Sample.(tuple.(points, 1), elevMap))
 bm = BeliefModel(ss, lb, ub)
@@ -311,7 +317,7 @@ vis(bm, [], Map(zeros(Bool,size(elev_img)), lb, ub); quantity=1)
 
 # still not getting consistent or expected results
 
-## averages predicted values over entire maps
+#* averages predicted values over entire maps
 
 names = ["30samples_15x15_1", "30samples_15x15_2", "30samples_15x15_priors",
          "30samples_50x50", "30samples_50x50_priors", "100samples_50x50_grid"]
@@ -418,7 +424,7 @@ plot!(
 # savefig(output_dir * "iros_2024/aves_50x50.png")
 display(p)
 
-## estimated correlations with elevation
+#* estimated correlations with elevation
 
 name_run15 = "30samples_15x15_priors"
 name_run50 = "30samples_50x50_priors"
@@ -494,7 +500,7 @@ p = plot!(
 # savefig(output_dir * "iros_2024/cors_50x50.png")
 display(p)
 
-## look at data
+#* look at data
 
 names = ["30samples_15x15_1", "30samples_15x15_2", "30samples_15x15_priors",
          "30samples_50x50", "30samples_50x50_priors", "100samples_50x50_grid"]
@@ -513,7 +519,7 @@ mission.prior_samples
 vis(beliefs[2], [], mission.occupancy; quantity=1)
 outputCorMat(beliefs[2])
 
-## re-run with randomized and negative initial hyperparameters
+#* re-run with randomized and negative initial hyperparameters
 
 gr()
 
@@ -587,7 +593,7 @@ fx = BeliefModels.buildPriorGP(X, Y_errs, kernel, θ)
 -logpdf(fx, Y_vals)
 # unexpectedly, positively-correlated hyperparameters have greater marginal likelihood
 
-## plot the functions
+#* plot the functions
 plot(-100, 100) do v
     θ = (σ = [55.82592833071618, v, 6.617717042512063],
          ℓ = -3.963171016628482,
@@ -596,7 +602,7 @@ plot(-100, 100) do v
     -logpdf(fx, Y_vals)
 end |> display
 
-## now look at straight correlation between points
+#* now look at straight correlation between points
 
 lb, ub = bounds(mission.occupancy)
 elev_img = Float64.(gray.(load(maps_dir * "dem_50x50.tif")))
@@ -617,7 +623,7 @@ cor(belief_vals, getfield.(mission.prior_samples, :y))
 
 # both are slightly negative
 
-## now train a gp on the matching points
+#* now train a gp on the matching points
 
 elev_samples = Sample.(tuple.(first.(getfield.(samples, :x)), 2), elev_vals)
 
@@ -647,7 +653,7 @@ plot(
     layout=(2,1)
 ) |> display
 
-## belief model with multi-mean
+#* belief model with multi-mean
 
 names = ["30samples_15x15_1", "30samples_15x15_2", "30samples_15x15_priors",
          "30samples_50x50", "30samples_50x50_priors", "100samples_50x50_grid"]
@@ -700,7 +706,7 @@ replay(vis, mission, samples; sleep_time=1.0)
 
 # things are much better with that: multi-mean, no noise
 
-## measurement stability
+#* measurement stability
 
 a = [141.010421753, 141.062576294, 141.064041138, 141.022872925, 141.020812988,
      141.058609009, 141.023162842, 141.041168213, 141.050064087, 141.04574585,
@@ -723,7 +729,7 @@ l, h = extrema(a)
 (h, l), h-l, std(a)
 # over about 8 seconds, the most it changed was less than half a millimeter
 
-## correlation convergence over time compared to grid sampling
+#* correlation convergence over time compared to grid sampling
 
 name = names[6]
 data = load(output_dir * "pye_farm_trial_named/" * name * output_ext)
@@ -739,7 +745,7 @@ end
 
 plot(getindex.(outputCorMat.(new_beliefs), 2), ylim=(-1.05,1.05))|>display
 
-## Uncertainty over time
+#* Uncertainty over time
 
 name = names[5]
 data = load(output_dir * "pye_farm_trial_named/" * name * output_ext)

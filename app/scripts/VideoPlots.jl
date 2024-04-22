@@ -1,10 +1,13 @@
+
 using AdaptiveSampling
 
 using .Maps: generateAxes
 using .Missions: Mission
 using .BeliefModels: BeliefModel
 using .Samples: Sample
-using .Outputs: output_dir, output_ext
+
+include("../utils/utils.jl")
+using .DataIO: output_dir, output_ext
 
 using Statistics: mean, std
 using FileIO: load
@@ -22,7 +25,7 @@ function createColorbarTicks(r)
     return ticks, [@sprintf("%.1e", x) for x in ticks]
 end
 
-## load mission
+#* load mission
 dir = "aus_ave"
 mname = "111"
 file_name = output_dir * "$dir/mission_$(mname)" * output_ext
@@ -115,10 +118,10 @@ for i in eachindex(beliefs)
          legendfontsize=14,
          )
 
-    savefig(output_dir * "$dir/mission_$(mname)_frames/$(lpad(i, 2, '0')).png")
+    # savefig(output_dir * "$dir/mission_$(mname)_frames/$(lpad(i, 2, '0')).png")
 end
 
-## load missions
+#* load missions
 dir = "aus_ave"
 mis_file_name = output_dir * "$dir/mission_000" * output_ext
 mis_file_name_m = output_dir * "$dir/mission_111" * output_ext
@@ -231,5 +234,5 @@ for i in eachindex(beliefs)
          labelfontsize=20,
          )
 
-    savefig(output_dir * "$dir/compare_frames/$(lpad(i, 2, '0')).png")
+    # savefig(output_dir * "$dir/compare_frames/$(lpad(i, 2, '0')).png")
 end

@@ -1,3 +1,4 @@
+
 using Random: seed!
 using LinearAlgebra: I
 using Statistics: cor
@@ -5,11 +6,13 @@ using Plots
 
 using AdaptiveSampling
 
-using .Maps: Map, GaussGroundTruth, Peak, generateAxes
+using .Maps: Map, generateAxes
 using .Samples: Sample, MapsSampler
-using .Outputs: output_dir
 
-## data
+include("../utils/utils.jl")
+using .DataIO: output_dir, GaussGroundTruth, Peak
+
+#* data
 seed_val=3; num_peaks=4; priors=Bool[1,1,1];
 
 seed!(seed_val) # make random values deterministic
@@ -18,7 +21,7 @@ lb = [0.0, 0.0]; ub = [1.0, 1.0]
 
 occupancy = Map(zeros(Bool, 100, 100), lb, ub)
 
-## initialize ground truth
+#* initialize ground truth
 
 # simulated
 peaks = [Peak(rand(2).*(ub-lb) .+ lb, 0.02*(rand()+0.5)*I, rand())
@@ -28,7 +31,7 @@ axs, points = generateAxes(occupancy)
 mat = ggt(points)
 map0 = Map(mat./maximum(mat), lb, ub)
 
-## Create prior prior_samples
+#* Create prior prior_samples
 
 # none -- leave uncommented
 prior_maps = []
@@ -64,7 +67,7 @@ prior_samples = [Sample((x, i+length(sampler)), d(x))
 [cor(map0.(points_sp), d.(points_sp)) for d in prior_maps]
 [cor(vec(map0), vec(d)) for d in prior_maps]
 
-## plot maps
+#* plot maps
 p1 = heatmap(axs..., map0', title="QOI", ticks=false, framestyle=:none)
 p2 = heatmap(axs..., prior_maps[1]', title="Scaling Factor", ticks=false)
 scatter!(first.(points_sp), last.(points_sp);

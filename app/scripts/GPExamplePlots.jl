@@ -1,9 +1,15 @@
+
 using Plots
 using Plots: mm
 
 using AdaptiveSampling
 
 using .Maps: res, generateAxes
+
+include("../utils/utils.jl")
+using .DataIO: output_dir, output_ext
+
+using FileIO: load
 
 function copy_ticks(plt::Plots.Plot=current())
     sp::Plots.Subplot = plt[1]
@@ -13,6 +19,9 @@ function copy_ticks(plt::Plots.Plot=current())
     plot!(pty,xlims=xlims(plt),ylims=ylims(plt),xformatter=_->"",yformatter=_->"")
 end
 
+#* data
+
+# This is old code and would need to be re-written
 mission = simMission(; seed_val=3, num_peaks=4, priors=collect(Bool, (0,0,0)))
 
 @time samples, beliefs = mission(visuals=false, sleep_time=0.0);
@@ -26,7 +35,8 @@ err_map = reshape(σ, dims)
 xp = first.(getfield.(samples[1:j], :x))
 x1 = getindex.(xp, 1)
 x2 = getindex.(xp, 2)
-## plot maps
+
+#* plot maps
 p1 = heatmap(axs..., pred_map', title="Predicted Values", ticks=false)
 # copy_ticks()
 scatter!(x1, x2;

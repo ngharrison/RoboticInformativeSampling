@@ -1,5 +1,9 @@
 
-using AdaptiveSampling: Maps, Missions, BeliefModels, Samples, ROSInterface, Visualization, Outputs
+using AdaptiveSampling
+using .Maps, .Missions, .BeliefModels, .Samples, .ROSInterface, .Kernels
+
+include("../utils/utils.jl")
+using .DataIO, .Visualization
 
 using Statistics, FileIO, Images, Logging, Printf
 
@@ -18,6 +22,7 @@ end
 names = ["30samples_15x15_1", "30samples_15x15_2", "30samples_15x15_priors",
          "30samples_50x50", "30samples_50x50_priors", "100samples_50x50_grid"]
 
+#* data
 name = names[2]
 data = load(output_dir * "pye_farm_trial_named/" * name * output_ext)
 mission = data["mission"]
@@ -46,6 +51,7 @@ titles = Dict(1=>"15x15 No Priors",
               4=>"50x50 No Priors",
               5=>"50x50 With Priors")
 
+#* plots
 plts = map([1,3,4,5]) do i
     name = names[i]
     data = load(output_dir * "pye_farm_trial_named/" * name * output_ext)
@@ -96,7 +102,7 @@ bm = BeliefModel([mission.prior_samples; samples], lb, ub)
 vis(bm, samples, mission.occupancy)
 outputCorMat(bm)
 
-## static sampling
+#* static sampling
 
 name = names[6]
 data = load(output_dir * "pye_farm_trial_named/" * name * output_ext)
@@ -132,7 +138,7 @@ savefig(output_dir * "iros_2024/grid_sampling.png")
 # display(plt)
 
 
-## now with makie
+#* now with makie
 
 using GLMakie
 

@@ -1,6 +1,10 @@
-## starter stuff
+#* starter stuff
 
-using AdaptiveSampling: Maps, Missions, BeliefModels, Samples, Visualization, Outputs
+using AdaptiveSampling
+using .Maps, .Missions, .BeliefModels, .Samples
+
+include("../utils/utils.jl")
+using .DataIO, .Visualization
 
 using Statistics, FileIO, Plots, Images, Logging
 
@@ -10,7 +14,7 @@ names = ["30samples_15x15_1", "30samples_15x15_2", "30samples_15x15_priors",
 pyplot()
 
 
-## create value ranges
+#* create value ranges
 
 pred_range = (Inf, -Inf)
 err_range = (Inf, -Inf)
@@ -29,7 +33,7 @@ for i in 4:6
     global err_range = (min(minimum(err), err_range[1]), max(maximum(err), err_range[2]))
 end
 
-## combined satellite, elevation, and learned height maps
+#* combined satellite, elevation, and learned height maps
 
 lb, ub = [0.0, 0.0], [50.0, 50.0]
 elev_img = Float64.(gray.(load(maps_dir * "dem_50x50.tif")))
@@ -103,7 +107,7 @@ savefig(output_dir * "iros_2024/sat_elev_height_50x50_triangle.png")
 # display(p)
 
 
-## two 50x50 runs
+#* two 50x50 runs
 
 name = names[4]
 data = load(output_dir * "pye_farm_trial_named/" * name * output_ext)
@@ -198,7 +202,7 @@ savefig(output_dir * "iros_2024/$(name)_new.png")
 # display(p)
 
 
-## all four in a grid
+#* all four in a grid
 
 p1_5 = heatmap(axs_5..., pred_map_5';
                title="Average Height (mm)",

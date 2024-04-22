@@ -1,11 +1,13 @@
+
 using DelimitedFiles: readdlm, writedlm
 using Statistics: mean
 
 using AdaptiveSampling
 
-using .Maps: maps_dir
+include("../utils/utils.jl")
+using .DataIO: maps_dir
 
-## average over year
+#* average over year
 # calculates the mean of a vector of matrices
 # can be passed a function, such as isnan, to skip certain elements
 function matMean(a; skip=Returns(false))
@@ -37,7 +39,7 @@ open(maps_dir * "topo_ave.csv", "w") do io
     writedlm(io, image, ',')
 end
 
-## full australia, lower res
+#* full australia, lower res
 file_names = [
     "vege_720x360.csv",
     "topo_720x360.csv",
@@ -57,7 +59,7 @@ for fname in file_names
 end
 
 
-## full australia, higher res
+#* full australia, higher res
 file_names = [
     "vege_ave.csv",
     "topo_ave.csv",
@@ -76,7 +78,7 @@ for fname in file_names
 end
 
 
-## nsw patch, higher res
+#* nsw patch, higher res
 file_names = [
     "vege_ave.csv",
     "topo_ave.csv",
@@ -95,7 +97,7 @@ for fname in file_names
 end
 
 
-## other patch, higher res
+#* other patch, higher res
 file_names = [
     "vege_ave.csv",
     "topo_ave.csv",
@@ -117,7 +119,7 @@ for fname in file_names
 end
 
 
-## usa patch, higher res
+#* usa patch, higher res
 file_names = [
     "vege_ave.csv",
     "topo_ave.csv",

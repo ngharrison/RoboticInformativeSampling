@@ -6,7 +6,9 @@ using AdaptiveSampling
 using .Missions: Mission
 using .BeliefModels: BeliefModel
 using .Samples: Sample
-using .Outputs: output_dir, output_ext
+
+include("../utils/utils.jl")
+using .DataIO: output_dir, output_ext
 
 using Statistics: mean, std
 using FileIO: load
@@ -25,17 +27,7 @@ function stdM(cors)
 end
 
 
-## Calculating statistical significance of difference between means
-using Distributions
-p = 4; a = 8; b = 2; n = 18;
-t = abs(err_means[p,a] - err_means[p,b])/sqrt(err_stds[p,a]^2/n + err_stds[p,b]^2/n)
-cdf(TDist(n-1), t) # t-test
-
-# calc number of samples from t-score
-t^2*(err_stds[p,a]^2 + err_stds[p,b]^2)/(err_means[p,a] - err_means[p,b])^2
-
-
-## Aus
+#* Aus
 dir = "aus_ave_means_noise"
 # file_name = output_dir * "2023-08-28-16-58-29_metrics" * output_ext
 file_name_s = output_dir * "$dir/metrics_000" * output_ext
@@ -98,7 +90,7 @@ gui()
 
 savefig(output_dir * "$dir/$(dir)_errors.png")
 
-## Batch
+#* Batch
 dir = "batch_means_noise_1e2"
 
 p_err = Vector{Any}(undef, 8)
@@ -209,7 +201,19 @@ gui()
 savefig(output_dir * "$dir/errors.png")
 
 
-## True mean coefficients
+#* Calculating statistical significance of difference between means
+using Distributions
+p = 4; a = 8; b = 2; n = 18;
+t = abs(err_means[p,a] - err_means[p,b])/sqrt(err_stds[p,a]^2/n + err_stds[p,b]^2/n)
+cdf(TDist(n-1), t) # t-test
+
+# calc number of samples from t-score
+t^2*(err_stds[p,a]^2 + err_stds[p,b]^2)/(err_means[p,a] - err_means[p,b])^2
+
+
+#* True mean coefficients
+
+# This is old code and would need to be re-written
 mission_peaks = [3,3,4,4,5,5]
 cors = Array{Any, 1}(undef, length(mission_peaks))
 for (i, num_peaks) in enumerate(mission_peaks)

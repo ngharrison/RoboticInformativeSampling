@@ -1,4 +1,9 @@
-using AdaptiveSampling: Maps, Missions, BeliefModels, Samples, Outputs, ROSInterface
+
+using AdaptiveSampling
+using .Maps, .Missions, .BeliefModels, .Samples, .ROSInterface, .Kernels
+
+include("../utils/utils.jl")
+using .DataIO
 
 using Statistics: mean, std
 using FileIO: load
@@ -11,7 +16,7 @@ pyplot()
 names = ["30samples_15x15_1", "30samples_15x15_2", "30samples_15x15_priors",
          "30samples_50x50", "30samples_50x50_priors"]
 
-## load mission
+#* load mission
 dir = "pye_farm_trial_named"
 mname = names[5]
 file_name = output_dir * "$dir/$(mname)" * output_ext
