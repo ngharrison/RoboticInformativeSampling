@@ -115,7 +115,7 @@ using .DataIO: save
 @time for priors in [(0,0,0), (1,1,1)]
     ## initialize data for mission
     priors = (0,0,0)
-    mission = ausMission(priors=collect(Bool, priors))
+    mission, _ = ausMission(priors=collect(Bool, priors))
     # empty!(mission.prior_samples)
 
     ## run search alg
