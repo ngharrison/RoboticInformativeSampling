@@ -88,7 +88,7 @@ beliefModel = BeliefModel(samples, M.prior_samples, lb, ub)
 beliefModel = BeliefModel([M.prior_samples; samples], lb, ub)
 ```
 """
-function BeliefModel(samples, prior_samples, lb, ub; noise, kernel=multiKernel)
+function BeliefModel(samples, prior_samples, lb, ub; noise=(0.0, :fixed), kernel=multiKernel)
     # create a simple belief model for the current samples
     current = BeliefModel(samples, lb, ub; noise, kernel)
     isempty(prior_samples) && return current
@@ -107,7 +107,7 @@ conditioned on the samples given.
 A noise standard deviation can optionally be passed in either as a single scalar
 value for all samples or a vector of values, one for each sample.
 """
-function BeliefModel(samples, lb, ub; noise, kernel=multiKernel)
+function BeliefModel(samples, lb, ub; noise=(0.0, :fixed), kernel=multiKernel)
     # set up training data
     X = getfield.(samples, :x)
     Y = getfield.(samples, :y)
