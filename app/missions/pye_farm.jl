@@ -19,12 +19,15 @@ using .DataIO: maps_dir, imgToMap
 function pyeFarmMission(; num_samples=4)
 
     # the topics that will be listened to for measurements
-    sub_topics = [
+    data_topics = [
         # Crop height avg and std in frame (excluding wheels)
         ("/rss/gp/crop_height_avg", "/rss/gp/crop_height_std")
     ]
 
-    sampler = ROSConnection(sub_topics)
+    done_topic = "sortie_finished"
+    pub_topic = "latest_sample"
+
+    sampler = ROSConnection(data_topics, done_topic, pub_topic)
 
     # # full bounds
     # lb = [284711.12, 6241319.42]

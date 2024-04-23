@@ -16,12 +16,15 @@ using .ROSInterface: ROSConnection
 function rosMission(; num_samples=4)
 
     # the topics that will be listened to for measurements
-    sub_topics = [
+    data_topics = [
         # Crop height avg and std in frame (excluding wheels)
         ("value1", "value2")
     ]
 
-    sampler = ROSConnection(sub_topics)
+    done_topic = "sortie_finished"
+    pub_topic = "latest_sample"
+
+    sampler = ROSConnection(data_topics, done_topic, pub_topic)
 
     lb = [1.0, 1.0]; ub = [9.0, 9.0]
 

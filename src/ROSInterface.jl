@@ -32,8 +32,10 @@ $(TYPEDFIELDS)
 """
 struct ROSConnection
     "vector of topic names that will be subscribed to to receive measurements"
-    sub_topics::Vector{Tuple{String, String}}
-    "name of topic to publish next sample location to"
+    data_topics::Vector{Tuple{String, String}}
+    "topic name that publishes a message to signify the traveling is done"
+    done_topic
+    "the publisher topic object, created automatically from a given name"
     publisher
 end
 
@@ -44,24 +46,24 @@ Creating a $(FUNCTIONNAME) object requires a vector of topics to subscribe to
 for measurement data, essentially the list of sensors onboard the robot to
 listen to. Each element of this list should be a 2-tuple of topics that will
 transmit the value and error for each sensor. This constructor initializes a ros
-node and sets up a publisher to "/latest_sample".
+node and sets up a publisher to pub_topic.
 """
-function ROSConnection(sub_topics)
+function ROSConnection(data_topics, done_topic, pub_topic)
     # initialize this node with its name
     rospy.init_node("informative_sampling")
 
     # this will pass the full goal pose, no quantity id
-    publisher = rospy.Publisher("latest_sample", geo_msg.PoseStamped, queue_size=1, latch=true)
+    publisher = rospy.Publisher(pub_topic, geo_msg.PoseStamped, queue_size=1, latch=true)
 
     # create connection object
-    rosConnection = ROSConnection(sub_topics, publisher)
+    rosConnection = ROSConnection(data_topics, done_topic, publisher)
 
     return rosConnection
 end
 
 # give it a length and indices
-Base.eachindex(R::ROSConnection) = eachindex(R.sub_topics)
-Base.length(R::ROSConnection) = length(R.sub_topics)
+Base.eachindex(R::ROSConnection) = eachindex(R.data_topics)
+Base.length(R::ROSConnection) = length(R.data_topics)
 
 """
 ```julia
@@ -75,12 +77,15 @@ and waits for its message.
 
 # Examples
 ```julia
-sub_topics = [
+data_topics = [
     ("/value1", "/error1"),
     ("/value2", "/error2")
 ]
 
-sampler = ROSConnection(sub_topics)
+done_topic = "sortie_finished"
+pub_topic = "latest_sample"
+
+sampler = ROSConnection(data_topics, done_topic, pub_topic)
 
 location = [.1, .3]
 [(value1, error1), (value2, error2)] = sampler(location)
@@ -89,13 +94,13 @@ location = [.1, .3]
 function (R::ROSConnection)(new_loc::Location)
     publishNextLocation(R.publisher, new_loc)
 
-    rospy.wait_for_message("sortie_finished", std_msg.Bool) # a message means finished
-    @debug "received sortie finished"
+    rospy.wait_for_message(R.done_topic, std_msg.Bool) # a message means finished
+    @debug "received traveling done"
 
     # get values, creates a list of tuples of (value, error)
     observations = [
         rospy.wait_for_message(val_topic, std_msg.Float32, timeout=20).data
-        for (val_topic, err_topic) in R.sub_topics]
+        for (val_topic, err_topic) in R.data_topics]
 
     @debug "received values:" observations
 
@@ -120,11 +125,11 @@ function (R::ROSConnection)(new_index::SampleInput)
     rospy = pyimport("rospy")
     std_msg = pyimport("std_msgs.msg")
 
-    rospy.wait_for_message("sortie_finished", std_msg.Bool) # a message means finished
-    @debug "received sortie finished"
+    rospy.wait_for_message(R.done_topic, std_msg.Bool) # a message means finished
+    @debug "received traveling done"
 
     # get value
-    (val_topic, err_topic) = R.sub_topics[quantity]
+    (val_topic, err_topic) = R.data_topics[quantity]
     value = rospy.wait_for_message(val_topic, std_msg.Float32, timeout=20).data
     # error = rospy.wait_for_message(err_topic, std_msg.Float32, timeout=20).data
     @debug "received value:" value# , error
