@@ -86,7 +86,7 @@ To see further examples of files that this works for, look in the =app/ros_sims=
 To generate the docs, run the following command from the project root:
 
 #+begin_src shell
-julia --project docs/make.jl
+julia --project=docs docs/make.jl
 #+end_src
 
 To view them, open [[file:docs/build/index.html]] in a web browser. It's normally nice to build and host them on-line, but the acfr gitlab doesn't allow that.
