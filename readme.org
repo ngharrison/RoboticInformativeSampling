@@ -1,4 +1,4 @@
-#+title: Adaptive Sampling
+#+title: Informative Sampling
 
 A repository for robotic exploration in natural environments.
 
@@ -17,21 +17,21 @@ Recommended to add julia to your path.
 
 Use git to clone the repository to a local directory:
 #+begin_src shell
-git clone https://gitlab.acfr.usyd.edu.au/nhar0989/AdaptiveSampling.git
+git clone https://gitlab.acfr.usyd.edu.au/nhar0989/InformativeSampling.git
 #+end_src
 
-This will create a directory called =AdaptiveSampling=. Next run =julia AdaptiveSampling/setup.jl=. After that finishes, you should be good to go.
+This will create a directory called =InformativeSampling=. Next run =julia InformativeSampling/setup.jl=. After that finishes, you should be good to go.
 
 * Quick Start
 To see an example run of the project in its current state, after following the steps in [[*Installation and Setup][Installation and Setup]],
 
-1. Navigate into the =AdaptiveSampling/app= directory on the command line
+1. Navigate into the =InformativeSampling/app= directory on the command line
 2. Run =julia --project missions/example.jl=
 
 
 Normally you will want to run code from within the REPL since this keeps data around after it finishes and saves compilation so it goes much faster on repeated runs. To do this,
 
-1. Navigate into the =AdaptiveSampling/app= directory on the command line
+1. Navigate into the =InformativeSampling/app= directory on the command line
 2. Run =julia --project= to open the REPL with the app environment activated
 3. Run =incluce("missions/example.jl")=
 
@@ -68,7 +68,7 @@ In addition, this project can be used as a ROS package itself by simply putting 
 1. Make sure the file is executable
 2. Run =catkin_make= from the workspace
 3. Source the workspace
-4. Run =rosrun adaptive_sampling ros.jl=
+4. Run =rosrun informative_sampling ros.jl=
 
 
 The file will need to have the following code at the top for this to work:

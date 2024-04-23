@@ -2,7 +2,7 @@
 using Plots
 using Plots: mm
 
-using AdaptiveSampling
+using InformativeSampling
 
 using .Maps: res, generateAxes
 

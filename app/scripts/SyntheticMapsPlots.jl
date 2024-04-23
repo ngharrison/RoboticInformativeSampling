@@ -4,7 +4,7 @@ using LinearAlgebra: I
 using Statistics: cor
 using Plots
 
-using AdaptiveSampling
+using InformativeSampling
 
 using .Maps: Map, generateAxes
 using .Samples: Sample, MapsSampler

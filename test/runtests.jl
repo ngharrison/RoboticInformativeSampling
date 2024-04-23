@@ -1,7 +1,7 @@
 
 using Test
 
-using AdaptiveSampling
+using InformativeSampling
 using .Paths: PathCost, finalOrientation, getPath
 using .Maps: Map, res, pointToCell, cellToPoint, generateAxes
 using .Missions: Mission

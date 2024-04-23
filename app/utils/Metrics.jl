@@ -2,7 +2,7 @@ module Metrics
 
 using Statistics: mean
 
-using AdaptiveSampling
+using InformativeSampling
 using .Maps: generateAxes
 using .BeliefModels: BeliefModel, outputCorMat
 using .Samples: MapsSampler

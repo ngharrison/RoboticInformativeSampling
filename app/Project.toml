@@ -1,6 +1,6 @@
 [deps]
 AbstractGPs = "99985d1d-32ba-4be9-9821-2ec096f28918"
-AdaptiveSampling = "bfd01cc8-db36-4de5-b056-8ab04eef9441"
+InformativeSampling = "bfd01cc8-db36-4de5-b056-8ab04eef9441"
 Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
 DelimitedFiles = "8bb1440f-4735-579b-a4ab-409b98df4dab"
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"

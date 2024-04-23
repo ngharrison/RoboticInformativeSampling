@@ -4,7 +4,7 @@ using DelimitedFiles: readdlm
 using Statistics: cor
 using Random: seed!
 
-using AdaptiveSampling
+using InformativeSampling
 using .Maps: Map
 using .Samples: Sample, MapsSampler
 using .SampleCosts: EIGFSampleCost

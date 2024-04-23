@@ -6,7 +6,7 @@ using Dates: now, year, month, day, hour, minute, second
 using Images: save as saveImg, colorview, RGBA
 using Plots
 
-using AdaptiveSampling
+using InformativeSampling
 using .Maps: generateAxes, Map
 
 include("Visualization.jl")

@@ -1,7 +1,7 @@
 # script for analyzing data from missions
 # can be run after Main.jl or by opening a saved file
 
-using AdaptiveSampling
+using InformativeSampling
 
 using .Missions: Mission
 using .BeliefModels: BeliefModel

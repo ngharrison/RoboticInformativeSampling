@@ -2,7 +2,7 @@
 using Logging: global_logger, ConsoleLogger, Info, Debug
 using DelimitedFiles: readdlm
 
-using AdaptiveSampling
+using InformativeSampling
 using .Maps: Map, pointToCell
 using .Samples: MapsSampler
 using .SampleCosts: NormedSampleCost

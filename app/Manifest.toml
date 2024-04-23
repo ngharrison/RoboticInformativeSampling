@@ -2,7 +2,7 @@
 
 julia_version = "1.10.2"
 manifest_format = "2.0"
-project_hash = "a07b5e24b702b848df99f0c1ab66c283a0305f79"
+project_hash = "3a6c432776d448aacc8dee8eba3ba035226af5a1"
 
 [[deps.AbstractFFTs]]
 deps = ["LinearAlgebra"]
@@ -30,12 +30,6 @@ weakdeps = ["StaticArrays"]
 
     [deps.Adapt.extensions]
     AdaptStaticArraysExt = "StaticArrays"
-
-[[deps.AdaptiveSampling]]
-deps = ["AbstractGPs", "DataStructures", "DocStringExtensions", "LinearAlgebra", "Optim", "ParameterHandling", "Pkg", "PyCall", "Random", "Rotations", "Statistics"]
-path = ".."
-uuid = "bfd01cc8-db36-4de5-b056-8ab04eef9441"
-version = "0.1.0"
 
 [[deps.ArgTools]]
 uuid = "0dad84c5-d112-42e6-8d28-ef12dabb789f"
@@ -701,6 +695,12 @@ version = "1.0.0"
 git-tree-sha1 = "ea8031dea4aff6bd41f1df8f2fdfb25b33626381"
 uuid = "d25df0c9-e2be-5dd7-82c8-3ad0b3e990b9"
 version = "0.1.4"
+
+[[deps.InformativeSampling]]
+deps = ["AbstractGPs", "DataStructures", "DocStringExtensions", "LinearAlgebra", "Optim", "ParameterHandling", "Pkg", "PyCall", "Random", "Rotations", "Statistics"]
+path = ".."
+uuid = "bfd01cc8-db36-4de5-b056-8ab04eef9441"
+version = "0.1.0"
 
 [[deps.IntegralArrays]]
 deps = ["ColorTypes", "FixedPointNumbers", "IntervalSets"]

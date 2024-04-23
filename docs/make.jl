@@ -1,11 +1,11 @@
 
 using Documenter
 
-using AdaptiveSampling: Maps, Missions, BeliefModels, Kernels,
+using InformativeSampling: Maps, Missions, BeliefModels, Kernels,
       Samples, SampleCosts, Paths, ROSInterface
 
 makedocs(
-    sitename="AdaptiveSampling.jl",
+    sitename="InformativeSampling.jl",
     remotes=nothing,
     pages = [
         "index.md",

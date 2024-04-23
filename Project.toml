@@ -1,4 +1,4 @@
-name = "AdaptiveSampling"
+name = "InformativeSampling"
 uuid = "bfd01cc8-db36-4de5-b056-8ab04eef9441"
 authors = ["Nicholas Harrison <nicholas.harrison@sydney.edu.au>"]
 version = "0.1.0"

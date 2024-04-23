@@ -5,7 +5,7 @@ using Statistics: cor
 using DelimitedFiles: readdlm
 using Plots
 
-using AdaptiveSampling
+using InformativeSampling
 
 using .Maps: Map, bounds
 using .Samples: Sample, MapsSampler, selectSampleLocation

@@ -2,7 +2,7 @@
 
 julia_version = "1.10.2"
 manifest_format = "2.0"
-project_hash = "523180e0f17babe56a13b9a69a113bea0a5fcd14"
+project_hash = "b73f6a090572854c9efe245cff3115ba8cc800b8"
 
 [[deps.ANSIColoredPrinters]]
 git-tree-sha1 = "574baf8110975760d391c710b6341da1afa48d8c"
@@ -29,12 +29,6 @@ weakdeps = ["StaticArrays"]
 
     [deps.Adapt.extensions]
     AdaptStaticArraysExt = "StaticArrays"
-
-[[deps.AdaptiveSampling]]
-deps = ["AbstractGPs", "DataStructures", "Distributions", "DocStringExtensions", "LinearAlgebra", "Optim", "ParameterHandling", "Pkg", "PyCall", "Random", "Rotations", "Statistics"]
-path = ".."
-uuid = "bfd01cc8-db36-4de5-b056-8ab04eef9441"
-version = "0.1.0"
 
 [[deps.ArgTools]]
 uuid = "0dad84c5-d112-42e6-8d28-ef12dabb789f"
@@ -305,6 +299,12 @@ deps = ["Logging", "Random"]
 git-tree-sha1 = "8b72179abc660bfab5e28472e019392b97d0985c"
 uuid = "b5f81e59-6552-4d32-b1f0-c071b021bf89"
 version = "0.2.4"
+
+[[deps.InformativeSampling]]
+deps = ["AbstractGPs", "DataStructures", "DocStringExtensions", "LinearAlgebra", "Optim", "ParameterHandling", "Pkg", "PyCall", "Random", "Rotations", "Statistics"]
+path = ".."
+uuid = "bfd01cc8-db36-4de5-b056-8ab04eef9441"
+version = "0.1.0"
 
 [[deps.InteractiveUtils]]
 deps = ["Markdown"]

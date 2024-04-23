@@ -3,7 +3,7 @@ module Visualization
 using Plots: plot, heatmap, scatter!, @layout, mm, grid
 using DocStringExtensions: TYPEDSIGNATURES, TYPEDEF
 
-using AdaptiveSampling
+using InformativeSampling
 using .Maps: Map, res, generateAxes
 using .BeliefModels: BeliefModel
 using .SampleCosts: SampleCost

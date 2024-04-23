@@ -1,5 +1,5 @@
 
-using AdaptiveSampling
+using InformativeSampling
 using .Maps: Map
 using .SampleCosts: EIGFSampleCost
 using .Missions: Mission

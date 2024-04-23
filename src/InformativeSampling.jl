@@ -1,4 +1,4 @@
-module AdaptiveSampling
+module InformativeSampling
 
 # put all the code into the top namespace
 include("Maps.jl")

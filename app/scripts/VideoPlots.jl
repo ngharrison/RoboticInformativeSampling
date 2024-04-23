@@ -1,5 +1,5 @@
 
-using AdaptiveSampling
+using InformativeSampling
 
 using .Maps: generateAxes
 using .Missions: Mission

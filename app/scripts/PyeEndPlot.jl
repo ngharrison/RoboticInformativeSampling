@@ -1,5 +1,5 @@
 
-using AdaptiveSampling
+using InformativeSampling
 using .Maps, .Missions, .BeliefModels, .Samples, .ROSInterface
 
 include("../utils/utils.jl")

@@ -21,7 +21,7 @@ Modules = [Maps]
 
 ## Missions.jl
 
-Functions for initializing mission data and the function for running the entire search mission. The entry-point to the actual adaptive sampling. This contains the main loop and most of the usage of Samples and BeliefModels.
+Functions for initializing mission data and the function for running the entire search mission. The entry-point to the actual informative sampling. This contains the main loop and most of the usage of Samples and BeliefModels.
 
 Main public types and functions:
 - `simMission`
@@ -90,7 +90,7 @@ Modules = [Paths]
 
 ## ROSInterface.jl
 
-The interface for passing data to and from other ROS nodes. It sets up an `adaptive_sampling` node and provides methods to handle the data. This is designed specifically for communication with Swagbot.
+The interface for passing data to and from other ROS nodes. It sets up an `informative_sampling` node and provides methods to handle the data. This is designed specifically for communication with Swagbot.
 
 Main public types and functions:
 - `ROSConnection`

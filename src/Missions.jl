@@ -48,7 +48,7 @@ mission = Mission(; occupancy,
 end
 
 """
-The main function that runs the adaptive sampling routine. For each iteration, a
+The main function that runs the informative sampling routine. For each iteration, a
 sample location is selected, a sample is collected, the belief model is updated,
 and visuals are possibly shown. The run finishes when the designated number of
 samples is collected.

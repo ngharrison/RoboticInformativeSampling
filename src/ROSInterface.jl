@@ -48,7 +48,7 @@ node and sets up a publisher to "/latest_sample".
 """
 function ROSConnection(sub_topics)
     # initialize this node with its name
-    rospy.init_node("adaptive_sampling")
+    rospy.init_node("informative_sampling")
 
     # this will pass the full goal pose, no quantity id
     publisher = rospy.Publisher("latest_sample", geo_msg.PoseStamped, queue_size=1, latch=true)

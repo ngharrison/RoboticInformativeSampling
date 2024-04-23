@@ -1,6 +1,6 @@
 #* starter stuff
 
-using AdaptiveSampling
+using InformativeSampling
 using .Maps, .Missions, .BeliefModels, .Samples
 
 include("../utils/utils.jl")

@@ -3,7 +3,7 @@ using Logging: global_logger, ConsoleLogger, Info, Debug
 using FileIO: load
 using Images: gray
 
-using AdaptiveSampling
+using InformativeSampling
 using .Maps: Map
 using .SampleCosts: EIGFSampleCost
 using .Samples: Sample

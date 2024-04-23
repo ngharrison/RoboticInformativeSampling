@@ -4,7 +4,7 @@ using LinearAlgebra: I, norm
 using Statistics: mean, cor
 using Random: seed!
 
-using AdaptiveSampling
+using InformativeSampling
 using .Maps: Map, generateAxes
 using .Samples: Sample, MapsSampler
 using .SampleCosts: EIGFSampleCost

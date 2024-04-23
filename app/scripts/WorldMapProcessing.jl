@@ -2,7 +2,7 @@
 using DelimitedFiles: readdlm, writedlm
 using Statistics: mean
 
-using AdaptiveSampling
+using InformativeSampling
 
 include("../utils/utils.jl")
 using .DataIO: maps_dir
