@@ -90,3 +90,10 @@ julia --project=docs docs/make.jl
 #+end_src
 
 To view them, open [[file:docs/build/index.html]] in a web browser. It's normally nice to build and host them on-line, but the acfr gitlab doesn't allow that.
+
+* Tests
+
+To test that some of the basic functionality of the package is working, run the following commands from the project root:
+
+1. Open a Julia REPL using =julia --project=test=
+2. Run =]test=
