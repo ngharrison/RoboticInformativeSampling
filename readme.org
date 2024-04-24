@@ -25,27 +25,27 @@ This will create a directory called =InformativeSampling=. Next run =julia Infor
 * Quick Start
 To see an example run of the project in its current state, after following the steps in [[*Installation and Setup][Installation and Setup]],
 
-1. Navigate into the =InformativeSampling/app= directory on the command line
-2. Run =julia --project missions/example.jl=
+1. Navigate into the =InformativeSampling= directory on the command line
+2. Run =julia --project=app app/missions/example.jl=
 
 
 Normally you will want to run code from within the REPL since this keeps data around after it finishes and saves compilation so it goes much faster on repeated runs. To do this,
 
-1. Navigate into the =InformativeSampling/app= directory on the command line
-2. Run =julia --project= to open the REPL with the app environment activated
-3. Run =incluce("missions/example.jl")=
+1. Navigate into the =InformativeSampling= directory on the command line
+2. Run =julia --project=app= to open the REPL with the app environment activated
+3. Run =incluce("app/missions/example.jl")=
 
 
 To understand more about the code and the Julia language in general, go to the [[*Documentation][documentation]].
 
 ** Extra notes
 *** Activating a project
-The =--project=<path>= flag automatically activates a project environment after starting the REPL. You can run this manually by =]activate <path>= within the julia REPL. Both of these forms accept the path to the directory that contains the =Project.toml= file, e.g. the root directory of this repository. If you are already within a project directory, you can simply run it without a value (=julia --project=) with the same effect.
+The =--project=<path>= flag automatically activates a project environment after starting the REPL. You can run this manually by =]activate <path>= within the julia REPL. Both of these forms accept the path to the directory that contains the =Project.toml= file, e.g. the app directory of this repository. If you are already within a project directory, you can simply run it without a value (=julia --project=) with the same effect.
 
 *** rospy error
 If you get: =Error: Unable to load the 'rospy' python package!=
 
-1. Run `ENV["PYTHON"] = "/usr/bin/python"` (or whatever the path is to the python executable that has the rospy package installed)
+1. Run ~ENV["PYTHON"] = "/usr/bin/python"~ (or whatever the path is to the python executable that has the rospy package installed)
 2. Run =]build PyCall=
 3. Restart the julia REPL
 
