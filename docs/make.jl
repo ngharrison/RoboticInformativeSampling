@@ -1,4 +1,10 @@
 
+using Pkg
+
+println("Instantiating docs environment")
+Pkg.activate(Base.source_dir())
+Pkg.instantiate()
+
 using Documenter
 
 using InformativeSampling: Maps, Missions, BeliefModels, Kernels,
