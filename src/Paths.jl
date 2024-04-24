@@ -38,6 +38,12 @@ Inputs:
 - `start`: the starting cell in the matrix
 - `occupancy`: a matrix indicating which cells are occupied
 - `resolution`: a vector of the width and height of each cell
+- `diagonals`: whether to include connectivity to diagonal cells or not
+  (default true)
+- `dist`: function to compute distance from current to next cell
+  (default weightedEuclidian)
+- `heuristic`: function to compute estimated distance from current to goal cell
+  (default weightedEuclidian)
 
 Note: this type and associated methods can in fact be used with any
 N-dimensional cost array, not just a matrix.

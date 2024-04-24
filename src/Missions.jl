@@ -23,7 +23,9 @@ mission = Mission(; occupancy,
                   sampleCostType,
                   weights,
                   start_locs,
-                  prior_samples)
+                  prior_samples,
+                  noise,
+                  kernel)
 ```
 """
 @kwdef struct Mission
@@ -54,11 +56,13 @@ and visuals are possibly shown. The run finishes when the designated number of
 samples is collected.
 
 Inputs:
+- `func`: any function to be run at the end of the update loop, useful for
+  visualization or saving data (default does nothing)
 - `samples`: a vector of samples, this can be used to jump-start a mission
   or resume a previous mission (default empty)
 - `beliefs`: a vector of beliefs, this pairs with the previous argument
   (default empty)
-- `visuals`: true or false to cause map plots to be shown or not (default false)
+- `seed_val`: the seed for the random number generator, an integer (default 0)
 - `sleep_time`: the amount of time to wait after each iteration, useful for
   visualizations (default 0)
 

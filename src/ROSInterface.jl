@@ -75,6 +75,8 @@ sensor measurement available. It does this by first publishing the next location
 to sample. Once the location is sampled, it calls out to each topic in sequence
 and waits for its message.
 
+Currently ignores the error topic and doesn't return its value.
+
 # Examples
 ```julia
 data_topics = [
@@ -115,6 +117,8 @@ function (R::ROSConnection)(new_index::SampleInput)
 Returns a single value from the sample location of the chosen quantity.  It does
 this by first publishing the next location to sample. Once the location is
 sampled, it calls out to each topic in sequence and waits for its message.
+
+Currently ignores the error topic and doesn't return its value.
 
 Currently will be unused.
 """

@@ -177,6 +177,8 @@ function values(sc::EIGFSampleCost, loc)
     return (-μ_err^2, -σ_norm^2, τ_norm, 0.0)
 end
 
+## These aren't finished, don't work
+
 struct MEPESampleCost <: SampleCost
     occupancy
     samples
