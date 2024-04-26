@@ -2,7 +2,7 @@
 using InformativeSampling
 using .Maps, .Missions, .BeliefModels, .Samples, .ROSInterface, .Kernels
 
-include("../utils/utils.jl")
+using InformativeSamplingUtils
 using .DataIO
 
 using Statistics: mean, std

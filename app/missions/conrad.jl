@@ -8,7 +8,7 @@ using .Samples: MapsSampler
 using .SampleCosts: NormedSampleCost
 using .Missions: Mission
 
-include("../utils/utils.jl")
+using InformativeSamplingUtils
 using .DataIO: maps_dir
 
 function conradMission()

@@ -9,7 +9,7 @@ using InformativeSampling
 using .Maps: Map, generateAxes
 using .Samples: Sample, MapsSampler
 
-include("../utils/utils.jl")
+using InformativeSamplingUtils
 using .DataIO: output_dir, GaussGroundTruth, Peak
 
 #* data

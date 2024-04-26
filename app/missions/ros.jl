@@ -53,7 +53,7 @@ end
 # set the logging level: Info or Debug
 global_logger(ConsoleLogger(stderr, Debug))
 
-include("../utils/utils.jl")
+using InformativeSamplingUtils
 using .Visualization: vis
 using .DataIO: save
 

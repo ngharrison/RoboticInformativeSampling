@@ -10,7 +10,7 @@ using InformativeSampling
 using .Maps: Map, bounds
 using .Samples: Sample, MapsSampler, selectSampleLocation
 
-include("../utils/utils.jl")
+using InformativeSamplingUtils
 using .Visualization: visualize
 using .DataIO: maps_dir, output_dir, imgToMap, spatialAve, normalize
 

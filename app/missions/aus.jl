@@ -11,7 +11,7 @@ using .Samples: Sample, MapsSampler, selectSampleLocation
 using .SampleCosts: EIGFSampleCost
 using .Missions: Mission
 
-include("../utils/utils.jl")
+using InformativeSamplingUtils
 using .Visualization: vis
 using .DataIO: normalize, maps_dir, imgToMap
 

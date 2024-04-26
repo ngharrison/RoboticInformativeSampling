@@ -6,7 +6,7 @@ using .Missions: Mission
 using .BeliefModels: BeliefModel
 using .Samples: Sample
 
-include("../utils/utils.jl")
+using InformativeSamplingUtils
 using .DataIO: output_dir, output_ext
 
 using Statistics: mean, std

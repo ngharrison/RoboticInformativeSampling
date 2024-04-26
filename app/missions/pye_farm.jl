@@ -12,7 +12,7 @@ using .Missions: Mission
 # this requires a working rospy installation
 using .ROSInterface: ROSConnection
 
-include("../utils/utils.jl")
+using InformativeSamplingUtils
 using .Visualization: vis
 using .DataIO: maps_dir, imgToMap
 

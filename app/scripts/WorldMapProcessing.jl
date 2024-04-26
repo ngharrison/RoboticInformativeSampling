@@ -4,7 +4,7 @@ using Statistics: mean
 
 using InformativeSampling
 
-include("../utils/utils.jl")
+using InformativeSamplingUtils
 using .DataIO: maps_dir
 
 #* average over year

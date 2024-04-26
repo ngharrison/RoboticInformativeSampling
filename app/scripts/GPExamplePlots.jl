@@ -6,7 +6,7 @@ using InformativeSampling
 
 using .Maps: res, generateAxes
 
-include("../utils/utils.jl")
+using InformativeSamplingUtils
 using .DataIO: output_dir, output_ext
 
 using FileIO: load

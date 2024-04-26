@@ -9,8 +9,7 @@ using Plots
 using InformativeSampling
 using .Maps: generateAxes, Map
 
-include("Visualization.jl")
-using .Visualization: visualize
+using ..Visualization: visualize
 
 export normalize, spatialAve, imgToMap, save, maps_dir,
        output_dir, output_ext, saveBeliefMapToPng

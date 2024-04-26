@@ -7,7 +7,7 @@ using .BeliefModels: BeliefModel
 using .Kernels: fullyConnectedCovMat
 using .Samples: Sample
 
-include("../utils/utils.jl")
+using InformativeSamplingUtils
 using .DataIO: output_dir, output_ext
 
 using Statistics: mean, std

@@ -4,7 +4,7 @@ using .Maps: Map
 using .SampleCosts: EIGFSampleCost
 using .Missions: Mission
 
-include("../utils/utils.jl")
+using InformativeSamplingUtils
 using .Visualization: vis
 
 struct UserSampler

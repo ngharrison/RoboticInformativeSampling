@@ -3,7 +3,7 @@
 using InformativeSampling
 using .Maps, .Missions, .BeliefModels, .Samples
 
-include("../utils/utils.jl")
+using InformativeSamplingUtils
 using .DataIO, .Visualization
 
 using Statistics, FileIO, Plots, Images, Logging

@@ -35,6 +35,8 @@ struct ROSConnection
     data_topics::Vector{Tuple{String, String}}
     "topic name that publishes a message to signify the traveling is done"
     done_topic
+    "the publisher topic name"
+    pub_topic
     "the publisher topic object, created automatically from a given name"
     publisher
 end
@@ -56,7 +58,7 @@ function ROSConnection(data_topics, done_topic, pub_topic)
     publisher = rospy.Publisher(pub_topic, geo_msg.PoseStamped, queue_size=1, latch=true)
 
     # create connection object
-    rosConnection = ROSConnection(data_topics, done_topic, publisher)
+    rosConnection = ROSConnection(data_topics, done_topic, pub_topic, publisher)
 
     return rosConnection
 end
