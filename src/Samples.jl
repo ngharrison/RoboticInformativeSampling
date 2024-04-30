@@ -49,9 +49,9 @@ argument.
 ```julia
 ss = MapsSampler(Map(zeros(5, 5)), Map(ones(5, 5)))
 
-x = [.2, .75]
-ss(x) # result: [0, 1]
-ss((x, 2)) # result: 1
+loc = [.2, .75]
+ss(loc) # result: [0, 1]
+ss((loc, 2)) # result: 1
 ```
 """
 struct MapsSampler{T1<:Real}
@@ -61,8 +61,8 @@ end
 MapsSampler(maps::Map...) = MapsSampler(maps)
 MapsSampler(maps::AbstractVector{<:Map}) = MapsSampler(Tuple(maps))
 
-(ss::MapsSampler)(x::Location) = [map(x) for map in ss]
-(ss::MapsSampler)(x::SampleInput) = ss[x[2]](x[1])
+(ss::MapsSampler)(loc::Location) = [map(loc) for map in ss]
+(ss::MapsSampler)((q, loc)::SampleInput) = ss[q](loc)
 
 # make it behave like a tuple
 Base.keys(m::MapsSampler) = keys(m.maps)
