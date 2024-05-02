@@ -6,7 +6,7 @@ using DocStringExtensions: TYPEDSIGNATURES
 
 export multiMeanAve, singleKernel, multiKernel, fullyConnectedCovNum,
        slfmKernel, fullyConnectedCovMat, manyToOneCovNum, manyToOneCovMat,
-       initHyperparams, initHyperparamsSLFM
+       initHyperparams
 
 include("SLFMKernel.jl")
 
@@ -17,7 +17,7 @@ $(TYPEDSIGNATURES)
 
 Creates the structure of hyperparameters for a MTGP and gives them initial values.
 """
-function initHyperparams(X, Y_vals, lb, ub; kwargs...)
+function initHyperparams(X, Y_vals, lb, ub, ::typeof(multiKernel); kwargs...)
     T = maximum(last, X) # number of outputs
     n = fullyConnectedCovNum(T)
     # NOTE may change to all just 0.5
@@ -34,7 +34,7 @@ $(TYPEDSIGNATURES)
 
 Creates the structure of hyperparameters for a SLFM and gives them initial values.
 """
-function initHyperparamsSLFM(X, Y_vals, lb, ub; kwargs...)
+function initHyperparams(X, Y_vals, lb, ub, ::typeof(slfmKernel); kwargs...)
     T = maximum(last, X) # number of outputs
     # NOTE may change to all just 0.5
     # σ = (length(first.(Y_vals))>1 ? std(first.(Y_vals)) : 0.5)/sqrt(2) * ones(n)

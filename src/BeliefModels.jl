@@ -10,7 +10,7 @@ using DocStringExtensions: TYPEDSIGNATURES, TYPEDEF
 using ..Samples: SampleInput
 using ..Kernels: multiMeanAve, singleKernel, multiKernel, fullyConnectedCovNum,
                  slfmKernel, fullyConnectedCovMat, manyToOneCovNum, manyToOneCovMat,
-                 initHyperparams, initHyperparamsSLFM
+                 initHyperparams
 
 export BeliefModel, outputCorMat
 
@@ -114,11 +114,11 @@ function BeliefModel(samples, lb, ub; noise=(0.0, :fixed), kernel=multiKernel)
 
     if Y isa AbstractArray{<:NTuple{2, <:Real}}
         Y_vals, Y_errs = first.(Y), last.(Y)
-        θ0 = initHyperparams(X, Y_vals, lb, ub; σn=fixed(Y_errs)) # no noise to learn
+        θ0 = initHyperparams(X, Y_vals, lb, ub, kernel; σn=fixed(Y_errs)) # no noise to learn
     else
         Y_vals = Y
         σn = (noise[2] == :learned ? noise[1] : fixed(noise[1]))
-        θ0 = initHyperparams(X, Y_vals, lb, ub; σn) # no noise to learn
+        θ0 = initHyperparams(X, Y_vals, lb, ub, kernel; σn) # no noise to learn
     end
 
     # optimize hyperparameters (train)
