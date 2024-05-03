@@ -108,7 +108,7 @@ end
 #* Run
 
 ## initialize data for mission
-mission, prior_maps = simMission(num_samples=10)
+mission, prior_maps = simMission(num_samples=5)
 
 vis(mission.sampler..., prior_maps...;
     titles=["QOI", "Scaling Factor", "Additive Noise", "Random Map"],

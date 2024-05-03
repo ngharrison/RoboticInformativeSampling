@@ -698,7 +698,7 @@ version = "0.1.4"
 
 [[deps.InformativeSampling]]
 deps = ["AbstractGPs", "DataStructures", "DocStringExtensions", "LinearAlgebra", "Optim", "ParameterHandling", "Pkg", "PyCall", "Random", "Rotations", "Statistics"]
-path = ".."
+path = "../core"
 uuid = "bfd01cc8-db36-4de5-b056-8ab04eef9441"
 version = "0.1.0"
 

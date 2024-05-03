@@ -1,4 +1,6 @@
-# Application Parts and Usage Overview
+# Application --- Parts and Usage Overview
+
+Scripts that run the informative sampling code.
 
 ## missions
 
@@ -12,34 +14,6 @@ The `example.jl` script can be run to see the full code in action.
 
 The place where code to analyze saved data is located.
 
-## utils
+## ros_sims
 
-Modules to help run the informative sampling.
-
-### DataIO.jl
-
-Handling data in and out.
-
-Exports:
-- `normalize`
-- `spatialAve`
-- `imgToMap`
-- `save`
-- `maps_dir`
-- `output_dir`
-- `output_ext`
-- `saveBeliefMapToPng`
-
-### Visualization.jl
-
-Methods to visualize mission data. The form displayed is determined by what data types are passed in.
-
-Main public types and functions:
-- `visualize`
-
-### Metrics.jl
-
-A function to calculate the metrics from a mission and belief model.
-
-Exports:
-- `calcMetrics`
+A few julia and python files used to test simple usage with ros.

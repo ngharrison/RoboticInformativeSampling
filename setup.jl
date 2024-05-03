@@ -4,18 +4,18 @@
 
 using Pkg;
 
-println("Instantiating Julia package")
-Pkg.activate(Base.source_dir())
+println("Instantiating package core")
+Pkg.activate(Base.source_dir() * "/core")
 Pkg.instantiate()
 
 println("Building PyCall")
 ENV["PYTHON"] = "/usr/bin/python";
 Pkg.build("PyCall")
 
-println("Instantiating Julia utils")
+println("Instantiating package utils")
 Pkg.activate(Base.source_dir() * "/utils")
 Pkg.instantiate()
 
-println("Instantiating Julia app")
+println("Instantiating package app")
 Pkg.activate(Base.source_dir() * "/app")
 Pkg.instantiate()
