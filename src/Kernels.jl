@@ -12,39 +12,6 @@ include("SLFMKernel.jl")
 
 ## Mean and kernel stuff
 
-"""
-$(TYPEDSIGNATURES)
-
-Creates the structure of hyperparameters for a MTGP and gives them initial values.
-"""
-function initHyperparams(X, Y_vals, lb, ub, ::typeof(multiKernel); kwargs...)
-    T = maximum(last, X) # number of outputs
-    n = fullyConnectedCovNum(T)
-    # NOTE may change to all just 0.5
-    # σ = (length(Y_vals)>1 ? std(Y_vals) : 0.5)/sqrt(2) * ones(n)
-    # a = mean(ub .- lb)
-    # ℓ = length(X)==1 ? a : a/length(X) + mean(std(first.(X)))*(1-1/length(X))
-    σ = 0.5/sqrt(2) * ones(n)
-    ℓ = mean(ub .- lb)
-    return (; σ, ℓ, kwargs...)
-end
-
-"""
-$(TYPEDSIGNATURES)
-
-Creates the structure of hyperparameters for a SLFM and gives them initial values.
-"""
-function initHyperparams(X, Y_vals, lb, ub, ::typeof(slfmKernel); kwargs...)
-    T = maximum(last, X) # number of outputs
-    # NOTE may change to all just 0.5
-    # σ = (length(first.(Y_vals))>1 ? std(first.(Y_vals)) : 0.5)/sqrt(2) * ones(n)
-    # a = mean(ub .- lb)
-    # ℓ = (length(X)==1 ? a : a/length(X) + mean(std(first.(X)))*(1-1/length(X))) * ones(T)
-    σ = 0.5/sqrt(2) * ones(T,T)
-    ℓ = mean(ub .- lb) * ones(T)
-    return (; σ, ℓ, kwargs...)
-end
-
 function multiMeanAve(X, Y)
     # calculate means
     T = maximum(last, X)
@@ -133,6 +100,39 @@ function manyToOneCovMat(a)
     A = L'*L # upper triangular times lower
 
     return A + √eps()*I
+end
+
+"""
+$(TYPEDSIGNATURES)
+
+Creates the structure of hyperparameters for a MTGP and gives them initial values.
+"""
+function initHyperparams(X, Y_vals, lb, ub, ::typeof(multiKernel); kwargs...)
+    T = maximum(last, X) # number of outputs
+    n = fullyConnectedCovNum(T)
+    # NOTE may change to all just 0.5
+    # σ = (length(Y_vals)>1 ? std(Y_vals) : 0.5)/sqrt(2) * ones(n)
+    # a = mean(ub .- lb)
+    # ℓ = length(X)==1 ? a : a/length(X) + mean(std(first.(X)))*(1-1/length(X))
+    σ = 0.5/sqrt(2) * ones(n)
+    ℓ = mean(ub .- lb)
+    return (; σ, ℓ, kwargs...)
+end
+
+"""
+$(TYPEDSIGNATURES)
+
+Creates the structure of hyperparameters for a SLFM and gives them initial values.
+"""
+function initHyperparams(X, Y_vals, lb, ub, ::typeof(slfmKernel); kwargs...)
+    T = maximum(last, X) # number of outputs
+    # NOTE may change to all just 0.5
+    # σ = (length(first.(Y_vals))>1 ? std(first.(Y_vals)) : 0.5)/sqrt(2) * ones(n)
+    # a = mean(ub .- lb)
+    # ℓ = (length(X)==1 ? a : a/length(X) + mean(std(first.(X)))*(1-1/length(X))) * ones(T)
+    σ = 0.5/sqrt(2) * ones(T,T)
+    ℓ = mean(ub .- lb) * ones(T)
+    return (; σ, ℓ, kwargs...)
 end
 
 end
