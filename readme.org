@@ -38,6 +38,12 @@ Normally you will want to run code from within the REPL since this keeps data ar
 
 To understand more about the code and the Julia language in general, go to the [[*Documentation][documentation]].
 
+** Custom Runs
+
+The easiest way to start using the code for your own purposes is to copy the =example.jl= file and change the data and settings to fit what you need. You can also look through the other files in =app/missions/= for inspiration, such as =aus.jl= for use with real data and =ros.jl= for use with ROS topics.
+
+An interesting mission is found in =user.jl=. This script does all the normal mapping and automatic sample location selection, but it asks for user input for every sample measurement.
+
 ** Extra notes
 *** Activating a project
 The =--project=<path>= flag automatically activates a project environment after starting the REPL. You can run this manually by =]activate <path>= within the julia REPL. Both of these forms accept the path to the directory that contains the =Project.toml= file, e.g. the app directory of this repository. If you are already within a project directory, you can simply run it without a value (=julia --project=) with the same effect.

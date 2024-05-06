@@ -29,6 +29,7 @@ function pickMission(; num_samples=30)
 
     ## initialize ground truth
 
+    # sampling two quantities each time
     sampler = UserSampler(1:2)
 
     sampleCostType = EIGFSampleCost
