@@ -95,5 +95,5 @@ To view them, open [[file:docs/build/index.html]] in a web browser. It's normall
 
 To test that some of the core functionality of the package is working, run the following commands from the project root:
 
-1. Open a Julia REPL using =julia --project=core/test=
+1. Open a Julia REPL using =julia --project=core=
 2. Run =]test=
