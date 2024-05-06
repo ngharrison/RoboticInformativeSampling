@@ -167,6 +167,11 @@ metrics = Array{Any, 2}(undef, (length(mission_peaks), num_runs))
         ## initialize data for mission
         mission, _ = simMission(; seed_val=i, num_peaks, priors=collect(Bool, priors))
         for j in 1:num_runs
+            println()
+            println("Priors ", priors)
+            println("Peaks number ", i)
+            println("Run number ", j)
+            println()
             ## run search alg
             @time samples, beliefs = mission(seed_val=j, sleep_time=0.0);
             @debug "output correlation matrix:" outputCorMat(beliefs[end])
