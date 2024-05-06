@@ -7,7 +7,7 @@ using Random: seed!
 using InformativeSampling
 using .Maps: Map, generateAxes
 using .Samples: Sample, MapsSampler
-using .SampleCosts: EIGFSampleCost
+using .SampleCosts: EIGFSampleCost, DistScaledEIGFSampleCost
 using .Missions: Mission
 
 using InformativeSamplingUtils

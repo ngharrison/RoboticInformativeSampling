@@ -8,7 +8,8 @@ using ..Maps: pointToCell, cellToPoint, res, bounds
 using ..Paths: PathCost
 
 export SampleCost, values, BasicSampleCost,
-       NormedSampleCost, MIPTSampleCost, EIGFSampleCost
+       NormedSampleCost, MIPTSampleCost, EIGFSampleCost,
+       DistScaledEIGFSampleCost
 
 abstract type SampleCost end
 
@@ -175,6 +176,46 @@ function values(sc::EIGFSampleCost, loc)
     μ_err = μ_norm - closest_sample.y[1]
 
     return (-μ_err^2, -σ_norm^2, τ_norm, 0.0)
+end
+
+struct DistScaledEIGFSampleCost <: SampleCost
+    occupancy
+    samples
+    beliefModel
+    quantities
+    weights
+    belief_max
+    pathCost
+end
+
+function DistScaledEIGFSampleCost(md, samples, beliefModel, quantities)
+    start = pointToCell(samples[end].x[1], md.occupancy) # just looking at location
+    pathCost = PathCost(start, md.occupancy, res(md.occupancy))
+
+    # using the max values from the current belief
+    locs = [cellToPoint(ci, md.occupancy) for ci in vec(CartesianIndices(md.occupancy))]
+    belief_max = [maximum(first(beliefModel(tuple.(locs, q)))) for q in quantities]
+
+    DistScaledEIGFSampleCost(md.occupancy, samples, beliefModel,
+                     quantities, md.weights, belief_max, pathCost)
+end
+
+function values(sc::DistScaledEIGFSampleCost, loc)
+    beliefs = sc.beliefModel([(loc, q) for q in sc.quantities]) # means and standard deviations
+    μ_norm, σ_norm = mean.(beliefs)
+
+    τ = sc.pathCost(pointToCell(loc, sc.occupancy)) # distance to location
+    lb, ub = bounds(sc.occupancy)
+    τ_norm = τ / mean(ub .- lb) # normalized
+    # τ_norm = sc.occupancy(loc) ? Inf : 0.0
+
+    closest_sample = argmin(sample -> norm(sample.x[1] - loc), sc.samples)
+
+    μ_err = μ_norm - closest_sample.y[1]
+
+    d = (τ_norm == Inf ? Inf : 0.0)
+    # return (-μ_err^2, -σ_norm^2/exp(τ_norm), d, 0.0)
+    return (-μ_err^2, -σ_norm^2/(1 + τ_norm), d, 0.0)
 end
 
 ## These aren't finished, don't work
