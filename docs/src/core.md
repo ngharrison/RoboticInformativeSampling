@@ -4,12 +4,9 @@ The code is divided up into files to contain pieces with similar purposes or con
 
 ## Maps.jl
 
-Types for holding and handling real and simulated data. Mainly used by [Missions.jl](@ref), but foundational for the other parts too. Its alias types `Location` and `SampleInput` are fundamental pieces for Samples and BeliefModels.
+Types for holding and handling real and simulated data. Mainly used by [Missions.jl](@ref), but foundational for the other parts too.
 
 Main public types and functions:
-- `Location`
-- `SampleInput`
-- `SampleOutput`
 - `Map`
 - `imgToMap`
 - `res`
@@ -46,9 +43,12 @@ Modules = [BeliefModels]
 
 ## Samples.jl
 
-Everything to do with sampling values in the environment.
+Everything to do with sampling values in the environment. Its alias types `Location` and `SampleInput` are fundamental pieces for BeliefModels as well.
 
 Main public types and functions:
+- `Location`
+- `SampleInput`
+- `SampleOutput`
 - `Sample`
 - `MapsSampler`
 - `takeSamples`
