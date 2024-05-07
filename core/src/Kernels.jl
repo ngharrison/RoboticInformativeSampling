@@ -6,9 +6,10 @@ using DocStringExtensions: TYPEDSIGNATURES
 
 export multiMeanAve, singleKernel, multiKernel, fullyConnectedCovNum,
        slfmKernel, fullyConnectedCovMat, manyToOneCovNum, manyToOneCovMat,
-       initHyperparams
+       initHyperparams, customKernel
 
 include("SLFMKernel.jl")
+include("CustomKernel.jl")
 
 ## Mean and kernel stuff
 
@@ -51,6 +52,9 @@ multiKernel(θ) = IntrinsicCoregionMOKernel(kernel=with_lengthscale(SqExponentia
 fullyConnectedCovNum(num_outputs) = (num_outputs+1)*num_outputs÷2
 
 slfmKernel(θ) = SLFMMOKernel(with_lengthscale.(SqExponentialKernel(), θ.ℓ.^2), θ.σ)
+
+customKernel(θ) = CustomMOKernel(with_lengthscale.(SqExponentialKernel(), fullyConnectedCovMat(θ.ℓ)),
+                                 fullyConnectedCovMat(θ.σ))
 
 """
 $(TYPEDSIGNATURES)
@@ -132,6 +136,18 @@ function initHyperparams(X, Y_vals, lb, ub, ::typeof(slfmKernel); kwargs...)
     # ℓ = (length(X)==1 ? a : a/length(X) + mean(std(first.(X)))*(1-1/length(X))) * ones(T)
     σ = 0.5/sqrt(2) * ones(T,T)
     ℓ = mean(ub .- lb) * ones(T)
+    return (; σ, ℓ, kwargs...)
+end
+
+function initHyperparams(X, Y_vals, lb, ub, ::typeof(customKernel); kwargs...)
+    T = maximum(last, X) # number of outputs
+    n = fullyConnectedCovNum(T)
+    # NOTE may change to all just 0.5
+    # σ = (length(Y_vals)>1 ? std(Y_vals) : 0.5)/sqrt(2) * ones(n)
+    # a = mean(ub .- lb)
+    # ℓ = length(X)==1 ? a : a/length(X) + mean(std(first.(X)))*(1-1/length(X))
+    σ = 0.5/sqrt(2) * ones(n)
+    ℓ = mean(ub .- lb) * ones(n)
     return (; σ, ℓ, kwargs...)
 end
 

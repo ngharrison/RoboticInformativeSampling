@@ -1,4 +1,4 @@
-using AbstractGPs: Kernel, MOKernel, MOInput, LatentFactorMOKernel
+using AbstractGPs: Kernel, MOKernel, MOInput
 
 @doc raw"""
     SLFMMOKernel(g::AbstractVector{<:Kernel}, A::AbstractMatrix)
@@ -18,7 +18,7 @@ struct SLFMMOKernel{Tg,TA<:AbstractMatrix} <: MOKernel
     g::Tg
     A::TA
     function SLFMMOKernel(g, A::AbstractMatrix)
-        all(gi isa Kernel for gi in g) || error("`g` should be an collection of kernels")
+        all(gi isa Kernel for gi in g) || error("`g` should be a collection of kernels")
         length(g) == size(A, 2) ||
             error("Size of `A` not compatible with the given array of kernels `g`")
         return new{typeof(g),typeof(A)}(g, A)
