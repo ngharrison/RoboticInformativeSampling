@@ -55,6 +55,9 @@ If you get: =Error: Unable to load the 'rospy' python package!=
 2. Run =]build PyCall=
 3. Restart the julia REPL
 
+
+This could also happen while running the =setup.jl= script. Make sure
+
 *** Code reloading
 When developing the code, you'll want to install Revise.jl in order to reload code you've changed while using an open REPL. Follow these steps and you won't have to worry about it again.
 
@@ -67,7 +70,7 @@ When developing the code, you'll want to install Revise.jl in order to reload co
 You can read a bit more about this in the docs.
 
 * Using as a ROS Package
-The project includes code to communicate with other nodes in the Robot Operating System (ROS). These features will work just by running the code as normal from the command line or within the Julia REPL.
+The project includes code to communicate with other nodes in the Robot Operating System (ROS). This code is designed to work with ROS1 and has been tested on Melodic and Noetic. These features will work just by running the code as normal from the command line or within the Julia REPL.
 
 In addition, this project can be used as a ROS package itself by simply putting it inside your workspace source directory (e.g. =catkin_ws/src=). It works similar to using a ROS python package because it uses rospy behind the scenes. If you want to run, for example, =ros.jl=:
 

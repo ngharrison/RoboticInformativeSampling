@@ -9,7 +9,11 @@ Pkg.activate(Base.source_dir() * "/core")
 Pkg.instantiate()
 
 println("Building PyCall")
-ENV["PYTHON"] = "/usr/bin/python";
+ros_version = readchomp(`rosversion -d`)
+println("ROS version is ", ros_version)
+python_exe = "/usr/bin/python" * (ros_version == "noetic" ? "3" : "")
+println("Python executable is ", python_exe)
+ENV["PYTHON"] = python_exe
 Pkg.build("PyCall")
 
 println("Instantiating package utils")
