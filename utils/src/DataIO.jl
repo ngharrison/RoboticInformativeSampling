@@ -58,8 +58,8 @@ matrix with its indexing left-right and bottom-up.
 using DelimitedFiles: readdlm
 
 image = readdlm(file_name, ',')
-lb = [0.0, 0.0]; ub = [1.0, 1.0]
-map = imgToMap(image, lb, ub)
+bounds = (lower = [0.0, 0.0], upper = [1.0, 1.0])
+map = imgToMap(image, bounds)
 map = imgToMap(image) # or auto bounds
 ```
 """

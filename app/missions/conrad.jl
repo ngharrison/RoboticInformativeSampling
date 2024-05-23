@@ -21,15 +21,17 @@ function conradMission()
     # need to drop the last point
     data = readdlm.(maps_dir .* file_names, ',')
 
-    lb = minimum(minimum(d, dims=1)[1:2] for d in data)
-    ub = maximum(maximum(d, dims=1)[1:2] for d in data)
+    bounds = (
+        lower = minimum(minimum(d, dims=1)[1:2] for d in data),
+        upper = maximum(maximum(d, dims=1)[1:2] for d in data)
+    )
 
     # scatter(data[1][:,1], data[1][:,2], marker_z=data[1][:,3])
     # scatter(data[2][:,1], data[2][:,2], marker_z=data[2][:,3])
 
     n = floor(Int, sqrt(maximum(size.(data, 1))))
 
-    maps = [Map(zeros(n, n), lb, ub) for _ in 1:2]
+    maps = [Map(zeros(n, n), bounds) for _ in 1:2]
 
     for (x,y,z) in eachrow(data[1])
         maps[1][pointToCell([x,y], maps[1])] = z
@@ -47,7 +49,7 @@ function conradMission()
     start_locs = [[0.8, 0.6]] # starting locations
     num_samples = 20
 
-    occupancy = Map(zeros(Bool, n, n), lb, ub)
+    occupancy = Map(zeros(Bool, n, n), bounds)
 
     mission = Mission(;
         occupancy,

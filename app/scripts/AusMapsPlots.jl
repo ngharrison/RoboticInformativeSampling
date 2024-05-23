@@ -7,7 +7,7 @@ using Plots
 
 using InformativeSampling
 
-using .Maps: Map, bounds
+using .Maps: Map, getBounds
 using .Samples: Sample, MapsSampler, selectSampleLocation
 
 using InformativeSamplingUtils
@@ -30,27 +30,27 @@ images = readdlm.(maps_dir .* file_names, ',')
 
 ims_sm = spatialAve.(images, 0)
 
-lb = [0.0, 0.0]; ub = [1.0, 1.0]
+bounds = (lower = [0.0, 0.0], upper = [1.0, 1.0])
 
-map0 = imgToMap(normalize(ims_sm[1]), lb, ub)
+map0 = imgToMap(normalize(ims_sm[1]), bounds)
 
 # image = readdlm(maps_dir * "vege_ave_nsw.csv", ',')
-# mapx = imgToMap(image, lb, ub)
+# mapx = imgToMap(image, bounds)
 # heatmap(mapx')
 # savefig("temp.png")
 
 # scatter!([3211, 3211, 3310, 3310], 1800 .- [1141, 1240, 1141, 1240])
 sampler = MapsSampler(map0)
 
-prior_maps = [imgToMap(normalize(img), lb, ub) for img in ims_sm[2:end]]
+prior_maps = [imgToMap(normalize(img), bounds) for img in ims_sm[2:end]]
 
 occupancy = imgToMap(Matrix{Bool}(reduce(.|, [isnan.(i)
-                                              for i in ims_sm])), lb, ub)
+                                              for i in ims_sm])), bounds)
 
 # sample sparsely from the prior maps
 # currently all data have the same sample numbers and locations
 n = (5,5) # number of samples in each dimension
-axs_sp = range.(lb, ub, n)
+axs_sp = range.(bounds..., n)
 points_sp = vec(collect.(Iterators.product(axs_sp...)))
 prior_samples = [Sample((x, i+length(sampler)), d(x))
                  for (i, d) in enumerate(prior_maps[priors])
@@ -60,7 +60,7 @@ prior_samples = [Sample((x, i+length(sampler)), d(x))
 points_sp = Vector{Float64}[]
 sampleCost = x -> occupancy(x) ? Inf : -minimum(norm(loc - x) for loc in points_sp; init=Inf)
 for _ in 1:25
-    x = selectSampleLocation(sampleCost, bounds(occupancy)...)
+    x = selectSampleLocation(sampleCost, getBounds(occupancy)...)
     push!(points_sp, x)
 end
 prior_samples = [Sample((x, i+length(sampler)), d(x))
@@ -81,7 +81,7 @@ prior_samples = [Sample((x, i+length(sampler)), d(x))
 
 
 #* plot maps
-axs = range.(lb, ub, size(occupancy))
+axs = range.(bounds..., size(occupancy))
 p1 = heatmap(axs..., map0', title="Vegetation (QOI)", ticks=false, framestyle=:none)
 p2 = heatmap(axs..., prior_maps[1]', title="Elevation", ticks=false)
 scatter!(first.(points_sp), last.(points_sp);

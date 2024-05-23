@@ -26,9 +26,9 @@ function rosMission(; num_samples=4)
 
     sampler = ROSConnection(data_topics, done_topic, pub_topic)
 
-    lb = [1.0, 1.0]; ub = [9.0, 9.0]
+    bounds = (lower = [1.0, 1.0], upper = [9.0, 9.0])
 
-    occupancy = Map(zeros(Bool, 100, 100), lb, ub)
+    occupancy = Map(zeros(Bool, 100, 100), bounds)
 
     sampleCostType = EIGFSampleCost
 

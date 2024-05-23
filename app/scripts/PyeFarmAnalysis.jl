@@ -35,20 +35,20 @@ data1 = load(file_name1)
 data2 = load(file_name2)
 samples = [data1["samples"]; data2["samples"]]
 mission = data1["mission"]
-lb, ub = bounds(mission.occupancy)
+bounds = getBounds(mission.occupancy)
 beliefs = map(1:length(samples)) do i
-    BeliefModel(samples[1:i], lb, ub)
+    BeliefModel(samples[1:i], bounds)
 end
 save(mission, samples, beliefs; sub_dir_name="pye_farm_trial_gen")
 
 #* elevation maps
 
 elev_img = load(maps_dir * "dem_50x50.tif")
-elevMap = imgToMap(gray.(elev_img), lb, ub)
+elevMap = imgToMap(gray.(elev_img), bounds)
 vis(elevMap)
 
 elev_img = load(maps_dir * "dem_15x15.tif")
-elevMap = imgToMap(gray.(elev_img), lb, ub)
+elevMap = imgToMap(gray.(elev_img), bounds)
 vis(elevMap)
 
 #* load mission data
@@ -58,7 +58,7 @@ data = load(file_name)
 mission = data["mission"]
 samples = data["samples"]
 beliefs = data["beliefs"]
-lb, ub = bounds(mission.occupancy)
+bounds = getBounds(mission.occupancy)
 
 global_logger(ConsoleLogger(stderr, Debug))
 
@@ -81,8 +81,8 @@ z = getfield.(all_samples, :y)
 display(scatter3d(x, y, z, legend=false))
 
 mission = load(readdir(output_dir * "pye_farm_trial", join=true)[end-1])["mission"]
-lb, ub = bounds(mission.occupancy)
-beliefModel = BeliefModel(all_samples, lb, ub)
+bounds = getBounds(mission.occupancy)
+beliefModel = BeliefModel(all_samples, bounds)
 
 vis(beliefModel, [], mission.occupancy)
 
@@ -95,21 +95,21 @@ data = load(file_name)
 mission = data["mission"]
 samples = data["samples"]
 beliefs = data["beliefs"]
-lb, ub = bounds(mission.occupancy)
+bounds = getBounds(mission.occupancy)
 
 elev_img = load(maps_dir * "dem_15x15.tif")
-elevMap = imgToMap(gray.(elev_img), lb, ub)
+elevMap = imgToMap(gray.(elev_img), bounds)
 prior_maps = [elevMap]
 
 n = (7,7)
-axs_sp = range.(lb, ub, n)
+axs_sp = range.(bounds..., n)
 points_sp = vec(collect.(Iterators.product(axs_sp...)))
 prior_samples = [Sample{Float64}((x, i+length(mission.sampler)), d(x))
                  for (i, d) in enumerate(prior_maps)
                      for x in points_sp if !isnan(d(x))]
 
 beliefs = map(1:length(samples)) do i
-    BeliefModel([prior_samples; samples[1:i]], lb, ub)
+    BeliefModel([prior_samples; samples[1:i]], bounds)
 end
 
 vis(elevMap; points=points_sp)
@@ -128,7 +128,7 @@ for i in 1:30
     sleep(1.5)
 end
 
-prior_belief = BeliefModel(prior_samples, lb, ub)
+prior_belief = BeliefModel(prior_samples, bounds)
 vis(mission, prior_samples, prior_belief, nothing; quantity=2)
 
 
@@ -156,15 +156,15 @@ data = load(output_dir * "pye_farm_trial_named/" * name * output_ext)
 mission = data["mission"]
 samples = data["samples"]
 beliefs = data["beliefs"]
-lb, ub = bounds(mission.occupancy)
+bounds = getBounds(mission.occupancy)
 
 beliefs[end]
 
-beliefModel = BeliefModel(all_samples, lb, ub)
+beliefModel = BeliefModel(all_samples, bounds)
 
 vis(beliefs[end], [], mission.occupancy)
 
-beliefModel = BeliefModel([prior_samples; samples], lb, ub)
+beliefModel = BeliefModel([prior_samples; samples], bounds)
 
 outputCorMat(beliefModel)
 
@@ -175,12 +175,12 @@ gt_data = load(output_dir * "pye_farm_trial_named/" * gt_name * output_ext)
 gt_belief = gt_data["beliefs"][end]
 mission = gt_data["mission"]
 occupancy = mission.occupancy
-lb, ub = bounds(occupancy)
+bounds = getBounds(occupancy)
 
 axes, points = generateAxes(occupancy)
 dims = Tuple(length.(axes))
 μ, σ = gt_belief(tuple.(vec(points), 1))
-gt_pred_map = Map(reshape(μ, dims), lb, ub)
+gt_pred_map = Map(reshape(μ, dims), bounds)
 
 name = "30samples_50x50_priors"
 file_name = output_dir * "pye_farm_trial_named/" * name * output_ext
@@ -189,7 +189,7 @@ beliefs = data["beliefs"]
 
 for i in 1:30
     μ, σ = beliefs[i](tuple.(vec(points), 1))
-    pred_map = Map(reshape(μ, dims), lb, ub)
+    pred_map = Map(reshape(μ, dims), bounds)
     err_map = abs.(pred_map .- gt_pred_map)
     vis(gt_pred_map, pred_map; titles=["gt", "belief"])
     println(mean(err_map))
@@ -219,11 +219,11 @@ mission = data["mission"]
 samples = data["samples"]
 beliefs = data["beliefs"]
 occupancy = mission.occupancy
-lb, ub = bounds(occupancy)
+bounds = getBounds(occupancy)
 axes, points = generateAxes(occupancy)
 dims = Tuple(length.(axes))
 μ, σ = beliefs[15](tuple.(vec(points), 1))
-pred_map = Map(reshape(μ, dims), lb, ub)
+pred_map = Map(reshape(μ, dims), bounds)
 
 fig, ax, hm = heatmap(pred_map')
 Colorbar(fig[1, 2], hm, width=20)
@@ -237,16 +237,16 @@ ax = GLMakie.Axis(f[1,1])
 heatmap.([pred_map, pred_map])
 
 #* combined satellite, elevation, and learned height maps
-lb, ub = [0.0, 0.0], [50.0, 50.0]
+bounds = [0.0, 0.0], [50.0, 50.0]
 elev_img = Float64.(gray.(load(maps_dir * "dem_50x50.tif")))
-elevMap = imgToMap((elev_img.-minimum(elev_img)).*100, lb, ub)
+elevMap = imgToMap((elev_img.-minimum(elev_img)).*100, bounds)
 
 sat_img = load(maps_dir * "satellite_50x50.tif")
 
 # sample sparsely from the prior maps
 # currently all data have the same sample numbers and locations
 n = (7,7) # number of samples in each dimension
-axs_sp = range.(lb, ub, n)
+axs_sp = range.(bounds..., n)
 points_sp = vec(collect.(Iterators.product(axs_sp...)))
 
 x0, y0, w, h = 10 .* (20, 50-15, 15, 15)
@@ -257,10 +257,10 @@ file_name = output_dir * "pye_farm_trial_named/" * name * output_ext
 data = load(file_name)
 mission = data["mission"]
 samples = data["samples"]
-bm = BeliefModel([mission.prior_samples; samples], lb, ub)
+bm = BeliefModel([mission.prior_samples; samples], bounds)
 
 occupancy = mission.occupancy
-lb, ub = bounds(occupancy)
+bounds = getBounds(occupancy)
 axs, points = generateAxes(occupancy)
 dims = Tuple(length.(axes))
 μ, σ = bm(tuple.(vec(points), 1))
@@ -274,7 +274,7 @@ p1 = plot(sat_img;
 #       legend=false,
 #       linewidth=3
 #       )
-p2 = heatmap(range.(lb, ub, size(elevMap))..., elevMap;
+p2 = heatmap(range.(bounds..., size(elevMap))..., elevMap;
              title="Elevation Change (cm)",
              aspect_ratio=:equal,
              # left_margin=-5mm,
@@ -303,17 +303,17 @@ display(p)
 #* test correlations
 axs, points = generateAxes(elevMap)
 ss = vec(Sample.(tuple.(points, 1), elevMap))
-bm = BeliefModel(ss, lb, ub)
-vis(bm, [], Map(zeros(Bool,size(elev_img)), lb, ub))
+bm = BeliefModel(ss, bounds)
+vis(bm, [], Map(zeros(Bool,size(elev_img)), bounds))
 
 name = "pye_farm_trial_named/100samples_50x50_grid"
 file_name = output_dir * "$(name)" * output_ext
 data = load(file_name)
 samples = data["samples"]
 ss = vec(Sample.(tuple.(points, 2), elevMap))
-bm = BeliefModel([ss; samples], lb, ub)
+bm = BeliefModel([ss; samples], bounds)
 outputCorMat(bm)
-vis(bm, [], Map(zeros(Bool,size(elev_img)), lb, ub); quantity=1)
+vis(bm, [], Map(zeros(Bool,size(elev_img)), bounds); quantity=1)
 
 # still not getting consistent or expected results
 
@@ -340,7 +340,7 @@ for name in names15
     end
     mission = data["mission"]
     beliefs = map(1:mission.num_samples) do i
-        BeliefModel([mission.prior_samples; samples[1:i]], lb, ub)
+        BeliefModel([mission.prior_samples; samples[1:i]], bounds)
     end
     occ = mission.occupancy
     axs, points = generateAxes(occ)
@@ -366,7 +366,7 @@ for name in names50
     end
     mission = data["mission"]
     beliefs = map(1:mission.num_samples) do i
-        BeliefModel([mission.prior_samples; samples[1:i]], lb, ub)
+        BeliefModel([mission.prior_samples; samples[1:i]], bounds)
     end
     occ = mission.occupancy
     axs, points = generateAxes(occ)
@@ -435,7 +435,7 @@ data = load(file_name)
 mission = data["mission"]
 samples = data["samples"]
 cors15 = map(1:mission.num_samples) do i
-    bm = BeliefModel([mission.prior_samples; samples[1:i]], lb, ub)
+    bm = BeliefModel([mission.prior_samples; samples[1:i]], bounds)
     outputCorMat(bm)[2,1]
 end
 
@@ -445,7 +445,7 @@ data = load(file_name)
 mission = data["mission"]
 samples = data["samples"]
 cors50 = map(1:mission.num_samples) do i
-    bm = BeliefModel([mission.prior_samples; samples[1:i]], lb, ub)
+    bm = BeliefModel([mission.prior_samples; samples[1:i]], bounds)
     outputCorMat(bm)[2,1]
 end
 
@@ -454,7 +454,7 @@ file_name = output_dir * "pye_farm_trial_named/" * name * output_ext
 data = load(file_name)
 mission_grid = data["mission"]
 samples = data["samples"]
-bm = BeliefModel([mission.prior_samples; samples], lb, ub)
+bm = BeliefModel([mission.prior_samples; samples], bounds)
 comp_cor = outputCorMat(bm)[2,1]
 
 p = plot(
@@ -510,7 +510,7 @@ data = load(output_dir * "pye_farm_trial_named/" * name * output_ext)
 mission = data["mission"]
 samples = data["samples"]
 beliefs = data["beliefs"]
-lb, ub = bounds(mission.occupancy)
+bounds = getBounds(mission.occupancy)
 
 samples[1:2]
 beliefs[2]
@@ -527,12 +527,12 @@ name = names[5]
 data = load(output_dir * "pye_farm_trial_named/" * name * output_ext)
 mission = data["mission"]
 samples = data["samples"]
-lb, ub = bounds(mission.occupancy)
+bounds = getBounds(mission.occupancy)
 
 global_logger(ConsoleLogger(stderr, Debug))
 
 new_beliefs = map(1:mission.num_samples) do i
-    bm = BeliefModel([mission.prior_samples; samples[1:i]], lb, ub; σn=1)
+    bm = BeliefModel([mission.prior_samples; samples[1:i]], bounds; σn=1)
     vis(bm, samples[1:i], mission.occupancy)
     @debug bm.θ.σ
     @debug outputCorMat(bm)
@@ -540,7 +540,7 @@ new_beliefs = map(1:mission.num_samples) do i
     bm
 end
 
-beliefModel = BeliefModel([mission.prior_samples[[1,end]]; samples[1:2]], lb, ub)
+beliefModel = BeliefModel([mission.prior_samples[[1,end]]; samples[1:2]], bounds)
 
 vis(beliefModel, samples[1:2], mission.occupancy)
 
@@ -569,8 +569,8 @@ function outputCorMatVec(a)
     return @. cov_mat / √(vars * vars') # broadcast shorthand
 end
 
-mission.occupancy.lb
-mission.occupancy.ub
+mission.occupancy.bounds.lower
+mission.occupancy.bounds.upper
 
 X = getfield.([mission.prior_samples[[1,end]]; samples[1:2]], :x)
 Y_vals = getfield.([mission.prior_samples[[1,end]]; samples[1:2]], :y)
@@ -604,15 +604,15 @@ end |> display
 
 #* now look at straight correlation between points
 
-lb, ub = bounds(mission.occupancy)
+bounds = getBounds(mission.occupancy)
 elev_img = Float64.(gray.(load(maps_dir * "dem_50x50.tif")))
-elevMap = imgToMap(elev_img, lb, ub)
+elevMap = imgToMap(elev_img, bounds)
 
 elev_vals = [elevMap(s.x[1]) for s in samples]
 
 cor(getfield.(samples, :y), elev_vals)
 
-bm = BeliefModel([mission.prior_samples; samples], lb, ub)
+bm = BeliefModel([mission.prior_samples; samples], bounds)
 vis(bm, samples, mission.occupancy)
 bm
 outputCorMat(bm)
@@ -627,10 +627,10 @@ cor(belief_vals, getfield.(mission.prior_samples, :y))
 
 elev_samples = Sample.(tuple.(first.(getfield.(samples, :x)), 2), elev_vals)
 
-bm1 = BeliefModel([elev_samples; samples], lb, ub)
+bm1 = BeliefModel([elev_samples; samples], bounds)
 outputCorMat(bm1)
 
-bm2 = BeliefModel([mission.prior_samples; samples], lb, ub)
+bm2 = BeliefModel([mission.prior_samples; samples], bounds)
 outputCorMat(bm2)
 
 # and with only two samples each
@@ -641,10 +641,10 @@ plot(
     layout=(2,1)
 ) |> display
 
-bm1 = BeliefModel([elev_samples[1:2]; samples[1:2]], lb, ub)
+bm1 = BeliefModel([elev_samples[1:2]; samples[1:2]], bounds)
 outputCorMat(bm1)
 
-bm2 = BeliefModel([mission.prior_samples[[1,end]]; samples[1:2]], lb, ub)
+bm2 = BeliefModel([mission.prior_samples[[1,end]]; samples[1:2]], bounds)
 outputCorMat(bm2)
 
 plot(
@@ -662,14 +662,14 @@ name = names[4]
 data = load(output_dir * "pye_farm_trial_named/" * name * output_ext)
 mission = data["mission"]
 samples = data["samples"]
-lb, ub = bounds(mission.occupancy)
-bm = BeliefModel([mission.prior_samples; samples], lb, ub)
+bounds = getBounds(mission.occupancy)
+bm = BeliefModel([mission.prior_samples; samples], bounds)
 vis(bm, samples, mission.occupancy)
 axs, points = generateAxes(mission.occupancy)
 pred, _ = bm(tuple.(vec(points), 1))
 mean(s.y for s in samples), mean(pred)
 
-# saveBeliefMapToPng(bm, Map(zeros(200, 200), lb, ub), "food_for_munch")
+# saveBeliefMapToPng(bm, Map(zeros(200, 200), bounds), "food_for_munch")
 
 outputCorMat(bm)
 
@@ -677,7 +677,7 @@ outputCorMat(bm)
 new_beliefs = map(1:mission.num_samples) do i
     @info "sample" i
     ss = [mission.prior_samples; samples[1:i]]
-    # bm = BeliefModel(ss, lb, ub)
+    # bm = BeliefModel(ss, bounds)
     bm = data["beliefs"][i]
     vis(bm, samples[1:i], mission.occupancy)
     # X = getfield.(ss, :x)
@@ -735,10 +735,10 @@ name = names[6]
 data = load(output_dir * "pye_farm_trial_named/" * name * output_ext)
 mission = data["mission"]
 samples = data["samples"]
-lb, ub = bounds(mission.occupancy)
+bounds = getBounds(mission.occupancy)
 
 new_beliefs = map(1:mission.num_samples) do i
-    BeliefModel([mission.prior_samples; samples[1:i]], lb, ub)
+    BeliefModel([mission.prior_samples; samples[1:i]], bounds)
 end
 
 [abs(bm.θ.ℓ) for bm in new_beliefs]
@@ -751,11 +751,11 @@ name = names[5]
 data = load(output_dir * "pye_farm_trial_named/" * name * output_ext)
 mission = data["mission"]
 samples = data["samples"]
-lb, ub = bounds(mission.occupancy)
+bounds = getBounds(mission.occupancy)
 
 vals = map(1:mission.num_samples) do i
     ss = [mission.prior_samples; samples[1:i]]
-    # bm = BeliefModel(ss, lb, ub)
+    # bm = BeliefModel(ss, bounds)
     bm = data["beliefs"][i]
     axs, points = generateAxes(mission.occupancy)
     _, err = bm(tuple.(vec(points), 1))
@@ -777,8 +777,8 @@ hs = map(1:6) do i
     data = load(output_dir * "pye_farm_trial_named/" * name * output_ext)
     mission = data["mission"]
     samples = data["samples"]
-    lb, ub = bounds(mission.occupancy)
-    bm = BeliefModel([mission.prior_samples; samples], lb, ub)
+    bounds = getBounds(mission.occupancy)
+    bm = BeliefModel([mission.prior_samples; samples], bounds)
 
     axs, points = generateAxes(mission.occupancy)
     pred, err = bm(tuple.(vec(points), 1))

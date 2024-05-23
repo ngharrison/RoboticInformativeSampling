@@ -12,27 +12,27 @@ names = ["30samples_15x15_1", "30samples_15x15_2", "30samples_15x15_priors",
          "30samples_50x50", "30samples_50x50_priors", "100samples_50x50_grid"]
 
 #* combined satellite, elevation, and learned height maps
-lb, ub = [0.0, 0.0], [50.0, 50.0]
+bounds = [0.0, 0.0], [50.0, 50.0]
 elev_img = Float64.(gray.(load(maps_dir * "dem_50x50.tif")))
-elevMap = imgToMap((elev_img.-minimum(elev_img)).*100, lb, ub)
+elevMap = imgToMap((elev_img.-minimum(elev_img)).*100, bounds)
 
 sat_img = load(maps_dir * "satellite_50x50.tif")
-satMap = imgToMap(sat_img, lb, ub)
+satMap = imgToMap(sat_img, bounds)
 
 name = names[6]
 file_name = output_dir * "pye_farm_trial_named/" * name * output_ext
 data = load(file_name)
 mission = data["mission"]
 samples = data["samples"]
-bm = BeliefModel([mission.prior_samples; samples], lb, ub)
+bm = BeliefModel([mission.prior_samples; samples], bounds)
 
 occupancy = mission.occupancy
-lb, ub = bounds(occupancy)
+bounds = getBounds(occupancy)
 axs, points = generateAxes(occupancy)
 dims = Tuple(length.(axs))
 μ, σ = bm(tuple.(vec(points), 1))
 pred_map = reshape(μ, dims)
-xp = [(s.x[1] .- lb) .* size(occupancy) ./ (ub .- lb) for s in samples]
+xp = [(s.x[1] .- bounds.lower) .* size(occupancy) ./ (bounds.upper .- bounds.lower) for s in samples]
 x1 = getindex.(xp, 1)
 x2 = getindex.(xp, 2)
 

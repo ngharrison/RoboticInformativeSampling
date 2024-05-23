@@ -3,7 +3,7 @@ module Missions
 using Random: seed!
 using DocStringExtensions: TYPEDSIGNATURES, TYPEDFIELDS
 
-using ..Maps: randomPoint, bounds
+using ..Maps: randomPoint, getBounds
 using ..Samples: Sample, selectSampleLocation, takeSamples
 using ..BeliefModels: BeliefModel, outputCorMat
 using ..Kernels: multiKernel
@@ -87,7 +87,7 @@ function (M::Mission)(func=Returns(nothing);
     seed!(seed_val)
     new_loc = !isempty(M.start_locs) ? M.start_locs[1] : randomPoint(M.occupancy)
 
-    lb, ub = bounds(M.occupancy)
+    bounds = getBounds(M.occupancy)
     quantities = eachindex(M.sampler) # all current available quantities
 
     println("Mission started")
@@ -107,7 +107,7 @@ function (M::Mission)(func=Returns(nothing);
         println("Sample values: $(getfield.(new_samples, :y))")
 
         # new belief
-        beliefModel = BeliefModel([M.prior_samples; samples], lb, ub; M.noise, M.kernel)
+        beliefModel = BeliefModel([M.prior_samples; samples], bounds; M.noise, M.kernel)
         push!(beliefs, beliefModel)
 
         # new sample location
@@ -118,7 +118,7 @@ function (M::Mission)(func=Returns(nothing);
                 new_loc = M.start_locs[i+1]
             else
                 sampleCost = M.sampleCostType(M, samples, beliefModel, quantities)
-                new_loc = selectSampleLocation(sampleCost, lb, ub)
+                new_loc = selectSampleLocation(sampleCost, bounds)
 
                 @debug "cost function values: $(Tuple(values(sampleCost, new_loc)))"
                 @debug "cost function weights: $(Tuple(M.weights))"
@@ -177,7 +177,7 @@ end
 
 function replay(func, M::Mission, full_samples; sleep_time=0.0)
     beliefs = map(1:length(full_samples)) do i
-        BeliefModel([M.prior_samples; full_samples[1:i]], bounds(M.occupancy)...)
+        BeliefModel([M.prior_samples; full_samples[1:i]], getBounds(M.occupancy)...)
     end
     replay(func, M, full_samples, beliefs; sleep_time)
 end

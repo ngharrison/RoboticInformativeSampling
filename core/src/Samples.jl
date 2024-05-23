@@ -111,18 +111,17 @@ The optimization of choosing a best single sample location.
 
 Inputs:
 - `sampleCost`: a function from sample location to cost (x->cost(x))
-- `lb`: map lower bounds
-- `ub`: map upper bounds
+- `bounds`: map lower and upper bounds
 
 Returns the sample location, a vector
 """
-function selectSampleLocation(sampleCost, lb, ub)
+function selectSampleLocation(sampleCost, bounds)
     # in future could optimize for measured quantity as well
-    loc0 = @. (ub - lb)/2 + lb
+    loc0 = @. (bounds.upper - bounds.lower)/2 + bounds.lower
     opt = optimize(
         sampleCost,
         loc0,
-        ParticleSwarm(; lower=lb, upper=ub, n_particles=40)
+        ParticleSwarm(; bounds.lower, bounds.upper, n_particles=40)
     )
     @debug "sample optimizer:" opt
     return opt.minimizer

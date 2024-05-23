@@ -82,18 +82,18 @@ value for all samples or a vector of values, one for each sample.
 # Examples
 ```julia
 # create a BeliefModelSplit
-beliefModel = BeliefModel(samples, M.prior_samples, lb, ub)
+beliefModel = BeliefModel(samples, M.prior_samples, bounds)
 
 # create a BeliefModelSimple
-beliefModel = BeliefModel([M.prior_samples; samples], lb, ub)
+beliefModel = BeliefModel([M.prior_samples; samples], bounds)
 ```
 """
-function BeliefModel(samples, prior_samples, lb, ub; noise=(0.0, :fixed), kernel=multiKernel)
+function BeliefModel(samples, prior_samples, bounds; noise=(0.0, :fixed), kernel=multiKernel)
     # create a simple belief model for the current samples
-    current = BeliefModel(samples, lb, ub; noise, kernel)
+    current = BeliefModel(samples, bounds; noise, kernel)
     isempty(prior_samples) && return current
     # create a simple belief model for the prior current samples combined
-    combined = BeliefModel([prior_samples; samples], lb, ub; noise, kernel)
+    combined = BeliefModel([prior_samples; samples], bounds; noise, kernel)
     # split is a combination of the two
     return BeliefModelSplit(current, combined)
 end
@@ -107,18 +107,18 @@ conditioned on the samples given.
 A noise standard deviation can optionally be passed in either as a single scalar
 value for all samples or a vector of values, one for each sample.
 """
-function BeliefModel(samples, lb, ub; noise=(0.0, :fixed), kernel=multiKernel)
+function BeliefModel(samples, bounds; noise=(0.0, :fixed), kernel=multiKernel)
     # set up training data
     X = getfield.(samples, :x)
     Y = getfield.(samples, :y)
 
     if Y isa AbstractArray{<:NTuple{2, <:Real}}
         Y_vals, Y_errs = first.(Y), last.(Y)
-        θ0 = initHyperparams(X, Y_vals, lb, ub, kernel; σn=fixed(Y_errs)) # no noise to learn
+        θ0 = initHyperparams(X, Y_vals, bounds, kernel; σn=fixed(Y_errs)) # no noise to learn
     else
         Y_vals = Y
         σn = (noise[2] == :learned ? noise[1] : fixed(noise[1]))
-        θ0 = initHyperparams(X, Y_vals, lb, ub, kernel; σn) # no noise to learn
+        θ0 = initHyperparams(X, Y_vals, bounds, kernel; σn) # no noise to learn
     end
 
     # optimize hyperparameters (train)

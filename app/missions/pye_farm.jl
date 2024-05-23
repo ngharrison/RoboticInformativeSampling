@@ -30,39 +30,39 @@ function pyeFarmMission(; num_samples=4)
     sampler = ROSConnection(data_topics, done_topic, pub_topic)
 
     # # full bounds
-    # lb = [284711.12, 6241319.42]
-    # ub = [284802.91, 6241403.93]
-    # lb = [284698., 6241343.]
-    # ub = [284805., 6241405.]
+    # bounds = (lower=[284711.12, 6241319.42],
+    #     upper=[284802.91, 6241403.93])
+    # bounds = (lower=[284698.0, 6241343.0],
+    #     upper=[284805.0, 6241405.0])
 
     # smaller bounds
-    # lb = [284729., 6241334.]
-    # ub = [284742., 6241348.]
-    # lb = [284724., 6241344.]
-    # ub = lb .+ 10
+    # bounds = (lower=[284729.0, 6241334.0],
+    #     upper=[284742.0, 6241348.0])
+    # bounds = (lower=[284724.0, 6241344.0],
+    #     upper=bounds.lower .+ 10)
 
     # full space (alt2)
-    lb = [284725., 6241345.]
-    ub = [284775., 6241395.]
+    bounds = (lower=[284725.0, 6241345.0],
+        upper=[284775.0, 6241395.0])
 
     elev_img = load(maps_dir * "iros_alt2_dem.tif")
-    elevMap = imgToMap(gray.(elev_img), lb, ub)
+    elevMap = imgToMap(gray.(elev_img), bounds)
 
     # # small patch (alt3)
-    # lb = [284745., 6241345.]
-    # ub = [284760., 6241360.]
+    # bounds = (lower=[284745.0, 6241345.0],
+    #     upper=[284760.0, 6241360.0])
     #
     # elev_img = load(maps_dir * "iros_alt3_dem.tif")
-    # elevMap = imgToMap(gray.(elev_img), lb, ub)
+    # elevMap = imgToMap(gray.(elev_img), bounds)
 
     prior_maps = [elevMap]
 
-    occupancy = Map(zeros(Bool, 100, 100), lb, ub)
+    occupancy = Map(zeros(Bool, 100, 100), bounds)
 
     # sample sparsely from the prior maps
     # currently all data have the same sample numbers and locations
     n = (7,7) # number of samples in each dimension
-    axs_sp = range.(lb, ub, n)
+    axs_sp = range.(bounds..., n)
     points_sp = vec(collect.(Iterators.product(axs_sp...)))
     prior_samples = [Sample{Float64}((x, i+length(sampler)), d(x))
                      for (i, d) in enumerate(prior_maps)
@@ -73,7 +73,7 @@ function pyeFarmMission(; num_samples=4)
 
     ## initialize alg values
     weights = (; μ=1, σ=5e1, τ=1, d=1) # mean, std, dist, prox
-    start_locs = [lb .+ 2]
+    start_locs = [bounds.lower .+ 2]
 
     mission = Mission(;
         occupancy,

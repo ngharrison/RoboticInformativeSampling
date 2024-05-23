@@ -27,7 +27,7 @@ name = names[2]
 data = load(output_dir * "pye_farm_trial_named/" * name * output_ext)
 mission = data["mission"]
 samples = data["samples"]
-lb, ub = bounds(mission.occupancy)
+bounds = getBounds(mission.occupancy)
 
 i = 2
 
@@ -37,7 +37,7 @@ for i in [1,3,4,5,6]
     name = names[i]
     data = load(output_dir * "pye_farm_trial_named/" * name * output_ext)
     mission = data["mission"]
-    lb, ub = bounds(mission.occupancy)
+    bounds = getBounds(mission.occupancy)
 
     axs, points = generateAxes(mission.occupancy)
     pred, _ = data["beliefs"][end](tuple.(vec(points), 1))
@@ -57,8 +57,8 @@ plts = map([1,3,4,5]) do i
     data = load(output_dir * "pye_farm_trial_named/" * name * output_ext)
     mission = data["mission"]
     samples = data["samples"]
-    lb, ub = bounds(mission.occupancy)
-    # bm = BeliefModel([mission.prior_samples; samples], lb, ub)
+    bounds = getBounds(mission.occupancy)
+    # bm = BeliefModel([mission.prior_samples; samples], bounds)
     bm = data["beliefs"][end]
 
     axs, points = generateAxes(mission.occupancy)
@@ -97,7 +97,7 @@ plot(plts[1], plts[3], plts[2], plts[4],
 
 savefig(output_dir * "iros_2024/full_results.png")
 
-bm = BeliefModel([mission.prior_samples; samples], lb, ub)
+bm = BeliefModel([mission.prior_samples; samples], bounds)
 
 vis(bm, samples, mission.occupancy)
 outputCorMat(bm)
@@ -108,8 +108,8 @@ name = names[6]
 data = load(output_dir * "pye_farm_trial_named/" * name * output_ext)
 mission = data["mission"]
 samples = data["samples"]
-lb, ub = bounds(mission.occupancy)
-# bm = BeliefModel([mission.prior_samples; samples], lb, ub)
+bounds = getBounds(mission.occupancy)
+# bm = BeliefModel([mission.prior_samples; samples], bounds)
 bm = data["beliefs"][end]
 
 axs, points = generateAxes(mission.occupancy)
@@ -149,15 +149,15 @@ name = names[2]
 data = load(output_dir * "pye_farm_trial_named/" * name * output_ext)
 mission = data["mission"]
 samples = data["samples"]
-lb, ub = bounds(mission.occupancy)
+bounds = getBounds(mission.occupancy)
 
 bm = data["beliefs"][end]
-axs = range.(lb, ub, size(mission.occupancy).+1)
+axs = range.(bounds..., size(mission.occupancy).+1)
 points = collect.(Iterators.product(axs...))
 pred, err = bm(tuple.(vec(points), 1))
 pred_map = reshape(pred, Tuple(length.(axs)))
-xp = (first.(getfield.(samples, :x)) .- Ref(lb)) .* Ref(ub .- lb)
-xp = [(s.x[1] .- lb) .* () ./ (ub .- lb) for s in samples]
+xp = (first.(getfield.(samples, :x)) .- Ref(bounds.lower)) .* Ref(bounds.upper .- bounds.lower)
+xp = [(s.x[1] .- bounds.lower) .* () ./ (bounds.upper .- bounds.lower) for s in samples]
 x1 = getindex.(xp, 1)
 x2 = getindex.(xp, 2)
 

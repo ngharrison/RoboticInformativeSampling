@@ -17,23 +17,23 @@ using .Visualization: vis
 function simMission(; seed_val=0, num_samples=30, num_peaks=3, priors=Bool[1,1,1])
     seed!(seed_val) # make random values deterministic
 
-    lb = [0.0, 0.0]; ub = [1.0, 1.0]
+    bounds = (lower = [0.0, 0.0], upper = [1.0, 1.0])
 
-    occupancy = Map(zeros(Bool, 100, 100), lb, ub)
+    occupancy = Map(zeros(Bool, 100, 100), bounds)
 
     ## initialize ground truth
 
     # simulated
     peaks = map(1:num_peaks) do _
-        μ = rand(2).*(ub-lb) .+ lb
-        Σ = 0.02*(rand()+0.5)*mean(ub-lb)^2*I
+        μ = rand(2).*(bounds.upper-bounds.lower) .+ bounds.lower
+        Σ = 0.02*(rand()+0.5)*mean(bounds.upper-bounds.lower)^2*I
         h = rand()
         Peak(μ, Σ, h)
     end
     ggt = GaussGroundTruth(peaks)
     _, points = generateAxes(occupancy)
     mat = ggt(points)
-    map0 = Map(mat./maximum(mat), lb, ub)
+    map0 = Map(mat./maximum(mat), bounds)
 
     ## Create prior prior_samples
 
@@ -41,15 +41,15 @@ function simMission(; seed_val=0, num_samples=30, num_peaks=3, priors=Bool[1,1,1
     prior_maps = []
 
     # multiplicative
-    m = Map(abs.(map0 .* randn()), lb, ub)
+    m = Map(abs.(map0 .* randn()), bounds)
     push!(prior_maps, m)
 
     # additive
-    m = Map(abs.(map0 .+ 0.2 .* randn(size(map0))), lb, ub)
+    m = Map(abs.(map0 .+ 0.2 .* randn(size(map0))), bounds)
     push!(prior_maps, m)
 
     # # both
-    # push!(prior_maps, Map(abs.(map0 .* randn() + 0.1 .* randn(size(map0))), lb, ub))
+    # push!(prior_maps, Map(abs.(map0 .* randn() + 0.1 .* randn(size(map0))), bounds))
 
     # # spatial shift
     # t = rand(1:7)
@@ -57,18 +57,18 @@ function simMission(; seed_val=0, num_samples=30, num_peaks=3, priors=Bool[1,1,1
 
     # random peaks
     peaks = map(1:num_peaks) do _
-        μ = rand(2).*(ub-lb) .+ lb
-        Σ = 0.02*(rand()+0.5)*mean(ub-lb)^2*I
+        μ = rand(2).*(bounds.upper-bounds.lower) .+ bounds.lower
+        Σ = 0.02*(rand()+0.5)*mean(bounds.upper-bounds.lower)^2*I
         h = rand()
         Peak(μ, Σ, h)
     end
     tggt = GaussGroundTruth(peaks)
     tmat = tggt(points)
-    m = Map(tmat./maximum(tmat), lb, ub)
+    m = Map(tmat./maximum(tmat), bounds)
     push!(prior_maps, m)
 
     # # purely random values
-    # m = Map(rand(size(map0)...), lb, ub)
+    # m = Map(rand(size(map0)...), bounds)
     # push!(prior_maps, m)
 
     sampler = MapsSampler(map0)
@@ -84,14 +84,14 @@ function simMission(; seed_val=0, num_samples=30, num_peaks=3, priors=Bool[1,1,1
     start_locs = [[1.0, 0.0]] # starting location
 
     # n = (4,4) # number of samples in each dimension
-    # axs_sp = range.(lb, ub, n)
+    # axs_sp = range.(bounds..., n)
     # start_locs = vec(collect.(Iterators.product(axs_sp...))) # starting locations
 
 
     # sample sparsely from the prior maps
     # currently all data have the same sample numbers and locations
     n = (5,5) # number of samples in each dimension
-    axs_sp = range.(lb, ub, n)
+    axs_sp = range.(bounds..., n)
     points_sp = vec(collect.(Iterators.product(axs_sp...)))
     prior_samples = [Sample((x, i+length(sampler)), d(x))
                      for (i, d) in enumerate(prior_maps[priors])

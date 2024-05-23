@@ -77,7 +77,7 @@ end
 @testset "Maps" begin
     n = 3
     m = reshape(1:n^2, n,n)
-    map = Map(m, [1,1], 2 .* [n,n] .- 1)
+    map = Map(m, (lower=[1,1], upper=2 .* [n,n] .- 1))
 
     @test all(res(map) .== [2.0, 2.0])
 
@@ -102,13 +102,13 @@ end
 # Missions: standard mission run remains the same (will break a lot)
 @testset "Missions" begin
     # set up mission
-    lb = [0.0, 0.0]; ub = [1.0, 1.0]
+    bounds = (lower = [0.0, 0.0], upper = [1.0, 1.0])
     dims = (100, 100)
-    occupancy = Map(zeros(Bool, dims), lb, ub)
+    occupancy = Map(zeros(Bool, dims), bounds)
 
-    axs = range.(lb, ub, dims)
+    axs = range.(bounds..., dims)
     mat = [i*sin(10j) for i in axs[1], j in axs[2]]
-    map0 = Map(mat, lb, ub)
+    map0 = Map(mat, bounds)
     sampler = MapsSampler(map0)
 
     sampleCostType = EIGFSampleCost

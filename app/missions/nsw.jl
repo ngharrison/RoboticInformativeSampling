@@ -30,15 +30,15 @@ function nswMission(; seed_val=0, num_samples=30, priors=Bool[1,1,1])
 
     ims_sm = images
 
-    lb = [0.0, 0.0]; ub = [1.0, 1.0]
+    bounds = (lower = [0.0, 0.0], upper = [1.0, 1.0])
 
-    map0 = imgToMap(normalize(ims_sm[1]), lb, ub)
+    map0 = imgToMap(normalize(ims_sm[1]), bounds...)
     sampler = MapsSampler(map0)
 
-    prior_maps = [imgToMap(normalize(img), lb, ub) for img in ims_sm[2:end]]
+    prior_maps = [imgToMap(normalize(img), bounds...) for img in ims_sm[2:end]]
 
     occupancy = imgToMap(Matrix{Bool}(reduce(.|, [isnan.(i)
-                                                  for i in ims_sm])), lb, ub)
+                                                  for i in ims_sm])), bounds...)
 
     sampleCostType = EIGFSampleCost
 
@@ -55,7 +55,7 @@ function nswMission(; seed_val=0, num_samples=30, priors=Bool[1,1,1])
     # sample sparsely from the prior maps
     # currently all data have the same sample numbers and locations
     n = (5,5) # number of samples in each dimension
-    axs_sp = range.(lb, ub, n)
+    axs_sp = range.(bounds..., n)
     points_sp = vec(collect.(Iterators.product(axs_sp...)))
     prior_samples = [Sample((x, i+length(sampler)), d(x))
                      for (i, d) in enumerate(prior_maps[priors])

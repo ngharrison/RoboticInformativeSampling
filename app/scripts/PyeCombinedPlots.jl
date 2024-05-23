@@ -24,10 +24,10 @@ for i in 4:6
     data = load(output_dir * "pye_farm_trial_named/" * name * output_ext)
     mission = data["mission"]
     samples = data["samples"]
-    lb, ub = bounds(mission.occupancy)
+    bounds = getBounds(mission.occupancy)
 
     axs, points = generateAxes(mission.occupancy)
-    bm = BeliefModel([mission.prior_samples; samples], lb, ub)
+    bm = BeliefModel([mission.prior_samples; samples], bounds)
     pred, err = bm(tuple.(vec(points), 1))
     global pred_range = (min(minimum(pred), pred_range[1]), max(maximum(pred), pred_range[2]))
     global err_range = (min(minimum(err), err_range[1]), max(maximum(err), err_range[2]))
@@ -35,12 +35,12 @@ end
 
 #* combined satellite, elevation, and learned height maps
 
-lb, ub = [0.0, 0.0], [50.0, 50.0]
+bounds = [0.0, 0.0], [50.0, 50.0]
 elev_img = Float64.(gray.(load(maps_dir * "dem_50x50.tif")))
-elevMap = imgToMap((elev_img.-minimum(elev_img)).*100, lb, ub)
+elevMap = imgToMap((elev_img.-minimum(elev_img)).*100, bounds)
 
 sat_img = load(maps_dir * "satellite_50x50.tif")
-satMap = imgToMap(sat_img, lb, ub)
+satMap = imgToMap(sat_img, bounds)
 
 x0, y0, w, h = 10 .* (20, 50-15, 15, 15)
 x, y = (x0 .+ [0,w,w,0,0], y0 .+ [0,0,h,h,0])
@@ -50,10 +50,10 @@ file_name = output_dir * "pye_farm_trial_named/" * name * output_ext
 data = load(file_name)
 mission = data["mission"]
 samples = data["samples"]
-bm = BeliefModel([mission.prior_samples; samples], lb, ub)
+bm = BeliefModel([mission.prior_samples; samples], bounds)
 
 occupancy = mission.occupancy
-lb, ub = bounds(occupancy)
+bounds = getBounds(occupancy)
 axs, points = generateAxes(occupancy)
 dims = Tuple(length.(axs))
 μ, σ = bm(tuple.(vec(points), 1))
@@ -114,7 +114,7 @@ data = load(output_dir * "pye_farm_trial_named/" * name * output_ext)
 mission = data["mission"]
 samples = data["samples"]
 
-bm = BeliefModel([mission.prior_samples; samples], lb, ub)
+bm = BeliefModel([mission.prior_samples; samples], bounds)
 axs_4, points = generateAxes(mission.occupancy)
 dims = Tuple(length.(axs_4))
 μ, σ = bm(tuple.(vec(points), 1))
@@ -160,7 +160,7 @@ data = load(output_dir * "pye_farm_trial_named/" * name * output_ext)
 mission = data["mission"]
 samples = data["samples"]
 
-bm = BeliefModel([mission.prior_samples; samples], lb, ub)
+bm = BeliefModel([mission.prior_samples; samples], bounds)
 axs_5, points = generateAxes(mission.occupancy)
 dims = Tuple(length.(axs_5))
 μ, σ = bm(tuple.(vec(points), 1))

@@ -4,7 +4,7 @@ using Plots: plot, heatmap, scatter!, @layout, mm, grid
 using DocStringExtensions: TYPEDSIGNATURES, TYPEDEF
 
 using InformativeSampling
-using .Maps: Map, res, generateAxes
+using .Maps: Map, res, generateAxes, getBounds
 using .BeliefModels: BeliefModel
 using .SampleCosts: SampleCost
 
@@ -90,7 +90,7 @@ $(TYPEDSIGNATURES)
 Method to show any Map data.
 """
 function visualize(map::Map, title="Map"; points=[], clim=nothing)
-    axes = range.(map.lb, map.ub, size(map))
+    axes = range.(getBounds(map)..., size(map))
     plt = heatmap(axes..., map';
                   xlabel="x1",
                   ylabel="x2",

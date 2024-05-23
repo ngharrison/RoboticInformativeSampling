@@ -3,7 +3,12 @@ module Maps
 using DocStringExtensions: TYPEDSIGNATURES, TYPEDFIELDS
 
 export Map, randomPoint, res, pointToCell, cellToPoint,
-       generateAxes, ConstantRegion, bounds
+       generateAxes, ConstantRegion, Bounds, getBounds
+
+const Bounds = @NamedTuple begin
+    lower::Vector{Float64}
+    upper::Vector{Float64}
+end
 
 """
 A general type for holding multidimensional data (usually a matrix) along with
@@ -17,8 +22,8 @@ will return the value of the grid cell that a given point falls within. In other
 words, the map value is constant within each cell.
 
 Each cell index is treated as the center of its cell. Thus the map's lower bound
-(lb) is at the center of the first cell and the map's upper bound (ub) is at the
-center of the last cell.
+is at the center of the first cell and the map's upper bound is at the center of
+the last cell.
 
 Also made to function directly like a built-in N-dimensional array by sub-typing
 and implementing the base methods.
@@ -29,15 +34,13 @@ $(TYPEDFIELDS)
 struct Map{T1<:Any, N<:Any, A<:AbstractArray{T1, N}, T2<:Real} <: AbstractArray{T1, N}
     "N-dimensional array of data"
     data::A
-    "vector of lower bounds, defaults to zeros"
-    lb::Vector{T2}
-    "vector of upper bounds, defaults to ones"
-    ub::Vector{T2}
+    "vectors of lower and upper bounds, defaults to zeros and ones"
+    bounds::Bounds
 
-    function Map(data, lb, ub)
-        length(lb) == length(ub) == ndims(data) ||
+    function Map(data, bounds)
+        length(bounds.lower) == length(bounds.upper) == ndims(data) ||
             throw(DimensionMismatch("lengths of bounds don't match data dimensions"))
-        new{eltype(data), ndims(data), typeof(data), eltype(lb)}(data, lb, ub)
+        new{eltype(data), ndims(data), typeof(data), eltype(bounds.lower)}(data, bounds)
     end
 end
 
@@ -50,9 +53,11 @@ that point).
 # Examples
 ```julia
 data = reshape(1:25, 5, 5)
-lb = [0.0, 0.0]
-ub = [1.0, 1.0]
-m = Map(data, lb, ub)
+bounds = (
+    lower = [0.0, 0.0],
+    upper = [1.0, 1.0]
+)
+m = Map(data, bounds)
 m2 = Map(data) # bounds will be zero to one
 
 x = [.2, .75]
@@ -73,10 +78,10 @@ Base.setindex!(m::Map, v, i::Integer) = (m.data[i] = v)
 
 # change display
 function Base.show(io::IO, map::Map{T1}) where T1
-    print(io, "Map{$T1} [$(map.lb), $(map.ub)]")
+    print(io, "Map{$T1} [$(map.bounds.lower), $(map.bounds.upper)]")
 end
 function Base.show(io::IO, ::MIME"text/plain", map::Map{T1}) where T1
-    print(io, "Map{$T1} [$(map.lb), $(map.ub)]:\n")
+    print(io, "Map{$T1} [$(map.bounds.lower), $(map.bounds.upper)]:\n")
     show(io, "text/plain", map.data)
 end
 
@@ -98,13 +103,14 @@ function Base.rand(map::Map)
 end
 
 function randomPoint(map::Map)
-    return map.lb .+ rand(ndims(map)).*(map.ub .- map.lb)
+    return map.bounds.lower .+
+           rand(ndims(map)) .* (map.bounds.upper .- map.bounds.lower)
 end
 
 """
 Get the lower and upper bounds of the map.
 """
-bounds(map::Map) = map.lb, map.ub
+getBounds(map::Map) = map.bounds
 
 """
 $(TYPEDSIGNATURES)
@@ -122,8 +128,8 @@ checkBounds(x, map) # no error thrown
 function checkBounds(x, map::Map)
     length(x) == ndims(map) ||
         throw(DomainError(x, "length doesn't match map dimensions: $(ndims(map))"))
-    all(map.lb .<= x .<= map.ub) ||
-        throw(DomainError(x, "out of map bounds: ($(map.lb), $(map.ub))"))
+    all(map.bounds.lower .<= x .<= map.bounds.upper) ||
+        throw(DomainError(x, "out of map bounds: ($(map.bounds.lower), $(map.bounds.upper))"))
 end
 
 """
@@ -131,7 +137,7 @@ $(TYPEDSIGNATURES)
 
 Returns the resolution for each dimension of the given Map as a vector.
 """
-res(map) = (map.ub .- map.lb) ./ (size(map) .- 1)
+res(map) = (map.bounds.upper .- map.bounds.lower) ./ (size(map) .- 1)
 
 """
 $(TYPEDSIGNATURES)
@@ -139,24 +145,25 @@ $(TYPEDSIGNATURES)
 Takes in a point in world-coordinates and a Map and returns a CartesianIndex for
 the underlying array.
 """
-pointToCell(x, map) = CartesianIndex(Tuple(round.(Int, (x .- map.lb) ./ res(map)) .+ 1))
+pointToCell(x, map) = CartesianIndex(Tuple(round.(Int, (x .- map.bounds.lower)
+                                                  ./ res(map)) .+ 1))
 
 """
 $(TYPEDSIGNATURES)
 
 Takes in a CartesianIndex and a Map and returns a point in world-coordinates.
 """
-cellToPoint(ci, map) = (collect(Tuple(ci)) .- 1) .* res(map) .+ map.lb
+cellToPoint(ci, map) = (collect(Tuple(ci)) .- 1) .* res(map) .+ map.bounds.lower
 
 """
 $(TYPEDSIGNATURES)
 
 Method to generate the x, y, etc. axes and points of a Map. Useful for plotting.
 """
-generateAxes(map) = return generateAxes(map.lb, map.ub, size(map))
+generateAxes(map) = return generateAxes(map.bounds, size(map))
 
-function generateAxes(lb, ub, dims)
-    axes = range.(lb, ub, dims)
+function generateAxes(bounds, dims)
+    axes = range.(bounds..., dims)
     points = collect.(Iterators.product(axes...))
     return axes, points
 end
@@ -173,14 +180,12 @@ struct ConstantRegion{T1, T2}
     in_bounds_value::T1
     "single value that this type returns when out of bounds"
     out_of_bounds_value::T1
-    "vector of lower bounds, defaults to zeros"
-    lb::Vector{T2}
-    "vector of upper bounds, defaults to ones"
-    ub::Vector{T2}
+    "vectors of lower and upper bounds, defaults to zeros and ones"
+    bounds::Bounds
 end
 
 function (cr::ConstantRegion)(x)
-    all(cr.lb .<= x .<= cr.ub) ?
+    all(cr.bounds.lower .<= x .<= cr.bounds.upper) ?
         cr.in_bounds_value :
         cr.out_of_bounds_value
 end

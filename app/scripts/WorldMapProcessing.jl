@@ -108,7 +108,7 @@ file_names = [
 # image = readdlm(maps_dir * file_names[1], ',')
 
 patch = (1130:1270, 3200:3300)
-# visualize(imgToMap(image[patch...], lb, ub))
+# visualize(imgToMap(image[patch...], bounds))
 
 for fname in file_names
     image = readdlm(maps_dir * fname, ',')
@@ -130,7 +130,7 @@ file_names = [
 # image = readdlm(maps_dir * file_names[1], ',')
 
 patch = (491:590, 811:910)
-# visualize(imgToMap(image[patch...], lb, ub))
+# visualize(imgToMap(image[patch...], bounds))
 
 for fname in file_names
     image = readdlm(maps_dir * fname, ',')

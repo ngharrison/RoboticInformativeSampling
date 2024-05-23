@@ -21,12 +21,11 @@ As an example, here is a simplified version of the Map type:
 # struct definition
 struct Map
     data
-    lb
-    ub
+    bounds
 end
 
 # constructor definition
-Map(data) = Map(data, [0.0, 0.0], [1.0, 1.0])
+Map(data) = Map(data, (lower=[0.0, 0.0], upper=[1.0, 1.0]))
 
 # method definition, returns the value at that location
 function (map::Map)(x::Location)

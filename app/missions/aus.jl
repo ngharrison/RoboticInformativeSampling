@@ -6,7 +6,7 @@ using Statistics: cor
 using Random: seed!
 
 using InformativeSampling
-using .Maps: Map, bounds
+using .Maps: Map, getBounds
 using .Samples: Sample, MapsSampler, selectSampleLocation
 using .SampleCosts: EIGFSampleCost
 using .Missions: Mission
@@ -29,15 +29,15 @@ function ausMission(; seed_val=0, num_samples=30, priors=Bool[1,1,1])
 
     images = readdlm.(maps_dir .* file_names, ',')
 
-    lb = [0.0, 0.0]; ub = [1.0, 1.0]
+    bounds = (lower = [0.0, 0.0], upper = [1.0, 1.0])
 
-    map0 = imgToMap(normalize(images[1]), lb, ub)
+    map0 = imgToMap(normalize(images[1]), bounds)
     sampler = MapsSampler(map0)
 
-    prior_maps = [imgToMap(normalize(img), lb, ub) for img in images[2:end]]
+    prior_maps = [imgToMap(normalize(img), bounds) for img in images[2:end]]
 
     occupancy = imgToMap(Matrix{Bool}(reduce(.|, [isnan.(i)
-                                                  for i in images])), lb, ub)
+                                                  for i in images])), bounds)
 
     sampleCostType = EIGFSampleCost
 
@@ -55,7 +55,7 @@ function ausMission(; seed_val=0, num_samples=30, priors=Bool[1,1,1])
     points_sp = Vector{Float64}[]
     sampleCost = x -> occupancy(x) ? Inf : -minimum(norm(loc - x) for loc in points_sp; init=Inf)
     for _ in 1:25
-        x = selectSampleLocation(sampleCost, bounds(occupancy)...)
+        x = selectSampleLocation(sampleCost, getBounds(occupancy)...)
         push!(points_sp, x)
         # x, v = rand(occupancy)
         # !v && push!(points_sp, x)
