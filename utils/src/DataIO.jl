@@ -5,14 +5,17 @@ using JLD2: jldsave
 using Dates: now, year, month, day, hour, minute, second
 using Images: save as saveImg, colorview, RGBA
 using Plots
+using DocStringExtensions: TYPEDSIGNATURES
 
 using InformativeSampling
-using .Maps: generateAxes, Map
+using .Maps: generateAxes, Map, getBounds
+using .BeliefModels: BeliefModel
 
 using ..Visualization: visualize
 
 export normalize, spatialAve, imgToMap, save, maps_dir,
-       output_dir, output_ext, saveBeliefMapToPng
+       output_dir, output_ext, saveBeliefMapToPng,
+       produceMap, produceMaps
 
 const maps_dir = dirname(Base.active_project()) * "/maps/"
 const output_dir = dirname(Base.active_project()) * "/output/"
@@ -160,10 +163,7 @@ function saveBeliefMapToPng(beliefModel, occupancy,
                             file_name=dateTimeString() * "_belief_map")
     mkpath(output_dir)
 
-    axs, points = generateAxes(occupancy)
-    dims = Tuple(length.(axs))
-    μ, _ = beliefModel(tuple.(vec(points), 1))
-    pred_map = reshape(μ, dims)
+    pred_map, _ = produceMaps(beliefModel, occupancy)
 
     l, h = extrema(pred_map)
     amount = (pred_map .- l) ./ (h - l)
@@ -179,6 +179,31 @@ function saveBeliefMapToPng(beliefModel, occupancy,
     saveImg("$(output_dir)$(file_name).png",
             colorview(RGBA, map_img))
 
+end
+
+"""
+$(TYPEDSIGNATURES)
+
+Generates belief and uncertainty Maps from a belief model for chosen bounds and
+dimensions.
+"""
+function produceMaps(beliefModel::BeliefModel, map::Map; quantity=1)
+    return produceMaps(beliefModel, getBounds(map), size(map); quantity)
+end
+
+function produceMaps(beliefModel::BeliefModel, bounds, dims; quantity=1)
+    axs, points = generateAxes(bounds, dims)
+    μ, σ = beliefModel(tuple.(vec(points), quantity))
+    pred_map, err_map = (Map(reshape(v, dims), bounds) for v in (μ, σ))
+
+    return pred_map, err_map
+end
+
+produceMap(func, map::Map) = produceMap(func, getBounds(map), size(map))
+
+function produceMap(func, bounds, dims)
+    axs, points = generateAxes(bounds, dims)
+    return Map(func.(points), bounds)
 end
 
 end
