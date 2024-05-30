@@ -4,8 +4,7 @@ using Pkg
 Pkg.activate(Base.source_dir() * "/..")
 
 using RobotOS
-@rosimport informative_sampling.srv: GenerateBeliefModel
-@rosimport informative_sampling.srv: GenerateBeliefMaps
+@rosimport informative_sampling.srv: GenerateBeliefModel, GenerateBeliefMaps, NextSampleLocation
 @rosimport informative_sampling.msg: BeliefModelParameters
 @rosimport std_msgs.msg: Float64MultiArray, MultiArrayLayout, MultiArrayDimension
 rostypegen()
@@ -14,16 +13,18 @@ using .informative_sampling.msg: BeliefModelParameters
 using .std_msgs.msg: Float64MultiArray, MultiArrayLayout, MultiArrayDimension
 
 using InformativeSampling
-using .Samples, .BeliefModels, .Maps
+using .Samples, .BeliefModels, .Maps, .SampleCosts
+
+using Random: seed!
 
 # takes in a function and returns a new function that does the same thing, but
 # wraps it in a try-catch block, so errors are caught and printed
 function catchErrors(func)
-    return req -> begin
+    return (args...; kwargs...) -> begin
         try
-            func(req)
+            func(args...; kwargs...)
         catch err
-            println(err)
+            println("Error caught: $err")
         end
     end
 end
@@ -31,6 +32,8 @@ end
 # callback functions
 function handleGenerateBeliefModel(req)
     println("Generating belief model")
+
+    seed!(0)
 
     samples = map(req.samples) do s
         Sample((s.location, s.quantity_index), s.measurement)
@@ -47,6 +50,8 @@ end
 
 function handleGenerateBeliefMaps(req)
     println("Generating belief maps")
+
+    seed!(0)
 
     samples = map(req.samples) do s
         Sample((s.location, s.quantity_index), s.measurement)
@@ -74,6 +79,31 @@ function handleGenerateBeliefMaps(req)
     return GenerateBeliefMapsResponse(belief_map, uncertainty_map)
 end
 
+function handleNextSampleLocation(req)
+    println("Choosing next sample location")
+
+    seed!(0)
+
+    samples = map(req.samples) do s
+        Sample((s.location, s.quantity_index), s.measurement)
+    end
+    bounds = (; req.bounds.lower, req.bounds.upper)
+    # default values will be (0.0, false)
+    noise = (; req.noise.value, req.noise.learned)
+
+    beliefModel = BeliefModel(samples, bounds; noise)
+
+    dims = Tuple(d.size for d in req.occupancy.layout.dim)
+    occupancy = Map(reshape(Bool.(req.occupancy.data), dims), bounds)
+
+    sampleCost = EIGFSampleCost(
+        occupancy, samples, beliefModel, req.quantities, req.weights
+    )
+    new_loc = selectSampleLocation(sampleCost, bounds)
+
+    return NextSampleLocationResponse(new_loc)
+end
+
 function main()
     init_node("generate_belief_model_server")
 
@@ -82,6 +112,8 @@ function main()
             catchErrors(handleGenerateBeliefModel))
     Service("generate_belief_maps", GenerateBeliefMaps,
             catchErrors(handleGenerateBeliefMaps))
+    Service("next_sample_location", NextSampleLocation,
+            catchErrors(handleNextSampleLocation))
 
     # wait for requests
     println("Ready to serve")

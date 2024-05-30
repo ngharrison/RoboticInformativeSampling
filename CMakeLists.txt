@@ -69,6 +69,7 @@ add_service_files(
   FILES
   GenerateBeliefModel.srv
   GenerateBeliefMaps.srv
+  NextSampleLocation.srv
 )
 
 ## Generate actions in the 'action' folder
