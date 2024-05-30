@@ -23,7 +23,9 @@ mission = data["mission"]
 beliefs = data["beliefs"]
 samples = data["samples"]
 quantities = eachindex(mission.sampler)
-sampleCost = mission.sampleCostType(mission, samples, beliefs[end], quantities)
+sampleCost = mission.sampleCostType(
+    mission.occupancy, samples, beliefs[end], quantities, mission.weights
+)
 vis(mission, samples, beliefs[end], nothing; quantity=1)
 
 

@@ -117,7 +117,9 @@ function (M::Mission)(func=Returns(nothing);
             if i < length(M.start_locs)
                 new_loc = M.start_locs[i+1]
             else
-                sampleCost = M.sampleCostType(M, samples, beliefModel, quantities)
+                sampleCost = M.sampleCostType(
+                    M.occupancy, samples, beliefModel, quantities, M.weights
+                )
                 new_loc = selectSampleLocation(sampleCost, bounds)
 
                 @debug "cost function values: $(Tuple(values(sampleCost, new_loc)))"
@@ -159,7 +161,9 @@ function replay(func, M::Mission, full_samples, beliefs; sleep_time=0.0)
         samples = full_samples[1:i]
 
         beliefModel = beliefs[i]
-        sampleCost = M.sampleCostType(M, samples, beliefModel, quantities)
+        sampleCost = M.sampleCostType(
+            M.occupancy, samples, beliefModel, quantities, M.weights
+        )
 
         new_loc = i < M.num_samples ? full_samples[i+1].x[1] : nothing
         func(M, samples, beliefModel, sampleCost, new_loc)

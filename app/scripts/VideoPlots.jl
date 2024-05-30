@@ -51,7 +51,9 @@ for i in eachindex(beliefs)
     err_map = reshape(σ, dims)
 
     # objective map
-    sampleCost = mission.sampleCostType(mission, samples[begin:i*num_quant], beliefs[i], quantities)
+    sampleCost = mission.sampleCostType(
+        mission.occupancy, samples[begin:i*num_quant], beliefs[i], quantities, mission.weights
+    )
     obj_map = -sampleCost.(points)
 
     # blocked points

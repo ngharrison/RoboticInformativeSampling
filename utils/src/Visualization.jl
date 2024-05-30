@@ -51,7 +51,9 @@ end
 $(TYPEDSIGNATURES)
 """
 function visualize(md, samples, beliefModel::BeliefModel, new_loc; quantity=1)
-    sampleCost = md.sampleCostType(md, samples, beliefModel, eachindex(md.sampler))
+    sampleCost = md.sampleCostType(
+        md.occupancy, samples, beliefModel, eachindex(md.sampler), md.weights
+    )
     a = visualize(beliefModel, samples, md.occupancy, new_loc; quantity)
     b = plot(legend=false, grid=false, foreground_color_subplot=:white) # blank plot
     # TODO this will need to be updated to test for actual types

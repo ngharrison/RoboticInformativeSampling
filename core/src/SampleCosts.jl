@@ -48,11 +48,11 @@ A pathCost is constructed automatically from the other arguments.
 This object can then be called to get the cost of sampling at a location:
 sampleCost(x)
 """
-function BasicSampleCost(md, samples, beliefModel, quantities)
-    start = pointToCell(samples[end].x[1], md.occupancy) # just looking at location
-    pathCost = PathCost(start, md.occupancy, res(md.occupancy))
-    BasicSampleCost(md.occupancy, samples, beliefModel,
-                    quantities, md.weights, pathCost)
+function BasicSampleCost(occupancy, samples, beliefModel, quantities, weights)
+    start = pointToCell(samples[end].x[1], occupancy) # just looking at location
+    pathCost = PathCost(start, occupancy, res(occupancy))
+    BasicSampleCost(occupancy, samples, beliefModel,
+                    quantities, weights, pathCost)
 end
 
 """
@@ -85,16 +85,16 @@ struct NormedSampleCost <: SampleCost
     pathCost
 end
 
-function NormedSampleCost(md, samples, beliefModel, quantities)
-    start = pointToCell(samples[end].x[1], md.occupancy) # just looking at location
-    pathCost = PathCost(start, md.occupancy, res(md.occupancy))
+function NormedSampleCost(occupancy, samples, beliefModel, quantities, weights)
+    start = pointToCell(samples[end].x[1], occupancy) # just looking at location
+    pathCost = PathCost(start, occupancy, res(occupancy))
 
     # using the max values from the current belief
-    locs = [cellToPoint(ci, md.occupancy) for ci in vec(CartesianIndices(md.occupancy))]
+    locs = [cellToPoint(ci, occupancy) for ci in vec(CartesianIndices(occupancy))]
     belief_max = [maximum(first(beliefModel(tuple.(locs, q)))) for q in quantities]
 
-    NormedSampleCost(md.occupancy, samples, beliefModel,
-                     quantities, md.weights, belief_max, pathCost)
+    NormedSampleCost(occupancy, samples, beliefModel,
+                     quantities, weights, belief_max, pathCost)
 end
 
 function values(sc::NormedSampleCost, loc)
@@ -119,16 +119,16 @@ struct MIPTSampleCost <: SampleCost
     pathCost
 end
 
-function MIPTSampleCost(md, samples, beliefModel, quantities)
-    start = pointToCell(samples[end].x[1], md.occupancy) # just looking at location
-    pathCost = PathCost(start, md.occupancy, res(md.occupancy))
+function MIPTSampleCost(occupancy, samples, beliefModel, quantities, weights)
+    start = pointToCell(samples[end].x[1], occupancy) # just looking at location
+    pathCost = PathCost(start, occupancy, res(occupancy))
 
     # using the max values from the current belief
-    locs = [cellToPoint(ci, md.occupancy) for ci in vec(CartesianIndices(md.occupancy))]
+    locs = [cellToPoint(ci, occupancy) for ci in vec(CartesianIndices(occupancy))]
     belief_max = [maximum(first(beliefModel(tuple.(locs, q)))) for q in quantities]
 
-    MIPTSampleCost(md.occupancy, samples, beliefModel,
-                     quantities, md.weights, belief_max, pathCost)
+    MIPTSampleCost(occupancy, samples, beliefModel,
+                     quantities, weights, belief_max, pathCost)
 end
 
 function values(sc::MIPTSampleCost, loc)
@@ -150,16 +150,16 @@ struct EIGFSampleCost <: SampleCost
     pathCost
 end
 
-function EIGFSampleCost(md, samples, beliefModel, quantities)
-    start = pointToCell(samples[end].x[1], md.occupancy) # just looking at location
-    pathCost = PathCost(start, md.occupancy, res(md.occupancy))
+function EIGFSampleCost(occupancy, samples, beliefModel, quantities, weights)
+    start = pointToCell(samples[end].x[1], occupancy) # just looking at location
+    pathCost = PathCost(start, occupancy, res(occupancy))
 
     # using the max values from the current belief
-    locs = [cellToPoint(ci, md.occupancy) for ci in vec(CartesianIndices(md.occupancy))]
+    locs = [cellToPoint(ci, occupancy) for ci in vec(CartesianIndices(occupancy))]
     belief_max = [maximum(first(beliefModel(tuple.(locs, q)))) for q in quantities]
 
-    EIGFSampleCost(md.occupancy, samples, beliefModel,
-                     quantities, md.weights, belief_max, pathCost)
+    EIGFSampleCost(occupancy, samples, beliefModel,
+                     quantities, weights, belief_max, pathCost)
 end
 
 function values(sc::EIGFSampleCost, loc)
@@ -188,16 +188,16 @@ struct DistScaledEIGFSampleCost <: SampleCost
     pathCost
 end
 
-function DistScaledEIGFSampleCost(md, samples, beliefModel, quantities)
-    start = pointToCell(samples[end].x[1], md.occupancy) # just looking at location
-    pathCost = PathCost(start, md.occupancy, res(md.occupancy))
+function DistScaledEIGFSampleCost(occupancy, samples, beliefModel, quantities, weights)
+    start = pointToCell(samples[end].x[1], occupancy) # just looking at location
+    pathCost = PathCost(start, occupancy, res(occupancy))
 
     # using the max values from the current belief
-    locs = [cellToPoint(ci, md.occupancy) for ci in vec(CartesianIndices(md.occupancy))]
+    locs = [cellToPoint(ci, occupancy) for ci in vec(CartesianIndices(occupancy))]
     belief_max = [maximum(first(beliefModel(tuple.(locs, q)))) for q in quantities]
 
-    DistScaledEIGFSampleCost(md.occupancy, samples, beliefModel,
-                     quantities, md.weights, belief_max, pathCost)
+    DistScaledEIGFSampleCost(occupancy, samples, beliefModel,
+                     quantities, weights, belief_max, pathCost)
 end
 
 function values(sc::DistScaledEIGFSampleCost, loc)
@@ -230,16 +230,16 @@ struct MEPESampleCost <: SampleCost
     pathCost
 end
 
-function MEPESampleCost(md, samples, beliefModel, quantities)
-    start = pointToCell(samples[end].x[1], md.occupancy) # just looking at location
-    pathCost = PathCost(start, md.occupancy, res(md.occupancy))
+function MEPESampleCost(occupancy, samples, beliefModel, quantities, weights)
+    start = pointToCell(samples[end].x[1], occupancy) # just looking at location
+    pathCost = PathCost(start, occupancy, res(occupancy))
 
     # using the max values from the current belief
-    locs = [cellToPoint(ci, md.occupancy) for ci in vec(CartesianIndices(md.occupancy))]
+    locs = [cellToPoint(ci, occupancy) for ci in vec(CartesianIndices(occupancy))]
     belief_max = [maximum(first(beliefModel(tuple.(locs, q)))) for q in quantities]
 
-    MEPESampleCost(md.occupancy, samples, beliefModel,
-                     quantities, md.weights, belief_max, pathCost)
+    MEPESampleCost(occupancy, samples, beliefModel,
+                     quantities, weights, belief_max, pathCost)
 end
 
 function values(sc::MEPESampleCost, loc)
