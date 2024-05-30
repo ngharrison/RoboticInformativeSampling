@@ -12,7 +12,7 @@ def generateBeliefModelClient(samples, bounds):
     rospy.wait_for_service('generate_belief_model')
     try:
         generateBeliefModel = rospy.ServiceProxy('generate_belief_model', GenerateBeliefModel)
-        result = generateBeliefModel(samples, bounds)
+        result = generateBeliefModel(samples=samples, bounds=bounds)
         return result.params
     except rospy.ServiceException as e:
         print("Service call failed: %s"%e)
@@ -22,7 +22,12 @@ def generateBeliefMapsClient(samples, bounds, dims, quantity_index):
     rospy.wait_for_service('generate_belief_maps')
     try:
         generateBeliefMaps = rospy.ServiceProxy('generate_belief_maps', GenerateBeliefMaps)
-        result = generateBeliefMaps(samples, bounds, dims, quantity_index)
+        result = generateBeliefMaps(
+            samples=samples,
+            bounds=bounds,
+            dims=dims,
+            quantity_index=quantity_index
+        )
         return result
     except rospy.ServiceException as e:
         print("Service call failed: %s"%e)

@@ -1,4 +1,6 @@
 informative_sampling/Sample[] samples
 informative_sampling/Bounds bounds
+float64 noise_value
+bool noise_learned
 ---
 informative_sampling/BeliefModelParameters params
