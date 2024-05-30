@@ -39,49 +39,6 @@ struct Sample{T}
 end
 
 """
-Handles samples of the form (location, quantity) to give the value from the
-right map. Internally a tuple of Maps.
-
-Constructor can take in a tuple or vector of Maps or each Map as a separate
-argument.
-
-# Examples
-```julia
-ss = MapsSampler(Map(zeros(5, 5)), Map(ones(5, 5)))
-
-loc = [.2, .75]
-ss(loc) # result: [0, 1]
-ss((loc, 2)) # result: 1
-```
-"""
-struct MapsSampler{T1<:Real}
-    maps::Tuple{Vararg{Map{T1}}}
-end
-
-MapsSampler(maps::Map...) = MapsSampler(maps)
-MapsSampler(maps::AbstractVector{<:Map}) = MapsSampler(Tuple(maps))
-
-(ss::MapsSampler)(loc::Location) = [map(loc) for map in ss]
-(ss::MapsSampler)((q, loc)::SampleInput) = ss[q](loc)
-
-# make it behave like a tuple
-Base.keys(m::MapsSampler) = keys(m.maps)
-Base.length(m::MapsSampler) = length(m.maps)
-Base.iterate(m::MapsSampler) = iterate(m.maps)
-Base.iterate(m::MapsSampler, i::Integer) = iterate(m.maps, i)
-Base.Broadcast.broadcastable(m::MapsSampler) = Ref(m) # don't broadcast
-Base.IndexStyle(::Type{<:MapsSampler}) = IndexLinear()
-Base.getindex(m::MapsSampler, i::Integer) = m.maps[i]
-
-# change display
-function Base.show(io::IO, ss::MapsSampler{T1}) where T1
-    print(io, "MapsSampler{$T1}:")
-    for map in ss
-        print("\n\t", map)
-    end
-end
-
-"""
 $(TYPEDSIGNATURES)
 
 Pulls a ground truth value from a given location and constructs a Sample object
@@ -125,6 +82,71 @@ function selectSampleLocation(sampleCost, bounds)
     )
     @debug "sample optimizer:" opt
     return opt.minimizer
+end
+
+
+### Samplers ###
+
+"""
+Handles samples of the form (location, quantity) to give the value from the
+right map. Internally a tuple of Maps.
+
+Constructor can take in a tuple or vector of Maps or each Map as a separate
+argument.
+
+# Examples
+```julia
+ss = MapsSampler(Map(zeros(5, 5)), Map(ones(5, 5)))
+
+loc = [.2, .75]
+ss(loc) # result: [0, 1]
+ss((loc, 2)) # result: 1
+```
+"""
+struct MapsSampler{T1<:Real}
+    maps::Tuple{Vararg{Map{T1}}}
+end
+
+MapsSampler(maps::Map...) = MapsSampler(maps)
+MapsSampler(maps::AbstractVector{<:Map}) = MapsSampler(Tuple(maps))
+
+(ss::MapsSampler)(loc::Location) = [map(loc) for map in ss]
+(ss::MapsSampler)((q, loc)::SampleInput) = ss[q](loc)
+
+# make it behave like a tuple
+Base.keys(m::MapsSampler) = keys(m.maps)
+Base.length(m::MapsSampler) = length(m.maps)
+Base.iterate(m::MapsSampler) = iterate(m.maps)
+Base.iterate(m::MapsSampler, i::Integer) = iterate(m.maps, i)
+Base.Broadcast.broadcastable(m::MapsSampler) = Ref(m) # don't broadcast
+Base.IndexStyle(::Type{<:MapsSampler}) = IndexLinear()
+Base.getindex(m::MapsSampler, i::Integer) = m.maps[i]
+
+# change display
+function Base.show(io::IO, ss::MapsSampler{T1}) where T1
+    print(io, "MapsSampler{$T1}:")
+    for map in ss
+        print("\n\t", map)
+    end
+end
+
+"""
+A sampler that asks the user to input measurement values, one for each quantity
+at the given location.
+"""
+struct UserSampler
+    "a list (or any iterable) of quantity indices, (e.g. [1,2])"
+    quantities
+end
+
+Base.keys(us::UserSampler) = us.quantities
+
+function (us::UserSampler)(x)
+    println("At location $x")
+    return map(us.quantities) do i
+        print("Enter the value for quantity $i: ")
+        parse(Float64, readline())
+    end
 end
 
 end

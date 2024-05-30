@@ -1,25 +1,12 @@
 
 using InformativeSampling
 using .Maps: Map
+using .Samples: UserSampler
 using .SampleCosts: EIGFSampleCost
 using .Missions: Mission
 
 using InformativeSamplingUtils
 using .Visualization: vis
-
-struct UserSampler
-    quantities
-end
-
-Base.keys(us::UserSampler) = us.quantities
-
-function (us::UserSampler)(x)
-    println("At location $x")
-    return map(us.quantities) do i
-        print("Enter the value for quantity $i: ")
-        parse(Float64, readline())
-    end
-end
 
 function pickMission(; num_samples=30)
 
