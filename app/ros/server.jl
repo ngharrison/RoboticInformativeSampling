@@ -4,8 +4,9 @@ using Pkg
 Pkg.activate(Base.source_dir() * "/..")
 
 using RobotOS
-@rosimport informative_sampling.srv: GenerateBeliefModel, GenerateBeliefMaps, NextSampleLocation
-@rosimport informative_sampling.msg: BeliefModelParameters
+@rosimport informative_sampling.srv: GenerateBeliefModel, GenerateBeliefMaps,
+                                     NextSampleLocation, BeliefMapsAndNextSampleLocation
+@rosimport informative_sampling.msg:BeliefModelParameters
 @rosimport std_msgs.msg: Float64MultiArray, MultiArrayLayout, MultiArrayDimension
 rostypegen()
 using .informative_sampling.srv
@@ -62,15 +63,15 @@ function handleGenerateBeliefMaps(req)
 
     beliefModel = BeliefModel(samples, bounds; noise)
 
-    dims = req.dims
+    dims = Tuple(req.dims)
     quantity = req.quantity_index
 
-    _, points = generateAxes(bounds, Tuple(dims))
+    _, points = generateAxes(bounds, dims)
     μ, σ = beliefModel(tuple.(vec(points), quantity))
 
     belief_map, uncertainty_map = (
         Float64MultiArray(
-            MultiArrayLayout(MultiArrayDimension.("", dims, 1), 0),
+            MultiArrayLayout(MultiArrayDimension.("", collect(dims), 1), 0),
             data
         )
         for data in (μ, σ)
@@ -104,6 +105,44 @@ function handleNextSampleLocation(req)
     return NextSampleLocationResponse(new_loc)
 end
 
+function handleBeliefMapsAndNextSampleLocation(req)
+    println("Choosing next sample location")
+
+    seed!(0)
+
+    samples = map(req.samples) do s
+        Sample((s.location, s.quantity_index), s.measurement)
+    end
+    bounds = (; req.bounds.lower, req.bounds.upper)
+    # default values will be (0.0, false)
+    noise = (; req.noise.value, req.noise.learned)
+
+    beliefModel = BeliefModel(samples, bounds; noise)
+
+    dims = Tuple(d.size for d in req.occupancy.layout.dim)
+    quantity = req.quantity_index
+
+    _, points = generateAxes(bounds, dims)
+    μ, σ = beliefModel(tuple.(vec(points), quantity))
+
+    belief_map, uncertainty_map = (
+        Float64MultiArray(
+            MultiArrayLayout(MultiArrayDimension.("", collect(dims), 1), 0),
+            data
+        )
+        for data in (μ, σ)
+    )
+
+    occupancy = Map(reshape(Bool.(req.occupancy.data), dims), bounds)
+
+    sampleCost = EIGFSampleCost(
+        occupancy, samples, beliefModel, req.quantities, req.weights
+    )
+    new_loc = selectSampleLocation(sampleCost, bounds)
+
+    return BeliefMapsAndNextSampleLocationResponse(belief_map, uncertainty_map, new_loc)
+end
+
 function main()
     init_node("generate_belief_model_server")
 
@@ -114,6 +153,8 @@ function main()
             catchErrors(handleGenerateBeliefMaps))
     Service("next_sample_location", NextSampleLocation,
             catchErrors(handleNextSampleLocation))
+    Service("belief_maps_and_next_sample_location", BeliefMapsAndNextSampleLocation,
+            catchErrors(handleBeliefMapsAndNextSampleLocation))
 
     # wait for requests
     println("Ready to serve")

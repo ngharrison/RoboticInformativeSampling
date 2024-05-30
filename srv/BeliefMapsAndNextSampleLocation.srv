@@ -1,0 +1,11 @@
+informative_sampling/Sample[] samples
+informative_sampling/Bounds bounds
+informative_sampling/Noise noise
+int64 quantity_index
+std_msgs/ByteMultiArray occupancy
+float64[] weights
+int64[] quantities
+---
+std_msgs/Float64MultiArray belief_map
+std_msgs/Float64MultiArray uncertainty_map
+float64[] next_location

@@ -74,9 +74,29 @@ def nextSampleLocationClient():
     except rospy.ServiceException as e:
         print("Service call failed: %s"%e)
 
+def beliefMapsAndNextSampleLocationClient():
+    print("Requesting belief maps and next sample location")
+    service_name = 'belief_maps_and_next_sample_location'
+    rospy.wait_for_service(service_name)
+    try:
+        result = rospy.ServiceProxy(service_name, BeliefMapsAndNextSampleLocation)(
+            samples=samples,
+            bounds=bounds,
+            quantity_index=quantity_index,
+            occupancy=occupancy,
+            weights=weights,
+            quantities=quantities
+        )
+        print("Received %s" % result)
+        return result
+    except rospy.ServiceException as e:
+        print("Service call failed: %s"%e)
+
 if __name__ == "__main__":
     generateBeliefModelClient()
 
     generateBeliefMapsClient()
 
     nextSampleLocationClient()
+
+    beliefMapsAndNextSampleLocationClient()
