@@ -59,6 +59,7 @@ add_message_files(
   FILES
   Bounds.msg
   Sample.msg
+  Noise.msg
   NoisySample.msg
   BeliefModelParameters.msg
 )

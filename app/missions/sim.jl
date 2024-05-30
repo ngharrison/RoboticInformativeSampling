@@ -101,7 +101,7 @@ function simMission(; seed_val=0, num_samples=30, num_peaks=3, priors=Bool[1,1,1
     @debug [cor(map0.(points_sp), d.(points_sp)) for d in prior_maps]
     # @debug [cor(vec(map0), vec(d)) for d in prior_maps]
 
-    noise = (0.0, :learned)
+    noise = (value=0.0, learned=true)
 
     mission = Mission(;
         occupancy,

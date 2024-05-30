@@ -38,7 +38,7 @@ function pickMission(; num_samples=30)
     weights = (; μ=1, σ=1e2, τ=1, d=0) # others
     start_locs = [[1.0, 0.0]] # starting location
 
-    noise = (0.0, :learned)
+    noise = (value=0.0, learned=true)
 
     mission = Mission(;
         occupancy,

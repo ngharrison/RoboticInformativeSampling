@@ -36,9 +36,9 @@ function handleGenerateBeliefModel(req)
         Sample((s.location, s.quantity_index), s.measurement)
     end
     bounds = (; req.bounds.lower, req.bounds.upper)
-
     # default values will be (0.0, false)
-    noise = (req.noise_value, req.noise_learned ? :learned : :fixed)
+    noise = (; req.noise.value, req.noise.learned)
+
     beliefModel = BeliefModel(samples, bounds; noise)
 
     params = BeliefModelParameters(beliefModel.θ...)
@@ -52,8 +52,9 @@ function handleGenerateBeliefMaps(req)
         Sample((s.location, s.quantity_index), s.measurement)
     end
     bounds = (; req.bounds.lower, req.bounds.upper)
+    # default values will be (0.0, false)
+    noise = (; req.noise.value, req.noise.learned)
 
-    noise = (req.noise_value, req.noise_learned ? :learned : :fixed)
     beliefModel = BeliefModel(samples, bounds; noise)
 
     dims = req.dims

@@ -107,7 +107,9 @@ conditioned on the samples given.
 A noise standard deviation can optionally be passed in either as a single scalar
 value for all samples or a vector of values, one for each sample.
 """
-function BeliefModel(samples, bounds; noise=(0.0, :fixed), kernel=multiKernel)
+function BeliefModel(samples, bounds;
+                     noise=(value=0.0, learned=false),
+                     kernel=multiKernel)
     # set up training data
     X = getfield.(samples, :x)
     Y = getfield.(samples, :y)
@@ -117,7 +119,7 @@ function BeliefModel(samples, bounds; noise=(0.0, :fixed), kernel=multiKernel)
         θ0 = initHyperparams(X, Y_vals, bounds, kernel; σn=fixed(Y_errs)) # no noise to learn
     else
         Y_vals = Y
-        σn = (noise[2] == :learned ? noise[1] : fixed(noise[1]))
+        σn = (noise.learned ? noise.value : fixed(noise.value))
         θ0 = initHyperparams(X, Y_vals, bounds, kernel; σn) # no noise to learn
     end
 

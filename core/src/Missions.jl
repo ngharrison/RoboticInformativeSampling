@@ -43,8 +43,8 @@ mission = Mission(; occupancy,
     start_locs = []
     "any samples taken previously (default empty)"
     prior_samples = Sample[]
-    "a tuple of global noise value and either :fixed or :learned (default (0.0, :fixed))"
-    noise = (0.0, :fixed)
+    "a named tuple of global noise value and if learned further (default (0.0, false))"
+    noise = (value=0.0, learned=false)
     "the kernel to be used in the belief model (default multiKernel)"
     kernel = multiKernel
 end

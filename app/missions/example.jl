@@ -87,7 +87,7 @@ function simMission(; seed_val=0, num_samples=30, num_peaks=3, priors=Bool[1,1,1
                      for (i, d) in enumerate(prior_maps[priors])
                          for x in points_sp if !isnan(d(x))]
 
-    noise = (0.0, :learned)
+    noise = (value=0.0, learned=true)
 
     mission = Mission(;
         occupancy,
