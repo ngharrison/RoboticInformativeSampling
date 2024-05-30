@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+# this script is used to test server.jl
+
 from __future__ import print_function
 
 import sys

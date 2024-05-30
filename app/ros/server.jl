@@ -1,5 +1,7 @@
 #!/usr/bin/env julia
 
+# this file runs the services connected with informative sampling
+
 using Pkg
 Pkg.activate(Base.source_dir() * "/..")
 
