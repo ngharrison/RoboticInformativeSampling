@@ -67,6 +67,7 @@ add_message_files(
 add_service_files(
   FILES
   GenerateBeliefModel.srv
+  GenerateBeliefMaps.srv
 )
 
 ## Generate actions in the 'action' folder

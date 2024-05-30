@@ -8,11 +8,22 @@ from informative_sampling.srv import *
 from informative_sampling.msg import Sample, Bounds
 
 def generateBeliefModelClient(samples, bounds):
+    print("Requesting BeliefModel")
     rospy.wait_for_service('generate_belief_model')
     try:
         generateBeliefModel = rospy.ServiceProxy('generate_belief_model', GenerateBeliefModel)
         result = generateBeliefModel(samples, bounds)
         return result.params
+    except rospy.ServiceException as e:
+        print("Service call failed: %s"%e)
+
+def generateBeliefMapsClient(samples, bounds, dims, quantity_index):
+    print("Requesting belief maps")
+    rospy.wait_for_service('generate_belief_maps')
+    try:
+        generateBeliefMaps = rospy.ServiceProxy('generate_belief_maps', GenerateBeliefMaps)
+        result = generateBeliefMaps(samples, bounds, dims, quantity_index)
+        return result
     except rospy.ServiceException as e:
         print("Service call failed: %s"%e)
 
@@ -25,6 +36,10 @@ def createSamples():
     ], Bounds([0.0, 0.0], [1.0, 1.0])
 
 if __name__ == "__main__":
-    print("Requesting BeliefModel")
-    response = generateBeliefModelClient(*createSamples())
+    samples, bounds = createSamples()
+
+    response = generateBeliefModelClient(samples, bounds)
+    print("Received %s" % response)
+
+    response = generateBeliefMapsClient(samples, bounds, [50, 50], 1)
     print("Received %s" % response)
