@@ -19,6 +19,8 @@ samples = [
 
 bounds = Bounds([0.0, 0.0], [1.0, 1.0])
 
+noise = Noise(0.0, False)
+
 dims = [50, 50]
 
 quantity_index = 1
@@ -37,7 +39,7 @@ def generateBeliefModelClient():
     rospy.wait_for_service('generate_belief_model')
     try:
         generateBeliefModel = rospy.ServiceProxy('generate_belief_model', GenerateBeliefModel)
-        result = generateBeliefModel(samples=samples, bounds=bounds)
+        result = generateBeliefModel(samples, bounds, noise)
         print("Received %s" % result)
         return result.params
     except rospy.ServiceException as e:
@@ -47,13 +49,8 @@ def generateBeliefMapsClient():
     print("Requesting belief maps")
     rospy.wait_for_service('generate_belief_maps')
     try:
-        generateBeliefMaps = rospy.ServiceProxy('generate_belief_maps', GenerateBeliefMaps)
-        result = generateBeliefMaps(
-            samples=samples,
-            bounds=bounds,
-            dims=dims,
-            quantity_index=quantity_index
-        )
+        proxy = rospy.ServiceProxy('generate_belief_maps', GenerateBeliefMaps)
+        result = proxy(samples, bounds, noise, dims, quantity_index)
         print("Received %s" % result)
         return result
     except rospy.ServiceException as e:
@@ -64,13 +61,8 @@ def nextSampleLocationClient():
     service_name = 'next_sample_location'
     rospy.wait_for_service(service_name)
     try:
-        result = rospy.ServiceProxy(service_name, NextSampleLocation)(
-            samples=samples,
-            bounds=bounds,
-            occupancy=occupancy,
-            weights=weights,
-            quantities=quantities
-        )
+        proxy = rospy.ServiceProxy(service_name, NextSampleLocation)
+        result = proxy(samples, bounds, noise, occupancy, weights, quantities)
         print("Received %s" % result)
         return result
     except rospy.ServiceException as e:
@@ -81,14 +73,8 @@ def beliefMapsAndNextSampleLocationClient():
     service_name = 'belief_maps_and_next_sample_location'
     rospy.wait_for_service(service_name)
     try:
-        result = rospy.ServiceProxy(service_name, BeliefMapsAndNextSampleLocation)(
-            samples=samples,
-            bounds=bounds,
-            quantity_index=quantity_index,
-            occupancy=occupancy,
-            weights=weights,
-            quantities=quantities
-        )
+        proxy = rospy.ServiceProxy(service_name, BeliefMapsAndNextSampleLocation)
+        result = proxy(samples, bounds, noise, quantity_index, occupancy, weights, quantities)
         print("Received %s" % result)
         return result
     except rospy.ServiceException as e:
