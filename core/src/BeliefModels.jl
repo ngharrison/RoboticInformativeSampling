@@ -114,28 +114,30 @@ function BeliefModel(samples, bounds;
     X = getfield.(samples, :x)
     Y = getfield.(samples, :y)
 
+    # split measurements if needed
     if Y isa AbstractArray{<:NTuple{2, <:Real}}
         Y_vals, Y_errs = first.(Y), last.(Y)
-        θ0 = initHyperparams(X, Y_vals, bounds, kernel; σn=fixed(Y_errs)) # no noise to learn
     else
-        Y_vals = Y
-        σn = (noise.learned ? noise.value : fixed(noise.value))
-        θ0 = initHyperparams(X, Y_vals, bounds, kernel; σn) # no noise to learn
+        Y_vals, Y_errs = Y, 0.0
     end
 
+    # choose noise
+    σn = (noise.learned ? noise.value : fixed(noise.value))
+    θ0 = initHyperparams(X, Y_vals, bounds, kernel; σn)
+
     # optimize hyperparameters (train)
-    θ = optimizeLoss(createLossFunc(X, Y_vals, kernel), θ0)
+    θ = optimizeLoss(createLossFunc(X, Y_vals, Y_errs, kernel), θ0)
 
     # produce optimized gp belief model
-    fx = buildPriorGP(X, Y_vals, kernel, θ)
+    fx = buildPriorGP(X, Y_vals, Y_errs, kernel, θ)
     f_post = posterior(fx, Y_vals) # gp conditioned on training samples
 
     return BeliefModelSimple(f_post, θ)
 end
 
-function buildPriorGP(X, Y_vals, kernel, θ, ϵ=0.0)
+function buildPriorGP(X, Y_vals, Y_errs, kernel, θ, ϵ=0.0)
     f = GP(multiMeanAve(X, Y_vals), kernel(θ)) # calculate
-    f(X, value(θ.σn).^2 .+ √eps() .+ ϵ) # eps to prevent numerical issues
+    f(X, Y_errs.^2 .+ value(θ.σn).^2 .+ √eps() .+ ϵ) # eps to prevent numerical issues
 end
 
 """
@@ -214,11 +216,11 @@ $(TYPEDSIGNATURES)
 This function creates the loss function for training the GP. The negative log
 marginal likelihood is used.
 """
-function createLossFunc(X, Y_vals, kernel)
+function createLossFunc(X, Y_vals, Y_errs, kernel)
     # returns a function for the negative log marginal likelihood
     θ -> begin
         try
-            fx = buildPriorGP(X, Y_vals, kernel, θ)
+            fx = buildPriorGP(X, Y_vals, Y_errs, kernel, θ)
             return -logpdf(fx, Y_vals)
         catch e
             # for PosDefException
@@ -227,7 +229,7 @@ function createLossFunc(X, Y_vals, kernel)
             @error e θ X Y_vals
 
             # NOTE this will probably break if reached with the multiKernel
-            fx = buildPriorGP(X, Y_vals, kernel, θ, 1e-1*maximum(θ.σ))
+            fx = buildPriorGP(X, Y_vals, Y_errs, kernel, θ, 1e-1*maximum(θ.σ))
             return -logpdf(fx, Y_vals)
         end
     end
