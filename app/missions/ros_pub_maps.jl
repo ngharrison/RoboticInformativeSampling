@@ -91,13 +91,13 @@ quantity = 1
         array_publishers[i].publish(array)
 
         l, h = extrema(data)
-        data_scaled = (data .- l) ./ (h - l)
+        data_scaled = (data .- l) ./ (h - l + eps())
 
         # map to image
         amount = vec(reverse(permutedims(reshape(data_scaled, dims), (2, 1)), dims=1))
 
         # convert to byte values and repeat each 4 times for rgba format
-        byte_data = UInt8[isnan(x) ? 0 : round(255*x) for x in amount]
+        byte_data = round.(UInt8, 255 .* amount)
         img_data = pybytes([x for x in byte_data for _ in 1:4])
 
         env_height, env_width = dims
