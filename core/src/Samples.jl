@@ -5,7 +5,7 @@ using DocStringExtensions: TYPEDSIGNATURES, TYPEDFIELDS, TYPEDEF
 
 using ..Maps: Map
 
-export Sample, MapsSampler, selectSampleLocation, takeSamples
+export Sample, selectSampleLocation, takeSamples, MapsSampler, UserSampler
 
 """
 $(TYPEDEF)
