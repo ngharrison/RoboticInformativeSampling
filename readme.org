@@ -72,7 +72,7 @@ You can read a bit more about this in the docs.
 * Using as a ROS Package
 The project includes code to communicate with other nodes in the Robot Operating System (ROS). This code is designed to work with ROS1 and has been tested on Melodic and Noetic. These features will work just by running the code as normal from the command line or within the Julia REPL.
 
-In addition, this project can be used as a ROS package itself by simply putting it inside your workspace source directory (e.g. =catkin_ws/src=). It works similar to using a ROS python package because it uses rospy behind the scenes. If you want to run, for example, =ros.jl=:
+In addition, this project can be used as a ROS package itself by simply putting it inside your workspace source directory (e.g. =catkin_ws/src=). It works similar to using a ROS python package because it uses rospy behind the scenes. If you want to run, for example, =app/missions/ros.jl=:
 
 1. Make sure the file is executable
 2. Run =catkin_make= from the workspace
@@ -88,7 +88,14 @@ using Pkg
 Pkg.activate(Base.source_dir() * "/..")
 #+end_src
 
-To see further examples of files that this works for, look in the =app/ros_sims= directory.
+Or you can just run the same script from within the Julia REPL as described [[* Quick Start][above]]. =rosrun= is a convenience to find the executable scripts within the package and doesn't provide maintaining compilation and variables like the REPL does.
+
+Such ROS-based missions will work with the right topics publishing. =ros.jl= is a good way to test things are working, but you will first need to run two other simulation scripts first so it has something to talk to:
+
+=rosrun informative_sampling sample_sim.py=
+=rosrun informative_sampling sortie_sim.py=
+
+Files like these are generally found in the =app/ros= directory.
 
 * Documentation
 
