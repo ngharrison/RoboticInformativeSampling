@@ -18,7 +18,7 @@ export BeliefModel, outputCorMat
 $(TYPEDEF)
 
 Abstract type. All subtypes of this will be callable with the same interface:
-`X -> μ, σ` (SampleInputs -> means, variances)
+`X -> μ, σ` (SampleInputs -> means, standard deviations)
 """
 abstract type BeliefModel end
 
@@ -144,7 +144,7 @@ end
 Inputs:
 - `X`: a single sample input or an array of multiple
 - `full_cov`: (optional) if this is true, returns the full covariance matrix
-  in place of the vector of variances
+  in place of the vector of standard deviations
 
 Outputs:
 - `μ, σ`: a pair of expected value(s) and uncertainty(s) for the given point(s)
@@ -172,7 +172,7 @@ end
 Inputs:
 - `X`: a single sample input or an array of multiple
 - `full_cov`: (optional) if this is true, returns the full covariance matrix
-    in place of the vector of variances
+  in place of the vector of standard deviations
 
 Outputs:
 - `μ, σ`: a pair of expected value(s) and uncertainty(s) for the given point(s)

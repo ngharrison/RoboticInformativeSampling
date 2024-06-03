@@ -33,7 +33,7 @@ Normally you will want to run code from within the REPL since this keeps data ar
 
 1. Navigate into the =InformativeSampling= directory on the command line
 2. Run =julia --project=app= to open the REPL with the app environment activated
-3. Run =incluce("app/missions/example.jl")=
+3. Run =include("app/missions/example.jl")=
 
 
 To understand more about the code and the Julia language in general, go to the [[*Documentation][documentation]].
