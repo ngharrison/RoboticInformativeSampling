@@ -20,8 +20,8 @@ function pyeFarmMission(; num_samples=4)
 
     # the topics that will be listened to for measurements
     data_topics = [
-        # Crop height avg and std in frame (excluding wheels)
-        ("/rss/gp/crop_height_avg", "/rss/gp/crop_height_std")
+        # Crop height avg in frame (excluding wheels)
+        "/rss/gp/crop_height_avg"
     ]
 
     done_topic = "sortie_finished"

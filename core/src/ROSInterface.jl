@@ -30,9 +30,9 @@ to get the name of each one.
 Fields:
 $(TYPEDFIELDS)
 """
-struct ROSConnection
+struct ROSConnection{T<:Union{String, NTuple{2, String}}}
     "vector of topic names that will be subscribed to to receive measurements"
-    data_topics::Vector{Tuple{String, String}}
+    data_topics::Vector{T}
     "topic name that publishes a message to signify the traveling is done"
     done_topic
     "the publisher topic name"
@@ -69,15 +69,55 @@ Base.length(R::ROSConnection) = length(R.data_topics)
 
 """
 ```julia
-function (R::ROSConnection)(new_loc::Location)
+function (R::ROSConnection{String})(new_loc::Location)
+```
+
+Returns a vector of values from the sample location, one for each sensor
+measurement available. It does this by first publishing the next location to
+sample. Once the location is sampled, it calls out to each topic in sequence and
+waits for its message.
+
+# Examples
+```julia
+data_topics = [
+    "/value1",
+    "/value2"
+]
+
+done_topic = "sortie_finished"
+pub_topic = "latest_sample"
+
+sampler = ROSConnection(data_topics, done_topic, pub_topic)
+
+location = [.1, .3]
+[value1, value2] = sampler(location)
+```
+"""
+function (R::ROSConnection{String})(new_loc::Location)
+    publishNextLocation(R.publisher, new_loc)
+
+    rospy.wait_for_message(R.done_topic, std_msg.Bool) # a message means finished
+    @debug "received traveling done"
+
+    # get a list of values
+    observations = [
+        rospy.wait_for_message(val_topic, std_msg.Float32, timeout=20).data
+        for val_topic in R.data_topics]
+
+    @debug "received values:" observations
+
+    return observations
+end
+
+"""
+```julia
+function (R::ROSConnection{NTuple{2, String}})(new_loc::Location)
 ```
 
 Returns a vector of (value, error) pairs from the sample location, one for each
 sensor measurement available. It does this by first publishing the next location
 to sample. Once the location is sampled, it calls out to each topic in sequence
 and waits for its message.
-
-Currently ignores the error topic and doesn't return its value.
 
 # Examples
 ```julia
@@ -95,7 +135,7 @@ location = [.1, .3]
 [(value1, error1), (value2, error2)] = sampler(location)
 ```
 """
-function (R::ROSConnection)(new_loc::Location)
+function (R::ROSConnection{NTuple{2, String}})(new_loc::Location)
     publishNextLocation(R.publisher, new_loc)
 
     rospy.wait_for_message(R.done_topic, std_msg.Bool) # a message means finished
@@ -103,7 +143,8 @@ function (R::ROSConnection)(new_loc::Location)
 
     # get values, creates a list of tuples of (value, error)
     observations = [
-        rospy.wait_for_message(val_topic, std_msg.Float32, timeout=20).data
+        (rospy.wait_for_message(val_topic, std_msg.Float32, timeout=20).data,
+            rospy.wait_for_message(err_topic, std_msg.Float32, timeout=20).data)
         for (val_topic, err_topic) in R.data_topics]
 
     @debug "received values:" observations
@@ -113,18 +154,46 @@ end
 
 """
 ```julia
-function (R::ROSConnection)(new_index::SampleInput)
+function (R::ROSConnection{String})(new_index::SampleInput)
 ```
 
 Returns a single value from the sample location of the chosen quantity.  It does
 this by first publishing the next location to sample. Once the location is
 sampled, it calls out to each topic in sequence and waits for its message.
 
-Currently ignores the error topic and doesn't return its value.
+Currently will be unused.
+"""
+function (R::ROSConnection{String})(new_index::SampleInput)
+    loc, quantity = new_index
+    publishNextLocation(R.publisher, loc)
+
+    rospy = pyimport("rospy")
+    std_msg = pyimport("std_msgs.msg")
+
+    rospy.wait_for_message(R.done_topic, std_msg.Bool) # a message means finished
+    @debug "received traveling done"
+
+    # get value
+    val_topic = R.data_topics[quantity]
+    value = rospy.wait_for_message(val_topic, std_msg.Float32, timeout=20).data
+    @debug "received value:" value
+
+    return value
+end
+
+"""
+```julia
+function (R::ROSConnection{NTuple{2, String}})(new_index::SampleInput)
+```
+
+Returns a single value and its error from the sample location of the chosen
+quantity.  It does this by first publishing the next location to sample. Once
+the location is sampled, it calls out to each topic in sequence and waits for
+its message.
 
 Currently will be unused.
 """
-function (R::ROSConnection)(new_index::SampleInput)
+function (R::ROSConnection{NTuple{2, String}})(new_index::SampleInput)
     loc, quantity = new_index
     publishNextLocation(R.publisher, loc)
 
@@ -137,10 +206,10 @@ function (R::ROSConnection)(new_index::SampleInput)
     # get value
     (val_topic, err_topic) = R.data_topics[quantity]
     value = rospy.wait_for_message(val_topic, std_msg.Float32, timeout=20).data
-    # error = rospy.wait_for_message(err_topic, std_msg.Float32, timeout=20).data
-    @debug "received value:" value# , error
+    error = rospy.wait_for_message(err_topic, std_msg.Float32, timeout=20).data
+    @debug "received value:" value, error
 
-    return value# , error
+    return value, error
 end
 
 """
