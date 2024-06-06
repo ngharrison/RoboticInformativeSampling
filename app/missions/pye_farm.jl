@@ -30,27 +30,33 @@ function pyeFarmMission(; num_samples=4)
     sampler = ROSConnection(data_topics, done_topic, pub_topic)
 
     # # full bounds
-    # bounds = (lower=[284711.12, 6241319.42],
-    #     upper=[284802.91, 6241403.93])
-    # bounds = (lower=[284698.0, 6241343.0],
-    #     upper=[284805.0, 6241405.0])
+    # lower=[284711.12, 6241319.42]
+    # upper=[284802.91, 6241403.93]
+    # bounds = (; lower, upper)
+    # lower=[284698.0, 6241343.0]
+    # upper=[284805.0, 6241405.0]
+    # bounds = (; lower, upper)
 
-    # smaller bounds
-    # bounds = (lower=[284729.0, 6241334.0],
-    #     upper=[284742.0, 6241348.0])
-    # bounds = (lower=[284724.0, 6241344.0],
-    #     upper=bounds.lower .+ 10)
+    # # smaller bounds
+    # lower=[284729.0, 6241334.0]
+    # upper=[284742.0, 6241348.0]
+    # bounds = (; lower, upper)
+    # lower=[284724.0, 6241344.0]
+    # upper=bounds.lower .+ 10
+    # bounds = (; lower, upper)
 
     # full space (alt2)
-    bounds = (lower=[284725.0, 6241345.0],
-        upper=[284775.0, 6241395.0])
+    lower=[284725.0, 6241345.0]
+    upper=[284775.0, 6241395.0]
+    bounds = (; lower, upper)
 
     elev_img = load(maps_dir * "iros_alt2_dem.tif")
     elevMap = imgToMap(gray.(elev_img), bounds)
 
     # # small patch (alt3)
-    # bounds = (lower=[284745.0, 6241345.0],
-    #     upper=[284760.0, 6241360.0])
+    # lower=[284745.0, 6241345.0]
+    # upper=[284760.0, 6241360.0]
+    # bounds = (; lower, upper)
     #
     # elev_img = load(maps_dir * "iros_alt3_dem.tif")
     # elevMap = imgToMap(gray.(elev_img), bounds)
