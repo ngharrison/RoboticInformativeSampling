@@ -213,8 +213,13 @@ function values(sc::DistScaledEIGFSampleCost, loc)
     μ_err = μ_norm - closest_sample.y[1]
 
     d = (τ_norm == Inf ? Inf : 0.0)
-    # return (-μ_err^2, -σ_norm^2/exp(τ_norm), d, 0.0)
-    return (-μ_err^2, -σ_norm^2/(1 + τ_norm), d, 0.0)
+
+    # gradually delay distance scaling
+    n_scale = 2/(1 + exp(1 - length(sc.samples))) - 1
+    d_scale = 1/(1 + n_scale*τ_norm^2)
+    d_scale = isnan(d_scale) ? 1.0 : d_scale # prevent 0*Inf=NaN
+
+    return (-μ_err^2*d_scale, -σ_norm^2*d_scale, d, 0.0)
 end
 
 ## These aren't finished, don't work
