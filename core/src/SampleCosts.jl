@@ -207,7 +207,6 @@ function values(sc::DistScaledEIGFSampleCost, loc)
     τ = sc.pathCost(pointToCell(loc, sc.occupancy)) # distance to location
     bounds = getBounds(sc.occupancy)
     τ_norm = τ / mean(bounds.upper .- bounds.lower) # normalized
-    # τ_norm = sc.occupancy(loc) ? Inf : 0.0
 
     closest_sample = argmin(sample -> norm(sample.x[1] - loc), sc.samples)
 

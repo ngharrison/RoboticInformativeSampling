@@ -1,6 +1,7 @@
 module Metrics
 
 using Statistics: mean
+using LinearAlgebra: norm
 
 using InformativeSampling
 using .Maps: generateAxes
@@ -9,7 +10,7 @@ using .Samples: MapsSampler
 
 export calcMetrics
 
-function calcMetrics(mission, beliefs)
+function calcMetrics(mission, samples, beliefs)
     mission.sampler isa MapsSampler ||
         error("don't know how to get a ground truth from that type of sampler")
 
@@ -23,37 +24,27 @@ function calcMetrics(mission, beliefs)
     mxu = zeros(length(beliefs), length(M.sampler))
     mxb = zeros(length(beliefs), length(M.sampler))
     cors = Matrix{Any}(undef, (length(beliefs), length(M.sampler)))
+    dists = zeros(length(beliefs), length(M.sampler))
     for (q, map) in enumerate(M.sampler)
         (mae[:,q], mu[:,q], mb[:,q],
-         mxae[:,q], mxu[:,q], mxb[:,q], cors[:,q]) = calcMetrics(mission, beliefs, q, points)
+         mxae[:,q], mxu[:,q], mxb[:,q],
+         cors[:,q], dists[:,q]) = calcMetrics(mission, samples, beliefs, q, points)
     end
 
-    return (; mae, mu, mb, mxae, mxu, mxb, cors)
+    return (; mae, mu, mb, mxae, mxu, mxb, cors, dists)
 end
 
-function calcMetrics(mission, beliefs, q)
+function calcMetrics(mission, samples, beliefs, q)
     mission.sampler isa MapsSampler ||
         error("don't know how to get a ground truth from that type of sampler")
 
     M = mission
     axs, points = generateAxes(M.occupancy)
 
-    mae = zeros(length(beliefs))
-    mu = zeros(length(beliefs))
-    mb = zeros(length(beliefs))
-    mxae = zeros(length(beliefs))
-    mxu = zeros(length(beliefs))
-    mxb = zeros(length(beliefs))
-    cors = Vector{Any}(undef, (length(beliefs),))
-    for (i, beliefModel) in enumerate(beliefs)
-        (mae[i], mu[i], mb[i],
-         mxae[i], mxu[i], mxb[i], cors[i]) = calcMetrics(mission, beliefModel, q, points)
-    end
-
-    return (; mae, mu, mb, mxae, mxu, mxb, cors)
+    return calcMetrics(mission, samples, beliefs, q, points)
 end
 
-function calcMetrics(mission, beliefs, q, points)
+function calcMetrics(mission, samples, beliefs, q, points)
     mae = zeros(length(beliefs))
     mu = zeros(length(beliefs))
     mb = zeros(length(beliefs))
@@ -61,12 +52,16 @@ function calcMetrics(mission, beliefs, q, points)
     mxu = zeros(length(beliefs))
     mxb = zeros(length(beliefs))
     cors = Vector{Any}(undef, (length(beliefs),))
+    dists = zeros(length(beliefs))
     for (i, beliefModel) in enumerate(beliefs)
         (mae[i], mu[i], mb[i],
-         mxae[i], mxu[i], mxb[i], cors[i]) = calcMetrics(mission, beliefModel, q, points)
+         mxae[i], mxu[i], mxb[i],
+         cors[i]) = calcMetrics(mission, beliefModel, q, points)
+        # distance
+        dists[i] = i==1 ? 0.0 : norm(samples[i].x[1] - samples[i-1].x[1])
     end
 
-    return (; mae, mu, mb, mxae, mxu, mxb, cors)
+    return (; mae, mu, mb, mxae, mxu, mxb, cors, dists)
 end
 
 function calcMetrics(mission, beliefModel::BeliefModel, q, points)

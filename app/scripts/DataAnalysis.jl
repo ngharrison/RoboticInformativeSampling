@@ -91,7 +91,7 @@ gui()
 savefig(output_dir * "$dir/$(dir)_errors.png")
 
 #* Batch
-dir = "batch_means_noise_1e2"
+dir = "batch_means_noise_rand_start_dist_scaled"
 
 p_err = Vector{Any}(undef, 8)
 p_cor = Vector{Any}(undef, 8)
@@ -101,6 +101,9 @@ err_stds = zeros(30, 8)
 
 det_means = Vector{Any}(undef, 8)
 det_stds = Vector{Any}(undef, 8)
+
+dist_means = zeros(30, 8)
+dist_stds = zeros(30, 8)
 
 priors = [
     (0, 0, 0),
@@ -122,12 +125,16 @@ for (i, p) in enumerate(priors)
     maes = [run.mae for run in data["metrics"]]
     cors = [run.cors for run in data["metrics"]]
     dets = [[v.^2 for v in u] for u in cors]
+    dists = [cumsum(run.dists) for run in data["metrics"]]
 
     err_means[:,i] .= mean(maes)
     err_stds[:,i] .= std(maes)
 
     det_means[i] = mean(dets)
     det_stds[i] = stdM(dets)
+
+    dist_means[:,i] .= mean(dists)
+    dist_stds[:,i] .= std(dists)
 
     plt = plot(hcat((c[2:end] for c in mean(dets))...)',
                ribbon=hcat((c[2:end] for c in stdM(dets))...)',
@@ -181,7 +188,7 @@ plot(
     xlabel="Sample Number",
     ylabel="Mean Absolute Map Error",
     title="Prediction Errors",
-    ylim=(0,.3),
+    ylim=(0,.35),
     seriescolors=[(RGB((p.*0.8)...) for p in priors)...;;],
     labels=[replace([join(c for (p, c) in zip(p, chars) if p==1) for p in priors], ""=>"none")...;;],
     framestyle=:box,
@@ -199,6 +206,32 @@ plot(
 gui()
 
 savefig(output_dir * "$dir/errors.png")
+
+plot(
+    dist_means,
+    # ribbon=err_stds,
+    xlabel="Sample Number",
+    ylabel="Cumulative Distance",
+    title="Distance Traveled",
+    ylim=(0,22),
+    seriescolors=[(RGB((p.*0.8)...) for p in priors)...;;],
+    labels=[replace([join(c for (p, c) in zip(p, chars) if p==1) for p in priors], ""=>"none")...;;],
+    framestyle=:box,
+    markers=true,
+    legendcolumns=2, # OR layout=2,
+    titlefontsize=24,
+    markersize=8,
+    tickfontsize=15,
+    labelfontsize=20,
+    legendfontsize=16,
+    legend=:topleft,
+    margin=5mm,
+    linewidth=4,
+    size=(width, height)
+)
+gui()
+
+savefig(output_dir * "$dir/distances.png")
 
 
 #* Calculating statistical significance of difference between means

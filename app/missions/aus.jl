@@ -124,7 +124,7 @@ using .DataIO: save
     # save(mission, samples, beliefs; animation=true)
 
     ## calculate errors
-    metrics = calcMetrics(mission, beliefs, 1)
+    metrics = calcMetrics(mission, samples, beliefs, 1)
 
     ## save outputs
     save(metrics; file_name="aus_ave_means_noise/metrics_$(join(priors))")

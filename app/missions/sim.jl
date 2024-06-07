@@ -73,7 +73,7 @@ function simMission(; seed_val=0, num_samples=30, num_peaks=3, priors=Bool[1,1,1
 
     sampler = MapsSampler(map0)
 
-    sampleCostType = EIGFSampleCost
+    sampleCostType = DistScaledEIGFSampleCost
 
     ## initialize alg values
     # weights = (; μ=17, σ=1.5, τ=7)
@@ -81,7 +81,7 @@ function simMission(; seed_val=0, num_samples=30, num_peaks=3, priors=Bool[1,1,1
     # weights = (; μ=1, σ=1e1, τ=1, d=0) # sogp
     weights = (; μ=1, σ=1e2, τ=1, d=0) # others
     # weights = (; μ=1, σ=1, τ=.1, d=1)
-    start_locs = [[1.0, 0.0]] # starting location
+    start_locs = [] # starting location
 
     # n = (4,4) # number of samples in each dimension
     # axs_sp = range.(bounds..., n)
@@ -142,7 +142,7 @@ vis(mission.sampler..., prior_maps...;
 # using .DataIO: save
 #
 # ## calculate errors
-# metrics = calcMetrics(mission, beliefs, 1)
+# metrics = calcMetrics(mission, samples, beliefs, 1)
 #
 # ## save outputs
 # save(mission, samples, beliefs; animation=true)
@@ -177,9 +177,9 @@ metrics = Array{Any, 2}(undef, (length(mission_peaks), num_runs))
             @debug "output correlation matrix:" outputCorMat(beliefs[end])
             # save(mission, samples, beliefs; animation=true)
             ## calculate errors
-            metrics[i,j] = calcMetrics(mission, beliefs, 1)
+            metrics[i,j] = calcMetrics(mission, samples, beliefs, 1)
         end
     end
     ## save outputs
-    save(metrics; file_name="batch_means_noise_1e2/metrics_$(join(priors))")
+    save(metrics; file_name="batch_means_noise_rand_start_dist_scaled/metrics_$(join(priors))")
 end
