@@ -99,7 +99,7 @@ function handleNextSampleLocation(req)
     dims = Tuple(d.size for d in req.occupancy.layout.dim)
     occupancy = Map(reshape(Bool.(req.occupancy.data), dims), bounds)
 
-    sampleCost = EIGFSampleCost(
+    sampleCost = EIGF(
         occupancy, samples, beliefModel, req.quantities, req.weights
     )
     new_loc = selectSampleLocation(sampleCost, bounds)
@@ -137,7 +137,7 @@ function handleBeliefMapsAndNextSampleLocation(req)
 
     occupancy = Map(reshape(Bool.(req.occupancy.data), dims), bounds)
 
-    sampleCost = EIGFSampleCost(
+    sampleCost = EIGF(
         occupancy, samples, beliefModel, req.quantities, req.weights
     )
     new_loc = selectSampleLocation(sampleCost, bounds)

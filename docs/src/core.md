@@ -66,10 +66,10 @@ Holds a variety of SampleCost functions used by [Samples.jl](@ref) in selecting 
 Main public types and functions:
 - `SampleCost`
 - `values`
-- `BasicSampleCost`
-- `NormedSampleCost`
-- `MIPTSampleCost`
-- `EIGFSampleCost`
+- `DistProx`
+- `LogNormed`
+- `MIPT`
+- `EIGF`
 
 ```@autodocs
 Modules = [SampleCosts]

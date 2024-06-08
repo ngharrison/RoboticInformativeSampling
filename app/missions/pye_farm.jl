@@ -5,7 +5,7 @@ using Images: gray
 
 using InformativeSampling
 using .Maps: Map
-using .SampleCosts: EIGFSampleCost
+using .SampleCosts: EIGF
 using .Samples: Sample
 using .Missions: Mission
 
@@ -75,7 +75,7 @@ function pyeFarmMission(; num_samples=4)
                          for x in points_sp if !isnan(d(x))]
     prior_samples = Sample{Float64}[]
 
-    sampleCostType = EIGFSampleCost
+    sampleCostType = EIGF
 
     ## initialize alg values
     weights = (; μ=1, σ=5e1, τ=1, d=1) # mean, std, dist, prox

@@ -7,7 +7,7 @@ using Random: seed!
 using InformativeSampling
 using .Maps: Map, generateAxes
 using .Samples: Sample, MapsSampler
-using .SampleCosts: EIGFSampleCost, DistScaledEIGFSampleCost
+using .SampleCosts: EIGF, DistScaledEIGF
 using .Missions: Mission
 
 using InformativeSamplingUtils
@@ -73,7 +73,7 @@ function simMission(; seed_val=0, num_samples=30, num_peaks=3, priors=Bool[1,1,1
 
     sampler = MapsSampler(map0)
 
-    sampleCostType = DistScaledEIGFSampleCost
+    sampleCostType = DistScaledEIGF
 
     ## initialize alg values
     # weights = (; μ=17, σ=1.5, τ=7)

@@ -7,7 +7,7 @@ using Logging: global_logger, ConsoleLogger, Info, Debug
 
 using InformativeSampling
 using .Maps: Map, generateAxes
-using .SampleCosts: EIGFSampleCost
+using .SampleCosts: EIGF
 using .Missions: Mission
 
 # this requires a working rospy installation
@@ -31,7 +31,7 @@ function rosMission(; num_samples=4)
 
     occupancy = Map(zeros(Bool, 100, 100), bounds)
 
-    sampleCostType = EIGFSampleCost
+    sampleCostType = EIGF
 
     ## initialize alg values
     weights = (; μ=1, σ=5e3, τ=1, d=1) # mean, std, dist, prox

@@ -7,7 +7,7 @@ using Random: seed!
 using InformativeSampling
 using .Maps: Map
 using .Samples: Sample, MapsSampler
-using .SampleCosts: EIGFSampleCost
+using .SampleCosts: EIGF
 using .Missions: Mission
 
 using InformativeSamplingUtils
@@ -40,7 +40,7 @@ function nswMission(; seed_val=0, num_samples=30, priors=Bool[1,1,1])
     occupancy = imgToMap(Matrix{Bool}(reduce(.|, [isnan.(i)
                                                   for i in ims_sm])), bounds...)
 
-    sampleCostType = EIGFSampleCost
+    sampleCostType = EIGF
 
     ## initialize alg values
     # weights = [1e-1, 6, 5e-1, 3e-3] # mean, std, dist, prox

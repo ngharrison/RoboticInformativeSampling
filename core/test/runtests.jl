@@ -6,7 +6,7 @@ using .Paths: PathCost, finalOrientation, getPath
 using .Maps: Map, res, pointToCell, cellToPoint, generateAxes
 using .Missions: Mission
 using .Samples: MapsSampler
-using .SampleCosts: EIGFSampleCost
+using .SampleCosts: EIGF
 
 @testset "Paths" begin
     occupancy = zeros(Bool, 10, 10) # open area
@@ -111,7 +111,7 @@ end
     map0 = Map(mat, bounds)
     sampler = MapsSampler(map0)
 
-    sampleCostType = EIGFSampleCost
+    sampleCostType = EIGF
 
     ## initialize alg values
     weights = (; μ=1, σ=1e2, τ=1, d=0) # others

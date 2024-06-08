@@ -2,7 +2,7 @@
 using InformativeSampling
 using .Maps: Map
 using .Samples: UserSampler
-using .SampleCosts: EIGFSampleCost
+using .SampleCosts: EIGF
 using .Missions: Mission
 
 using InformativeSamplingUtils
@@ -19,7 +19,7 @@ function pickMission(; num_samples=30)
     # sampling two quantities each time
     sampler = UserSampler(1:2)
 
-    sampleCostType = EIGFSampleCost
+    sampleCostType = EIGF
 
     ## initialize alg values
     weights = (; μ=1, σ=1e2, τ=1, d=0) # others

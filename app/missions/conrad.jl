@@ -5,7 +5,7 @@ using DelimitedFiles: readdlm
 using InformativeSampling
 using .Maps: Map, pointToCell
 using .Samples: MapsSampler
-using .SampleCosts: NormedSampleCost
+using .SampleCosts: LogNormed
 using .Missions: Mission
 
 using InformativeSamplingUtils
@@ -42,7 +42,7 @@ function conradMission()
 
     sampler = MapsSampler(maps)
 
-    sampleCostType = NormedSampleCost
+    sampleCostType = LogNormed
 
     ## initialize alg values
     weights = [1, 6, 1, 3e-3] # mean, std, dist, prox
