@@ -23,7 +23,7 @@ Has the form:
 ``\\mathrm{cost} = - w_{1} μ - w_{2} σ + w_{3} τ + w_{4} D``
 """
 function (sc::SampleCost)(loc)
-    # sc.occupancy(loc) && return Inf
+    sc.occupancy(loc) && return Inf
     vals = values(sc, loc)
     return sum(w*v for (w,v) in zip(sc.weights, vals))
 end
