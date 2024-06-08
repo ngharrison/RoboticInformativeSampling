@@ -154,17 +154,14 @@ function EIGFSampleCost(occupancy, samples, beliefModel, quantities, weights)
     start = pointToCell(samples[end].x[1], occupancy) # just looking at location
     pathCost = PathCost(start, occupancy, res(occupancy))
 
-    # using the max values from the current belief
-    locs = [cellToPoint(ci, occupancy) for ci in vec(CartesianIndices(occupancy))]
-    belief_max = [maximum(first(beliefModel(tuple.(locs, q)))) for q in quantities]
+    belief_max = nothing
 
     EIGFSampleCost(occupancy, samples, beliefModel,
                      quantities, weights, belief_max, pathCost)
 end
 
 function values(sc::EIGFSampleCost, loc)
-    beliefs = sc.beliefModel([(loc, q) for q in sc.quantities]) # means and standard deviations
-    μ_norm, σ_norm = mean.(beliefs)
+    μ, σ = sc.beliefModel((loc, 1)) # mean and standard deviation
 
     # τ = sc.pathCost(pointToCell(loc, sc.occupancy)) # distance to location
     # bounds = getBounds(sc.occupancy)
@@ -173,9 +170,9 @@ function values(sc::EIGFSampleCost, loc)
 
     closest_sample = argmin(sample -> norm(sample.x[1] - loc), sc.samples)
 
-    μ_err = μ_norm - closest_sample.y[1]
+    μ_err = μ - closest_sample.y[1]
 
-    return (-μ_err^2, -σ_norm^2, τ_norm, 0.0)
+    return (-μ_err^2, -σ^2, τ_norm, 0.0)
 end
 
 struct DistScaledEIGFSampleCost <: SampleCost
@@ -192,17 +189,14 @@ function DistScaledEIGFSampleCost(occupancy, samples, beliefModel, quantities, w
     start = pointToCell(samples[end].x[1], occupancy) # just looking at location
     pathCost = PathCost(start, occupancy, res(occupancy))
 
-    # using the max values from the current belief
-    locs = [cellToPoint(ci, occupancy) for ci in vec(CartesianIndices(occupancy))]
-    belief_max = [maximum(first(beliefModel(tuple.(locs, q)))) for q in quantities]
+    belief_max = nothing
 
     DistScaledEIGFSampleCost(occupancy, samples, beliefModel,
                      quantities, weights, belief_max, pathCost)
 end
 
 function values(sc::DistScaledEIGFSampleCost, loc)
-    beliefs = sc.beliefModel([(loc, q) for q in sc.quantities]) # means and standard deviations
-    μ_norm, σ_norm = mean.(beliefs)
+    μ, σ = sc.beliefModel((loc, 1)) # mean and standard deviation
 
     τ = sc.pathCost(pointToCell(loc, sc.occupancy)) # distance to location
     bounds = getBounds(sc.occupancy)
@@ -210,7 +204,7 @@ function values(sc::DistScaledEIGFSampleCost, loc)
 
     closest_sample = argmin(sample -> norm(sample.x[1] - loc), sc.samples)
 
-    μ_err = μ_norm - closest_sample.y[1]
+    μ_err = μ - closest_sample.y[1]
 
     d = (τ_norm == Inf ? Inf : 0.0)
 
@@ -219,7 +213,7 @@ function values(sc::DistScaledEIGFSampleCost, loc)
     d_scale = 1/(1 + n_scale*τ_norm^2)
     d_scale = isnan(d_scale) ? 1.0 : d_scale # prevent 0*Inf=NaN
 
-    return (-μ_err^2*d_scale, -σ_norm^2*d_scale, d, 0.0)
+    return (-μ_err^2*d_scale, -σ^2*d_scale, d, 0.0)
 end
 
 ## These aren't finished, don't work
