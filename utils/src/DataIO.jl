@@ -93,8 +93,7 @@ the highest of all the peaks before being added into the total. This causes the
 entire ground truth map to have a max value of (about) 1.
 """
 function (ggt::GaussGroundTruth)(X)
-    h_max = maximum(p.h for p in ggt.peaks)
-    return sum(p.h*pdf(p.distr, X)/pdf(p.distr, p.distr.μ)/h_max for p in ggt.peaks)
+    return sum(p.h*pdf(p.distr, X) for p in ggt.peaks)
 end
 
 """
