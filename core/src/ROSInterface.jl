@@ -92,24 +92,7 @@ sampler = ROSConnection(data_topics, done_topic, pub_topic)
 location = [.1, .3]
 [value1, value2] = sampler(location)
 ```
-"""
-function (R::ROSConnection{String})(new_loc::Location)
-    publishNextLocation(R.publisher, new_loc)
 
-    rospy.wait_for_message(R.done_topic, std_msg.Bool) # a message means finished
-    @debug "received traveling done"
-
-    # get a list of values
-    observations = [
-        rospy.wait_for_message(val_topic, std_msg.Float32, timeout=20).data
-        for val_topic in R.data_topics]
-
-    @debug "received values:" observations
-
-    return observations
-end
-
-"""
 ```julia
 function (R::ROSConnection{NTuple{2, String}})(new_loc::Location)
 ```
@@ -135,6 +118,22 @@ location = [.1, .3]
 [(value1, error1), (value2, error2)] = sampler(location)
 ```
 """
+function (R::ROSConnection{String})(new_loc::Location)
+    publishNextLocation(R.publisher, new_loc)
+
+    rospy.wait_for_message(R.done_topic, std_msg.Bool) # a message means finished
+    @debug "received traveling done"
+
+    # get a list of values
+    observations = [
+        rospy.wait_for_message(val_topic, std_msg.Float32, timeout=20).data
+        for val_topic in R.data_topics]
+
+    @debug "received values:" observations
+
+    return observations
+end
+
 function (R::ROSConnection{NTuple{2, String}})(new_loc::Location)
     publishNextLocation(R.publisher, new_loc)
 
@@ -162,6 +161,17 @@ this by first publishing the next location to sample. Once the location is
 sampled, it calls out to each topic in sequence and waits for its message.
 
 Currently will be unused.
+
+```julia
+function (R::ROSConnection{NTuple{2, String}})(new_index::SampleInput)
+```
+
+Returns a single value and its error from the sample location of the chosen
+quantity.  It does this by first publishing the next location to sample. Once
+the location is sampled, it calls out to each topic in sequence and waits for
+its message.
+
+Currently will be unused.
 """
 function (R::ROSConnection{String})(new_index::SampleInput)
     loc, quantity = new_index
@@ -181,18 +191,6 @@ function (R::ROSConnection{String})(new_index::SampleInput)
     return value
 end
 
-"""
-```julia
-function (R::ROSConnection{NTuple{2, String}})(new_index::SampleInput)
-```
-
-Returns a single value and its error from the sample location of the chosen
-quantity.  It does this by first publishing the next location to sample. Once
-the location is sampled, it calls out to each topic in sequence and waits for
-its message.
-
-Currently will be unused.
-"""
 function (R::ROSConnection{NTuple{2, String}})(new_index::SampleInput)
     loc, quantity = new_index
     publishNextLocation(R.publisher, loc)
