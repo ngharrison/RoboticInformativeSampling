@@ -44,7 +44,13 @@ struct Map{T1<:Any, N<:Any, A<:AbstractArray{T1, N}, T2<:Real} <: AbstractArray{
     end
 end
 
-Map(data::AbstractArray{<:Any}) = Map(data, (lower=zeros(ndims(data)), upper=ones(ndims(data))))
+function Map(data::AbstractArray{<:Any})
+    bounds = (
+        lower=zeros(ndims(data)),
+        upper=ones(ndims(data))
+    )
+    return Map(data, bounds)
+end
 
 """
 Method accepts a single vector (the location), returns a scalar (the value at
@@ -103,8 +109,8 @@ function Base.rand(map::Map)
 end
 
 function randomPoint(map::Map)
-    return map.bounds.lower .+
-           rand(ndims(map)) .* (map.bounds.upper .- map.bounds.lower)
+    dif = (map.bounds.upper .- map.bounds.lower)
+    return map.bounds.lower .+ rand(ndims(map)) .* dif
 end
 
 """
@@ -137,7 +143,9 @@ $(TYPEDSIGNATURES)
 
 Returns the resolution for each dimension of the given Map as a vector.
 """
-res(map) = (map.bounds.upper .- map.bounds.lower) ./ (size(map) .- 1)
+function res(map)
+    return (map.bounds.upper .- map.bounds.lower) ./ (size(map) .- 1)
+end
 
 """
 $(TYPEDSIGNATURES)
@@ -145,15 +153,19 @@ $(TYPEDSIGNATURES)
 Takes in a point in world-coordinates and a Map and returns a CartesianIndex for
 the underlying array.
 """
-pointToCell(x, map) = CartesianIndex(Tuple(round.(Int, (x .- map.bounds.lower)
-                                                  ./ res(map)) .+ 1))
+function pointToCell(x, map)
+    dif = (x .- map.bounds.lower)
+    return CartesianIndex(Tuple(round.(Int, dif ./ res(map)) .+ 1))
+end
 
 """
 $(TYPEDSIGNATURES)
 
 Takes in a CartesianIndex and a Map and returns a point in world-coordinates.
 """
-cellToPoint(ci, map) = (collect(Tuple(ci)) .- 1) .* res(map) .+ map.bounds.lower
+function cellToPoint(ci, map)
+    return (collect(Tuple(ci)) .- 1) .* res(map) .+ map.bounds.lower
+end
 
 """
 $(TYPEDSIGNATURES)
