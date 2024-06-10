@@ -99,6 +99,9 @@ p_cor = Vector{Any}(undef, 8)
 err_means = zeros(30, 8)
 err_stds = zeros(30, 8)
 
+max_err_means = zeros(30, 8)
+max_err_stds = zeros(30, 8)
+
 det_means = Vector{Any}(undef, 8)
 det_stds = Vector{Any}(undef, 8)
 
@@ -123,12 +126,16 @@ for (i, p) in enumerate(priors)
 
     data = load(file_name)
     maes = [run.mae for run in data["metrics"]]
+    mxaes = [run.mxae for run in data["metrics"]]
     cors = [run.cors for run in data["metrics"]]
     dets = [[v.^2 for v in u] for u in cors]
     dists = [cumsum(run.dists) for run in data["metrics"]]
 
     err_means[:,i] .= mean(maes)
     err_stds[:,i] .= std(maes)
+
+    max_err_means[:,i] .= mean(mxaes)
+    max_err_stds[:,i] .= std(mxaes)
 
     det_means[i] = mean(dets)
     det_stds[i] = stdM(dets)
@@ -206,6 +213,31 @@ plot(
 gui()
 
 savefig(output_dir * "$dir/errors.png")
+
+plot(
+    max_err_means,
+    # ribbon=max_err_stds,
+    xlabel="Sample Number",
+    ylabel="Max Absolute Map Error",
+    title="Max Prediction Errors",
+    ylim=(0,1),
+    seriescolors=[(RGB((p.*0.8)...) for p in priors)...;;],
+    labels=[replace([join(c for (p, c) in zip(p, chars) if p==1) for p in priors], ""=>"none")...;;],
+    framestyle=:box,
+    markers=true,
+    legendcolumns=2, # OR layout=2,
+    titlefontsize=24,
+    markersize=8,
+    tickfontsize=15,
+    labelfontsize=20,
+    legendfontsize=16,
+    margin=5mm,
+    linewidth=4,
+    size=(width, height)
+)
+gui()
+
+savefig(output_dir * "$dir/max_errors.png")
 
 plot(
     dist_means,
