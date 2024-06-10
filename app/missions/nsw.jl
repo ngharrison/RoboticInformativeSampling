@@ -32,13 +32,13 @@ function nswMission(; seed_val=0, num_samples=30, priors=Bool[1,1,1])
 
     bounds = (lower = [0.0, 0.0], upper = [1.0, 1.0])
 
-    map0 = imgToMap(normalize(ims_sm[1]), bounds...)
+    map0 = imgToMap(normalize(ims_sm[1]), bounds)
     sampler = MapsSampler(map0)
 
-    prior_maps = [imgToMap(normalize(img), bounds...) for img in ims_sm[2:end]]
+    prior_maps = [imgToMap(normalize(img), bounds) for img in ims_sm[2:end]]
 
     occupancy = imgToMap(Matrix{Bool}(reduce(.|, [isnan.(i)
-                                                  for i in ims_sm])), bounds...)
+                                                  for i in ims_sm])), bounds)
 
     sampleCostType = EIGF
 

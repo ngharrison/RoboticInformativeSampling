@@ -60,7 +60,7 @@ prior_samples = [Sample((x, i+length(sampler)), d(x))
 points_sp = Vector{Float64}[]
 sampleCost = x -> occupancy(x) ? Inf : -minimum(norm(loc - x) for loc in points_sp; init=Inf)
 for _ in 1:25
-    x = selectSampleLocation(sampleCost, getBounds(occupancy)...)
+    x = selectSampleLocation(sampleCost, getBounds(occupancy))
     push!(points_sp, x)
 end
 prior_samples = [Sample((x, i+length(sampler)), d(x))

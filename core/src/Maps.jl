@@ -44,7 +44,7 @@ struct Map{T1<:Any, N<:Any, A<:AbstractArray{T1, N}, T2<:Real} <: AbstractArray{
     end
 end
 
-Map(data::AbstractArray{<:Any}) = Map(data, zeros(ndims(data)), ones(ndims(data)))
+Map(data::AbstractArray{<:Any}) = Map(data, (lower=zeros(ndims(data)), upper=ones(ndims(data))))
 
 """
 Method accepts a single vector (the location), returns a scalar (the value at

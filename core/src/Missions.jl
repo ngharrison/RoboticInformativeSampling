@@ -181,7 +181,7 @@ end
 
 function replay(func, M::Mission, full_samples; sleep_time=0.0)
     beliefs = map(1:length(full_samples)) do i
-        BeliefModel([M.prior_samples; full_samples[1:i]], getBounds(M.occupancy)...)
+        BeliefModel([M.prior_samples; full_samples[1:i]], getBounds(M.occupancy))
     end
     replay(func, M, full_samples, beliefs; sleep_time)
 end
