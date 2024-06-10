@@ -17,7 +17,6 @@ function rosMission(; num_samples=4)
 
     # the topics that will be listened to for measurements
     data_topics = [
-        # Crop height avg and std in frame (excluding wheels)
         ("value1", "value2")
     ]
 
@@ -60,12 +59,19 @@ using .DataIO: save
 ## initialize data for mission
 mission = rosMission()
 
-## run search alg
-@time samples, beliefs = mission(
-    # vis;
-    sleep_time=0.0
-)
-# save(mission, samples, beliefs)
+# start other scripts
+cmds = (`$(Base.source_dir())/../ros/sample_sim.py`,
+        `$(Base.source_dir())/../ros/sortie_sim.py`)
 
-## save outputs
-# saveBeliefMapToPng(beliefs[end], mission.occupancy)
+procs = run.(cmds; wait=false)
+
+try
+    ## run search alg
+    @time samples, beliefs = mission(
+        # vis;
+        sleep_time=0.0
+    )
+finally
+    # kill other scripts
+    kill.(procs)
+end

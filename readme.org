@@ -40,7 +40,7 @@ To understand more about the code and the Julia language in general, go to the [
 
 ** Custom Runs
 
-The easiest way to start using the code for your own purposes is to copy the =example.jl= file and change the data and settings to fit what you need. You can also look through the other files in =app/missions/= for inspiration, such as =aus.jl= for use with real data and =ros.jl= for use with ROS topics.
+The easiest way to start using the code for your own purposes is to copy the =example.jl= file and change the data and settings to fit what you need. You can also look through the other files in =app/missions/= for inspiration, such as =aus.jl= for use with real data and =ros_test.jl= for use with ROS topics.
 
 An interesting mission is found in =user.jl=. This script does all the normal mapping and automatic sample location selection, but it asks for user input for every sample measurement.
 
@@ -56,7 +56,7 @@ If you get: =Error: Unable to load the 'rospy' python package!=
 3. Restart the julia REPL
 
 
-This could also happen while running the =setup.jl= script. Make sure
+If you get: =ERROR: LoadError: PyError ... ROSInterruptException('rospy shutdown',)= from within the Julia REPL, this indicates that you interrupted a previous running ROS node (using =ctrl-c=) and a new node can't be created because that flag sticks around inside the same Julia process. You will need to close and reopen the REPL to run new nodes again.
 
 *** Code reloading
 When developing the code, you'll want to install Revise.jl in order to reload code you've changed while using an open REPL. Follow these steps and you won't have to worry about it again.
@@ -72,15 +72,16 @@ You can read a bit more about this in the docs.
 * Using as a ROS Package
 The project includes code to communicate with other nodes in the Robot Operating System (ROS). This code is designed to work with ROS1 and has been tested on Melodic and Noetic. These features will work just by running the code as normal from the command line or within the Julia REPL.
 
-In addition, this project can be used as a ROS package itself by simply putting it inside your workspace source directory (e.g. =catkin_ws/src=). It works similar to using a ROS python package because it uses rospy behind the scenes. If you want to run, for example, =app/missions/ros.jl=:
+In addition, this project can be used as a ROS package itself by simply putting it inside your workspace source directory (e.g. =catkin_ws/src=). It works similar to using a ROS python package because it uses rospy behind the scenes. To test your ROS+Julia setup, run the following:
 
-1. Make sure the file is executable
-2. Run =catkin_make= from the workspace
-3. Source the workspace
-4. Run =rosrun informative_sampling ros.jl=
+1. =catkin_make= from the ROS workspace directory
+2. =. devel/setup.bash= to source the workspace
+3. =rosrun informative_sampling ros_test.jl=
 
 
-The file will need to have the following code at the top for this to work:
+If the sampling mission runs without errors, everything is working. This script starts up two helper scripts first so it has something to talk to, performs its informative sampling mission, and then closes everything.
+
+If you want to do this with other files, they will need to be executable and have the following code at the top for this to work (and be in the =app/missions= or =app/ros= directory):
 #+begin_src julia
 #!/usr/bin/env julia
 
@@ -88,14 +89,9 @@ using Pkg
 Pkg.activate(Base.source_dir() * "/..")
 #+end_src
 
-Or you can just run the same script from within the Julia REPL as described [[* Quick Start][above]]. =rosrun= is a convenience to find the executable scripts within the package and doesn't provide maintaining compilation and variables like the REPL does.
+You can also just run the same script from within the Julia REPL as described [[* Quick Start][above]]. The Julia code handles the actual connections to ROS and =rosrun= is just a convenience to find the executable scripts within the package. It also doesn't provide maintaining compilation and variables (for inspection) like the REPL does.
 
-Such ROS-based missions will work with the right topics publishing. =ros.jl= is a good way to test things are working, but you will first need to run two other simulation scripts first so it has something to talk to:
-
-=rosrun informative_sampling sample_sim.py=
-=rosrun informative_sampling sortie_sim.py=
-
-Files like these are generally found in the =app/ros= directory.
+ROS-related helper files are generally found in the =app/ros= directory.
 
 * Documentation
 
