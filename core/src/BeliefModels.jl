@@ -1,7 +1,8 @@
 module BeliefModels
 
-using LinearAlgebra: diag, PosDefException
-using AbstractGPs: GP, posterior, mean_and_var, mean_and_cov, logpdf
+using LinearAlgebra: diag, PosDefException, norm
+using AbstractGPs: GP, posterior, mean_and_var, mean_and_cov,
+                   logpdf, cov, var, diag_Xt_invA_X
 using Statistics: mean, std
 using Optim: optimize, Options, NelderMead, LBFGS
 using ParameterHandling: value_flatten, fixed, value
@@ -12,7 +13,7 @@ using ..Kernels: multiMeanAve, singleKernel, multiKernel, fullyConnectedCovNum,
                  slfmKernel, fullyConnectedCovMat, manyToOneCovNum, manyToOneCovMat,
                  initHyperparams
 
-export BeliefModel, outputCorMat
+export BeliefModel, outputCorMat, meanDerivAndVar
 
 """
 $(TYPEDEF)
@@ -167,6 +168,38 @@ function (beliefModel::BeliefModelSimple)(X::AbstractVector{SampleInput}; full_c
     μ, σ² = func(beliefModel.gp, X)
     return μ, .√clamp!(σ², 0.0, Inf) # avoid negative variances
 end
+
+function meanDerivAndVar(beliefModel::BeliefModelSimple, x::SampleInput)
+    return only.(meanDerivAndVar(beliefModel, [x]))
+end
+
+function meanDerivAndVar(beliefModel::BeliefModelSimple, X::AbstractVector{SampleInput})
+    f = beliefModel.gp
+    C_xcond_x = cov(f.prior, f.data.x, X)
+    m_deriv_norm = derivNorm(X, f.data.x, C_xcond_x, beliefModel.θ.ℓ, f.data.α)
+    C_post_diag = var(f.prior, X) - diag_Xt_invA_X(f.data.C, C_xcond_x)
+    return m_deriv_norm, .√clamp!(C_post_diag, 0.0, Inf)
+end
+
+function derivNorm(X, Xm, C_xcond_x, ℓ, α)
+    m_deriv_dims = map(eachindex(X[1][1])) do i
+        dif_mat = [xi[1][i] - xj[1][i] for xi in X, xj in Xm]
+        k_prime = -dif_mat ./ ℓ^2
+        (C_xcond_x' .* k_prime) * α
+    end
+    return sqrt.(sum(arr.^2 for arr in m_deriv_dims))
+end
+
+# a = [([1, 2], 1), ([7, 5], 1)]
+# b = [([1, 2], 1), ([3, 4], 1), ([5, 6], 1)]
+# cc = ones(length(b), length(a))
+# ff = ones(length(b))
+# m_deriv_dims = map(eachindex(a[1][1])) do i
+#     dif_mat = [xi[1][i] - xj[1][i] for xi in a, xj in b]
+#     k_prime = -dif_mat ./ 0.1^2
+#     (cc' .* k_prime) * ff
+# end
+# sqrt.(sum(arr.^2 for arr in m_deriv_dims))
 
 """
 Inputs:

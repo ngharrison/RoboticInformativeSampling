@@ -3,10 +3,10 @@ module InformativeSampling
 # put all the code into the top namespace
 include("Maps.jl")
 include("Paths.jl")
-include("SampleCosts.jl")
 include("Samples.jl")
 include("Kernels.jl")
 include("BeliefModels.jl")
+include("SampleCosts.jl")
 include("ROSInterface.jl")
 include("Missions.jl")
 
