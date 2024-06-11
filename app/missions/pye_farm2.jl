@@ -8,6 +8,7 @@ using .Maps: Map, generateAxes, getBounds
 using .SampleCosts: EIGF, DistScaledEIGF
 using .Samples: Sample, MapsSampler
 using .Missions: Mission
+using .BeliefModels: BeliefModel
 
 # this requires a working rospy installation
 using .ROSInterface: ROSConnection
@@ -25,6 +26,7 @@ function pyeFarmMission(; num_samples=4,
     data_topics = [
         # Crop height avg in frame (excluding wheels)
         "/rss/gp/crop_height_avg"
+        "/rss/silios/ndvi_bw_gradient_image" # TODO check this
     ]
 
     done_topic = "sortie_finished"
@@ -75,7 +77,7 @@ function pyeFarmMission(; num_samples=4,
         n = (7, 7) # number of samples in each dimension
         axs_sp = range.(bounds..., n)
         points_sp = vec(collect.(Iterators.product(axs_sp...)))
-        prior_samples = [Sample{Float64}((x, i + length(sampler)), d(x))
+        prior_samples = [Sample{Float64}((x, i + 1), d(x))
                          for (i, d) in enumerate(prior_maps)
                          for x in points_sp if !isnan(d(x))]
     end
@@ -109,8 +111,8 @@ using .DataIO: save
 ## initialize data for mission
 mission, prior_maps = pyeFarmMission(
     num_samples=30,
-    sampleCostType=EIGF,
-    use_priors=true,
+    sampleCostType=DistScaledEIGF,
+    use_priors=false,
     start_locs=[]
 )
 
@@ -124,3 +126,74 @@ vis(prior_maps[1]; points=first.(getfield.(mission.prior_samples, :x)))
     save(M, samples, beliefModel)
 end;
 save(mission, samples, beliefs)
+
+
+#* Publish maps
+
+using PyCall
+
+rospy = pyimport("rospy")
+std_msg = pyimport("std_msgs.msg")
+sen_msg = pyimport("sensor_msgs.msg")
+
+axs, points = generateAxes(mission.occupancy)
+dims = size(mission.occupancy)
+
+quantities = eachindex(mission.sampler)
+
+# sets up the publishers
+array_publishers, image_publishers = map(("array", "image"),
+    (std_msg.Float64MultiArray, sen_msg.Image)) do type_name, type
+    map(quantities) do q
+        map(("pred", "err")) do name
+            rospy.Publisher("/informative_sampling/$(name)_$(type_name)_$(q)",
+                type, queue_size=1, latch=false)
+        end
+    end
+end
+
+M = mission
+other_bm = BeliefModel(filter(s->s.x[2]==2, samples), getBounds(M.occupancy);
+                       M.noise, M.kernel)
+bm_vals = map(enumerate((beliefs[end], other_bm))) do (i, bm)
+    bm(tuple.(vec(points), i))
+end
+
+for q in quantities
+    for (i, data) in enumerate(bm_vals[q])
+        # publish as array
+        array = std_msg.Float64MultiArray()
+        array.layout.dim = std_msg.MultiArrayDimension.("", collect(dims), 1)
+        array.layout.data_offset = 0
+        array.data = data
+        array_publishers[q][i].publish(array)
+        rospy.sleep(.01) # allow the publisher time to publish
+
+        l, h = extrema(data)
+        data_scaled = (data .- l) ./ (h - l + eps())
+
+        # map to image
+        amount = vec(reverse(permutedims(reshape(data_scaled, dims), (2, 1)), dims=1))
+
+        # Main.@infiltrate
+
+        # convert to byte values and repeat each 4 times for rgba format
+        byte_data = round.(UInt8, 255 .* amount)
+        img_data = pybytes([x for x in byte_data for _ in 1:4])
+
+        env_height, env_width = dims
+
+        # publish as image
+        image = sen_msg.Image()
+        image.header.stamp = rospy.Time.now()
+        image.header.frame_id = "env_image"
+        image.height = env_height
+        image.width = env_width
+        image.encoding = "rgba8"
+        image.is_bigendian = 1
+        image.step = env_width * 4
+        image.data = img_data
+        image_publishers[q][i].publish(image)
+        rospy.sleep(.01) # allow the publisher time to publish
+    end
+end

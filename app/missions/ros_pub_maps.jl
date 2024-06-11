@@ -6,9 +6,10 @@ Pkg.activate(Base.source_dir() * "/..")
 using Logging: global_logger, ConsoleLogger, Info, Debug
 
 using InformativeSampling
-using .Maps: Map, generateAxes
+using .Maps: Map, generateAxes, getBounds
 using .SampleCosts: EIGF
 using .Missions: Mission
+using .BeliefModels: BeliefModel
 
 # this requires a working rospy installation
 using .ROSInterface: ROSConnection
@@ -71,7 +72,6 @@ axs, points = generateAxes(mission.occupancy)
 dims = size(mission.occupancy)
 
 quantities = eachindex(mission.sampler)
-full_indices = [(p, q) for p in points for q in quantities]
 
 # sets up the publishers
 array_publishers, image_publishers = map(("array", "image"),
@@ -79,23 +79,28 @@ array_publishers, image_publishers = map(("array", "image"),
     map(quantities) do q
         map(("pred", "err")) do name
             rospy.Publisher("/informative_sampling/$(name)_$(type_name)_$(q)",
-                type, queue_size=1, latch=true)
+                type, queue_size=1, latch=false)
         end
     end
 end
 
 ## run search alg
-@time samples, beliefs = mission() do _, _, beliefModel, _, _
-    μ, σ = collect.(Iterators.partition.(beliefModel(full_indices), prod(dims)))
+@time samples, beliefs = mission() do M, samples, beliefModel, _, _
+    other_bm = BeliefModel(filter(s->s.x[2]!=1, samples),
+                           getBounds(M.occupancy); M.noise, M.kernel)
+    bm_vals = map(enumerate((beliefModel, other_bm))) do (i, bm)
+        bm(tuple.(vec(points), i))
+    end
 
     for q in quantities
-        for (i, data) in enumerate((μ[q], σ[q]))
+        for (i, data) in enumerate(bm_vals[q])
             # publish as array
             array = std_msg.Float64MultiArray()
             array.layout.dim = std_msg.MultiArrayDimension.("", collect(dims), 1)
             array.layout.data_offset = 0
             array.data = data
             array_publishers[q][i].publish(array)
+            rospy.sleep(.01) # allow the publisher time to publish
 
             l, h = extrema(data)
             data_scaled = (data .- l) ./ (h - l + eps())
@@ -120,6 +125,7 @@ end
             image.step = env_width * 4
             image.data = img_data
             image_publishers[q][i].publish(image)
+            rospy.sleep(.01) # allow the publisher time to publish
         end
     end
 end

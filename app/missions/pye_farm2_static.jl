@@ -6,7 +6,8 @@ using .ROSInterface: ROSConnection
 # the topics that will be listened to for measurements
 data_topics = [
     # Crop height avg in frame (excluding wheels)
-    "/rss/gp/crop_height_avg"
+    "/rss/gp/crop_height_avg",
+    "/rss/silios/ndvi_bw_gradient_image" # TODO check this
 ]
 
 done_topic = "sortie_finished"
@@ -19,7 +20,7 @@ lower = [284725.0, 6241345.0]
 upper = [284775.0, 6241395.0]
 bounds = (; lower, upper)
 
-n = (10, 10) # number of samples in each dimension
+n = (50, 50) # number of samples in each dimension
 axs_sp = range.(bounds..., n)
 locs = vec(collect.(Iterators.product(axs_sp...)))
 
