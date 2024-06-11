@@ -20,6 +20,7 @@ using .DataIO: maps_dir, imgToMap
 function pyeFarmMission(; num_samples=4,
     sampleCostType=DistScaledEIGF,
     use_priors=false,
+    sub_patch=false,
     start_locs=[])
 
     # the topics that will be listened to for measurements
@@ -34,13 +35,23 @@ function pyeFarmMission(; num_samples=4,
 
     sampler = ROSConnection(data_topics, done_topic, pub_topic)
 
-    # 50x50 meter space (alt2)
-    lower=[284725.0, 6241345.0]
-    upper=[284775.0, 6241395.0]
-    bounds = (; lower, upper)
+    if sub_patch
+        # 15x15 meter sub-patch (alt3)
+        lower = [284745.0, 6241345.0]
+        upper = [284760.0, 6241360.0]
+        bounds = (; lower, upper)
 
-    elev_img = load(maps_dir * "dem_50x50.tif")
-    elevMap = imgToMap(gray.(elev_img), bounds)
+        elev_img = load(maps_dir * "dem_15x15.tif")
+        elevMap = imgToMap(gray.(elev_img), bounds)
+    else
+        # 50x50 meter space (alt2)
+        lower = [284725.0, 6241345.0]
+        upper = [284775.0, 6241395.0]
+        bounds = (; lower, upper)
+
+        elev_img = load(maps_dir * "dem_50x50.tif")
+        elevMap = imgToMap(gray.(elev_img), bounds)
+    end
 
     occupancy = Map(zeros(Bool, 100, 100), bounds)
 
@@ -111,8 +122,9 @@ using .DataIO: save
 ## initialize data for mission
 mission, prior_maps = pyeFarmMission(
     num_samples=30,
-    sampleCostType=DistScaledEIGF,
+    sampleCostType=EIGF,
     use_priors=false,
+    sub_patch=true,
     start_locs=[]
 )
 
