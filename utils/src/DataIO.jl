@@ -136,10 +136,10 @@ function save(mission, samples, beliefs;
     jldsave(full_path_name; mission, samples, beliefs)
 
     if animation
-        num_quant = length(mission.sampler)
+        first_samples = filter(s->s.x[2]==1, samples)
         animation = @animate for i in eachindex(beliefs)
             visualize(beliefs[i],
-                      samples[begin:i*num_quant],
+                      first_samples[begin:i],
                       mission.occupancy,
                       1)
         end

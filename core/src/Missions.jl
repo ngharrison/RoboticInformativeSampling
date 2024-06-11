@@ -81,6 +81,7 @@ samples, beliefs = mission(visuals=true, sleep_time=0.5) # run the mission
 """
 function (M::Mission)(func=Returns(nothing);
                       samples=Sample[], beliefs=BeliefModel[],
+                      other_samples=Sample[],
                       seed_val=0, sleep_time=0)
 
     # initialize
@@ -88,7 +89,7 @@ function (M::Mission)(func=Returns(nothing);
     new_loc = !isempty(M.start_locs) ? M.start_locs[1] : randomPoint(M.occupancy)
 
     bounds = getBounds(M.occupancy)
-    quantities = eachindex(M.sampler) # all current available quantities
+    quantities = 1:1 # only first quantity
 
     println("Mission started")
 
@@ -103,7 +104,8 @@ function (M::Mission)(func=Returns(nothing);
 
         # sample all quantities
         new_samples = takeSamples(new_loc, M.sampler)
-        append!(samples, new_samples)
+        push!(samples, new_samples[1]) # the one we act on
+        append!(other_samples, new_samples[2:end]) # the ones we don't
         println("Sample values: $(getfield.(new_samples, :y))")
 
         # new belief
@@ -130,7 +132,8 @@ function (M::Mission)(func=Returns(nothing);
         end
 
         # user-defined function (visualization, saving, etc.)
-        func(M, samples, beliefModel, sampleCost, new_loc)
+        func(M, [samples; other_samples], beliefModel, sampleCost, new_loc)
+        @debug "belief model hyperparams: " beliefModel.θ
         @debug "output correlation matrix:" outputCorMat(beliefModel)
         sleep(sleep_time)
     end
@@ -138,7 +141,7 @@ function (M::Mission)(func=Returns(nothing);
     println()
     println("Mission complete")
 
-    return samples, beliefs
+    return [samples; other_samples], beliefs
 end
 
 function replay(func, M::Mission, full_samples, beliefs; sleep_time=0.0)

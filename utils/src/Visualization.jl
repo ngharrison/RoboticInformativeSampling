@@ -140,7 +140,7 @@ function visualize(beliefModel::BeliefModel, samples, occupancy, new_loc=nothing
     pred_map[occupancy] .= NaN
     err_map[occupancy] .= NaN
 
-    xp = first.(getfield.(samples, :x))
+    xp = first.(getfield.(filter(s->s.x[2]==quantity, samples), :x))
     x1 = getindex.(xp, 1)
     x2 = getindex.(xp, 2)
 
