@@ -76,7 +76,8 @@ In addition, this project can be used as a ROS package itself by simply putting 
 
 1. =catkin_make= from the ROS workspace directory
 2. =. devel/setup.bash= to source the workspace
-3. =rosrun informative_sampling ros_test.jl=
+3. =roscore &= to start roscore in the background
+4. =rosrun informative_sampling ros_test.jl=
 
 
 If the sampling mission runs without errors, everything is working. This script starts up two helper scripts first so it has something to talk to, performs its informative sampling mission, and then closes everything.

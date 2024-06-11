@@ -59,9 +59,12 @@ using .DataIO: save
 ## initialize data for mission
 mission = rosMission()
 
+ros_version = readchomp(`rosversion -d`)
+python_exe = "python" * (ros_version == "noetic" ? "3" : "")
+
 # start other scripts
-cmds = (`$(Base.source_dir())/../ros/sample_sim.py`,
-        `$(Base.source_dir())/../ros/sortie_sim.py`)
+cmds = (`$(python_exe) $(Base.source_dir())/../ros/sample_sim.py`,
+        `$(python_exe) $(Base.source_dir())/../ros/sortie_sim.py`)
 
 procs = run.(cmds; wait=false)
 
