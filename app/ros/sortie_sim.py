@@ -8,7 +8,6 @@ from std_msgs.msg import Bool
 from geometry_msgs.msg import PoseStamped
 
 def callback(pose, pub):
-    print("Pose received!")
     rospy.sleep(1)
     pub.publish(True) # sortie finished
 
