@@ -23,7 +23,3 @@ Pkg.instantiate()
 println("Instantiating package app")
 Pkg.activate(Base.source_dir() * "/app")
 Pkg.instantiate()
-
-println("Instantiating package docs")
-Pkg.activate(Base.source_dir() * "/docs")
-Pkg.instantiate()

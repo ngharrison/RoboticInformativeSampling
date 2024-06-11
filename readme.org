@@ -98,6 +98,7 @@ ROS-related helper files are generally found in the =app/ros= directory.
 To generate the docs, run the following command from the project root:
 
 #+begin_src shell
+julia --project=docs using Pkg; Pkg.instantiate() # only needed first time
 julia --project=docs docs/make.jl
 #+end_src
 
