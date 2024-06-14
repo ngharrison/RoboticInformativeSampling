@@ -15,7 +15,7 @@ using .ROSInterface: ROSConnection
 
 using InformativeSamplingUtils
 using .Visualization: vis
-using .DataIO: maps_dir, imgToMap
+using .DataIO: maps_dir, imgToMap, output_dir, output_ext, produceMaps
 
 function pyeFarmMission(; num_samples=4,
     sampleCostType=DistScaledEIGF,
@@ -27,7 +27,7 @@ function pyeFarmMission(; num_samples=4,
     data_topics = [
         # Crop height avg in frame (excluding wheels)
         "/rss/gp/crop_height_avg"
-        "/rss/silios/ndvi_bw_gradient_image" # TODO check this
+        "/rss/silios/ndvi_avg"
     ]
 
     done_topic = "sortie_finished"
@@ -57,8 +57,8 @@ function pyeFarmMission(; num_samples=4,
 
     # # to test
     # p = let
-    #     name = "100samples_50x50_grid"
-    #     file_name = output_dir * "pye_farm_trial_named/" * name * output_ext
+    #     name = "2024-06-13-14-01-22_metrics"
+    #     file_name = output_dir * "pye_farm_trial2/dense/" * name * output_ext
     #     data = load(file_name)
     #     samples = data["samples"]
     #
@@ -96,7 +96,7 @@ function pyeFarmMission(; num_samples=4,
     ## initialize alg values
     weights = (; μ=1, σ=5e1, τ=1, d=1) # mean, std, dist, prox
 
-    noise = (value=0.1, learned=true)
+    noise = (value=0.1, learned=false)
 
     mission = Mission(;
         occupancy,
@@ -123,9 +123,9 @@ using .DataIO: save
 mission, prior_maps = pyeFarmMission(
     num_samples=30,
     sampleCostType=EIGF,
-    use_priors=false,
-    sub_patch=true,
-    start_locs=[]
+    use_priors=true,
+    sub_patch=false,
+    start_locs=[[284748.0, 6241355.0]]
 )
 
 vis(prior_maps[1]; points=first.(getfield.(mission.prior_samples, :x)))
@@ -135,9 +135,9 @@ vis(prior_maps[1]; points=first.(getfield.(mission.prior_samples, :x)))
     sleep_time=0.0
 ) do M, samples, beliefModel, sampleCost, new_loc
     vis(M, samples, beliefModel, sampleCost, new_loc)
-    save(M, samples, beliefModel)
+    save(M, samples, beliefModel; sub_dir_name="pye_farm_trial2")
 end;
-save(mission, samples, beliefs)
+save(mission, samples, beliefs; sub_dir_name="pye_farm_trial2")
 
 
 #* Publish maps
@@ -159,10 +159,12 @@ array_publishers, image_publishers = map(("array", "image"),
     map(quantities) do q
         map(("pred", "err")) do name
             rospy.Publisher("/informative_sampling/$(name)_$(type_name)_$(q)",
-                type, queue_size=1, latch=false)
+                type, queue_size=1, latch=true)
         end
     end
 end
+
+rospy.sleep(.1)
 
 M = mission
 other_bm = BeliefModel(filter(s->s.x[2]==2, samples), getBounds(M.occupancy);
@@ -173,24 +175,23 @@ end
 
 for q in quantities
     for (i, data) in enumerate(bm_vals[q])
+
+        # map to image
+        data_flipped = vec(reverse(permutedims(reshape(data, dims), (2, 1)), dims=1))
+
         # publish as array
         array = std_msg.Float64MultiArray()
         array.layout.dim = std_msg.MultiArrayDimension.("", collect(dims), 1)
         array.layout.data_offset = 0
-        array.data = data
+        array.data = data_flipped
         array_publishers[q][i].publish(array)
-        rospy.sleep(.01) # allow the publisher time to publish
+        rospy.sleep(.1) # allow the publisher time to publish
 
-        l, h = extrema(data)
-        data_scaled = (data .- l) ./ (h - l + eps())
-
-        # map to image
-        amount = vec(reverse(permutedims(reshape(data_scaled, dims), (2, 1)), dims=1))
-
-        # Main.@infiltrate
+        l, h = extrema(data_flipped)
+        data_scaled = (data_flipped .- l) ./ (h - l + eps())
 
         # convert to byte values and repeat each 4 times for rgba format
-        byte_data = round.(UInt8, 255 .* amount)
+        byte_data = round.(UInt8, 255 .* data_scaled)
         img_data = pybytes([x for x in byte_data for _ in 1:4])
 
         env_height, env_width = dims
@@ -206,6 +207,8 @@ for q in quantities
         image.step = env_width * 4
         image.data = img_data
         image_publishers[q][i].publish(image)
-        rospy.sleep(.01) # allow the publisher time to publish
+        rospy.sleep(.1) # allow the publisher time to publish
     end
 end
+
+rospy.sleep(.1)
