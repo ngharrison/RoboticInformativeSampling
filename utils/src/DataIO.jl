@@ -68,6 +68,7 @@ map = imgToMap(image) # or auto bounds
 """
 imgToMap(img, args...) = Map(permutedims(reverse(img, dims=1), (2,1)), args...)
 
+mapToImg(map) = reverse(permutedims(map, (2,1)), dims=1)
 
 abstract type GroundTruth end
 
