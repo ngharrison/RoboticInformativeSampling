@@ -22,14 +22,12 @@ end
 function values(sc::EIGF, loc)
     μ, σ = sc.beliefModel((loc, 1)) # mean and standard deviation
 
-    # τ = sc.pathCost(pointToCell(loc, sc.occupancy)) # distance to location
-    # bounds = getBounds(sc.occupancy)
-    # τ_norm = τ / mean(bounds.upper .- bounds.lower) # normalized
-    τ_norm = sc.occupancy(loc) ? Inf : 0.0
+    τ = sc.pathCost(pointToCell(loc, sc.occupancy)) # distance to location
+    τ = isinf(τ) ? Inf : 0.0
 
     closest_sample = argmin(sample -> norm(sample.x[1] - loc), sc.samples)
 
     μ_err = μ - closest_sample.y[1]
 
-    return (-μ_err^2, -σ^2, τ_norm, 0.0)
+    return (-μ_err^2, -σ^2, τ, 0.0)
 end

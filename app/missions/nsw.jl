@@ -7,7 +7,7 @@ using Random: seed!
 using InformativeSampling
 using .Maps: Map
 using .Samples: Sample, MapsSampler
-using .SampleCosts: EIGF
+using .SampleCosts: EIGF, DistScaledEIGF
 using .Missions: Mission
 
 using InformativeSamplingUtils
@@ -40,13 +40,13 @@ function nswMission(; seed_val=0, num_samples=30, priors=Bool[1,1,1])
     occupancy = imgToMap(Matrix{Bool}(reduce(.|, [isnan.(i)
                                                   for i in ims_sm])), bounds)
 
-    sampleCostType = EIGF
+    sampleCostType = DistScaledEIGF
 
     ## initialize alg values
     # weights = [1e-1, 6, 5e-1, 3e-3] # mean, std, dist, prox
     # weights = (; μ=1, σ=5e3, τ=1, d=1) # others
     weights = (; μ=1, σ=5e2, τ=1, d=1) # others
-    start_locs = [[1.0, 0.0]] # starting locations
+    start_locs = [[.14, 0.56]] # starting locations
 
 
     # sample sparsely from the prior maps
@@ -66,6 +66,8 @@ function nswMission(; seed_val=0, num_samples=30, priors=Bool[1,1,1])
     [cor(vec(map0[.!occupancy]), vec(d[.!occupancy])) for d in prior_maps]
     # scatter(vec(map0[.!occupancy]), [vec(d[.!occupancy]) for d in prior_maps], layout=3)
 
+    noise = (value=0.0001, learned=false)
+
     mission = Mission(;
         occupancy,
         sampler,
@@ -73,7 +75,8 @@ function nswMission(; seed_val=0, num_samples=30, priors=Bool[1,1,1])
         sampleCostType,
         weights,
         start_locs,
-        prior_samples
+        prior_samples,
+        noise
     )
 
     return mission, prior_maps
@@ -88,7 +91,7 @@ end
 global_logger(ConsoleLogger(stderr, Info))
 
 ## initialize data for mission
-mission, prior_maps = nswMission(num_samples=10)
+mission, prior_maps = nswMission(num_samples=30)
 
 vis(mission.sampler..., prior_maps...;
     titles=["Vegetation", "Elevation", "Ground Temperature", "Rainfall"],
@@ -113,7 +116,7 @@ using .DataIO: save
 
 @time for priors in [(0,0,0), (1,1,1)]
     ## initialize data for mission
-    priors = (0,0,0)
+    # priors = (0,0,0)
     mission, _ = nswMission(priors=collect(Bool, priors))
     # empty!(mission.prior_samples)
 
@@ -126,6 +129,7 @@ using .DataIO: save
     metrics = calcMetrics(mission, samples, beliefs, 1)
 
     ## save outputs
-    save(metrics; file_name="aus_patch_ave_means_noise/metrics_$(join(priors))")
-    save(mission, samples, beliefs; file_name="aus_patch_ave_means_noise/mission_$(join(priors))")
+    dir = "aus_patch_ave_means_dist_scaled"
+    save(metrics; file_name="$(dir)/metrics_$(join(priors))")
+    save(mission, samples, beliefs; file_name="$(dir)/mission_$(join(priors))")
 end

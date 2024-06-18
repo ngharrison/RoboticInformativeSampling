@@ -28,16 +28,18 @@ end
 
 
 #* Aus
-dir = "aus_ave_means_noise"
+dir = "aus_patch_ave_means_dist_scaled"
 # file_name = output_dir * "2023-08-28-16-58-29_metrics" * output_ext
 file_name_s = output_dir * "$dir/metrics_000" * output_ext
 file_name_m = output_dir * "$dir/metrics_111" * output_ext
 
 data = load(file_name_s)
 maes = data["metrics"].mae
+dists = cumsum(data["metrics"].dists)
 
 data = load(file_name_m)
 maes = [maes data["metrics"].mae]
+dists = [dists cumsum(data["metrics"].dists)]
 cors = data["metrics"].cors
 dets = [u.^2 for u in cors]
 
@@ -89,6 +91,29 @@ p = plot(
 gui()
 
 savefig(output_dir * "$dir/$(dir)_errors.png")
+
+p = plot(
+    dists[1:30,:],
+    title="Distance Traveled",
+    xlabel="Sample Number",
+    ylabel="Cumulative Distance",
+    labels=["No Priors" "Priors"],
+    seriescolors=[:black RGB(0.1,0.7,0.2)],
+    framestyle=:box,
+    marker=true,
+    # ylim=(0,.5),
+    titlefontsize=24,
+    markersize=8,
+    tickfontsize=15,
+    labelfontsize=20,
+    legendfontsize=16,
+    margin=5mm,
+    linewidth=4,
+    size=(width, height)
+)
+gui()
+
+savefig(output_dir * "$dir/$(dir)_distances.png")
 
 #* Batch
 dir = "batch_means_noise_rand_start_dist_scaled"

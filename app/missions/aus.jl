@@ -8,7 +8,7 @@ using Random: seed!
 using InformativeSampling
 using .Maps: Map, getBounds
 using .Samples: Sample, MapsSampler, selectSampleLocation
-using .SampleCosts: EIGF
+using .SampleCosts: EIGF, DistScaledEIGF
 using .Missions: Mission
 
 using InformativeSamplingUtils
@@ -69,6 +69,8 @@ function ausMission(; seed_val=0, num_samples=30, priors=Bool[1,1,1])
     [cor(vec(map0[.!occupancy]), vec(d[.!occupancy])) for d in prior_maps]
     # scatter(vec(map0[.!occupancy]), [vec(d[.!occupancy]) for d in prior_maps], layout=3)
 
+    noise = (value=0.0, learned=true)
+
     mission = Mission(;
         occupancy,
         sampler,
@@ -76,7 +78,8 @@ function ausMission(; seed_val=0, num_samples=30, priors=Bool[1,1,1])
         sampleCostType,
         weights,
         start_locs,
-        prior_samples
+        prior_samples,
+        noise
     )
 
     return mission, prior_maps
@@ -89,7 +92,7 @@ end
 global_logger(ConsoleLogger(stderr, Info))
 
 ## initialize data for mission
-mission, prior_maps = ausMission(num_samples=10)
+mission, prior_maps = ausMission(num_samples=30)
 
 vis(mission.sampler..., prior_maps...;
     titles=["Vegetation", "Elevation", "Ground Temperature", "Rainfall"],
@@ -114,7 +117,7 @@ using .DataIO: save
 
 @time for priors in [(0,0,0), (1,1,1)]
     ## initialize data for mission
-    priors = (0,0,0)
+    # priors = (0,0,0)
     mission, _ = ausMission(priors=collect(Bool, priors))
     # empty!(mission.prior_samples)
 
@@ -127,6 +130,7 @@ using .DataIO: save
     metrics = calcMetrics(mission, samples, beliefs, 1)
 
     ## save outputs
-    save(metrics; file_name="aus_ave_means_noise/metrics_$(join(priors))")
-    save(mission, samples, beliefs; file_name="aus_ave_means_noise/mission_$(join(priors))")
+    dir = "aus_ave_means_noise_new"
+    save(metrics; file_name="$(dir)/metrics_$(join(priors))")
+    save(mission, samples, beliefs; file_name="$(dir)/mission_$(join(priors))")
 end
