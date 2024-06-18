@@ -56,27 +56,23 @@ function pyeFarmMission(; num_samples=4,
     occupancy = Map(zeros(Bool, 100, 100), bounds)
 
     # # to test
-    # p = let
-    #     name = "2024-06-13-14-01-22_metrics"
-    #     file_name = output_dir * "pye_farm_trial2/dense/" * name * output_ext
+    # h, n = let
+    #     name = "50x50_dense_grid"
+    #     file_name = output_dir * "pye_farm_trial2/named/" * name * output_ext
     #     data = load(file_name)
-    #     samples = data["samples"]
+    #     height_samples = filter(s->s.x[2]==1, data["samples"])
+    #     ndvi_samples = filter(s->s.x[2]==2, data["samples"])
     #
-    #     bm = BeliefModel(samples, bounds)
-    #     p, s = produceMaps(bm, occupancy)
-    #     # vis(p)
-    #     p
+    #     bm = BeliefModel(height_samples, bounds)
+    #     h, _ = produceMaps(bm, occupancy)
+    #     # vis(h)
+    #     bm = BeliefModel(ndvi_samples, bounds)
+    #     n, _ = produceMaps(bm, occupancy; quantity=2)
+    #     # vis(n)
+    #     h, n
     # end
     #
-    # sampler = MapsSampler(p)
-
-    # # 15x15 meter sub-patch (alt3)
-    # lower=[284745.0, 6241345.0]
-    # upper=[284760.0, 6241360.0]
-    # bounds = (; lower, upper)
-    #
-    # elev_img = load(maps_dir * "dem_15x15.tif")
-    # elevMap = imgToMap(gray.(elev_img), bounds)
+    # sampler = MapsSampler(h, n)
 
     prior_maps = [elevMap]
 
@@ -185,7 +181,7 @@ for q in quantities
         array.layout.data_offset = 0
         array.data = data_flipped
         array_publishers[q][i].publish(array)
-        rospy.sleep(.1) # allow the publisher time to publish
+        rospy.sleep(.01) # allow the publisher time to publish
 
         l, h = extrema(data_flipped)
         data_scaled = (data_flipped .- l) ./ (h - l + eps())
@@ -207,7 +203,7 @@ for q in quantities
         image.step = env_width * 4
         image.data = img_data
         image_publishers[q][i].publish(image)
-        rospy.sleep(.1) # allow the publisher time to publish
+        rospy.sleep(.01) # allow the publisher time to publish
     end
 end
 
