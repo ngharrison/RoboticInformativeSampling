@@ -89,7 +89,9 @@ beliefModel = BeliefModel(samples, M.prior_samples, bounds)
 beliefModel = BeliefModel([M.prior_samples; samples], bounds)
 ```
 """
-function BeliefModel(samples, prior_samples, bounds; noise=(0.0, :fixed), kernel=multiKernel)
+function BeliefModel(samples, prior_samples, bounds;
+                     noise=(value=0.0, learned=false),
+                     kernel=multiKernel)
     # create a simple belief model for the current samples
     current = BeliefModel(samples, bounds; noise, kernel)
     isempty(prior_samples) && return current
@@ -157,10 +159,8 @@ X = [([.1, .2], 1),
 μ, σ = beliefModel(X) # result: [μ1, μ2], [σ1, σ2]
 ```
 """
-function (beliefModel::BeliefModelSimple)(x::SampleInput; full_cov=false)
-    func = full_cov ? mean_and_cov : mean_and_var
-    μ, σ² = only.(func(beliefModel.gp, [x]))
-    return μ, √σ²
+function (beliefModel::BeliefModelSimple)(x::SampleInput; kwargs...)
+    return only.(beliefModel([x]); kwargs...)
 end
 
 function (beliefModel::BeliefModelSimple)(X::AbstractVector{SampleInput}; full_cov=false)
@@ -176,12 +176,12 @@ end
 function meanDerivAndVar(beliefModel::BeliefModelSimple, X::AbstractVector{SampleInput})
     f = beliefModel.gp
     C_xcond_x = cov(f.prior, f.data.x, X)
-    m_deriv_norm = derivNorm(X, f.data.x, C_xcond_x, beliefModel.θ.ℓ, f.data.α)
+    m_deriv_norm = meanDerivNorm(X, f.data.x, C_xcond_x, beliefModel.θ.ℓ, f.data.α)
     C_post_diag = var(f.prior, X) - diag_Xt_invA_X(f.data.C, C_xcond_x)
     return m_deriv_norm, .√clamp!(C_post_diag, 0.0, Inf)
 end
 
-function derivNorm(X, Xm, C_xcond_x, ℓ, α)
+function meanDerivNorm(X, Xm, C_xcond_x, ℓ, α)
     m_deriv_dims = map(eachindex(X[1][1])) do i
         dif_mat = [xi[1][i] - xj[1][i] for xi in X, xj in Xm]
         k_prime = -dif_mat ./ ℓ^2
@@ -189,17 +189,6 @@ function derivNorm(X, Xm, C_xcond_x, ℓ, α)
     end
     return sqrt.(sum(arr.^2 for arr in m_deriv_dims))
 end
-
-# a = [([1, 2], 1), ([7, 5], 1)]
-# b = [([1, 2], 1), ([3, 4], 1), ([5, 6], 1)]
-# cc = ones(length(b), length(a))
-# ff = ones(length(b))
-# m_deriv_dims = map(eachindex(a[1][1])) do i
-#     dif_mat = [xi[1][i] - xj[1][i] for xi in a, xj in b]
-#     k_prime = -dif_mat ./ 0.1^2
-#     (cc' .* k_prime) * ff
-# end
-# sqrt.(sum(arr.^2 for arr in m_deriv_dims))
 
 """
 Inputs:
