@@ -4,9 +4,9 @@ using Statistics: I, mean
 using AbstractGPs: with_lengthscale, SqExponentialKernel, IntrinsicCoregionMOKernel, CustomMean
 using DocStringExtensions: TYPEDSIGNATURES
 
-export multiMeanAve, singleKernel, multiKernel, fullyConnectedCovNum,
-       slfmKernel, fullyConnectedCovMat, manyToOneCovNum, manyToOneCovMat,
-       initHyperparams, customKernel
+export multiMeanAve, singleKernel, multiKernel, slfmKernel, mtoKernel,
+       fullyConnectedCovNum, fullyConnectedCovMat, manyToOneCovNum,
+       manyToOneCovMat, initHyperparams, customKernel
 
 include("SLFMKernel.jl")
 include("CustomKernel.jl")
@@ -48,6 +48,9 @@ This function creates the kernel function used within the GP.
 """
 multiKernel(θ) = IntrinsicCoregionMOKernel(kernel=with_lengthscale(SqExponentialKernel(), θ.ℓ^2),
                                            B=fullyConnectedCovMat(θ.σ))
+
+mtoKernel(θ) = IntrinsicCoregionMOKernel(kernel=with_lengthscale(SqExponentialKernel(), θ.ℓ^2),
+                                           B=manyToOneCovMat(θ.σ))
 
 fullyConnectedCovNum(num_outputs) = (num_outputs+1)*num_outputs÷2
 
@@ -114,6 +117,24 @@ Creates the structure of hyperparameters for a MTGP and gives them initial value
 function initHyperparams(X, Y_vals, bounds, ::typeof(multiKernel); kwargs...)
     T = maximum(last, X) # number of outputs
     n = fullyConnectedCovNum(T)
+    # NOTE may change to all just 0.5
+    # σ = (length(Y_vals)>1 ? std(Y_vals) : 0.5)/sqrt(2) * ones(n)
+    # a = mean(bounds.upper .- bounds.lower)
+    # ℓ = length(X)==1 ? a : a/length(X) + mean(std(first.(X)))*(1-1/length(X))
+    σ = 0.5/sqrt(2) * ones(n)
+    ℓ = mean(bounds.upper .- bounds.lower)
+    return (; σ, ℓ, kwargs...)
+end
+
+"""
+$(TYPEDSIGNATURES)
+
+Creates the structure of hyperparameters for a MTGP and gives them initial values.
+This is for a specialized quantity covariance matrix with separation.
+"""
+function initHyperparams(X, Y_vals, bounds, ::typeof(mtoKernel); kwargs...)
+    T = maximum(last, X) # number of outputs
+    n = manyToOneCovNum(T)
     # NOTE may change to all just 0.5
     # σ = (length(Y_vals)>1 ? std(Y_vals) : 0.5)/sqrt(2) * ones(n)
     # a = mean(bounds.upper .- bounds.lower)
