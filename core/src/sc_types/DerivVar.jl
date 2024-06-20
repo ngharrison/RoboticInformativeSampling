@@ -24,9 +24,8 @@ end
 function values(sc::DerivVar, loc)
     dμ, σ = meanDerivAndVar(sc.beliefModel, (loc, 1)) # mean and standard deviation
 
-    # τ = sc.pathCost(pointToCell(loc, sc.occupancy)) # distance to location
-    # τ = isinf(τ) ? Inf : 0.0
-    τ = sc.occupancy(loc) ? Inf : 0.0
+    τ = sc.pathCost(pointToCell(loc, sc.occupancy)) # distance to location
+    τ = isinf(τ) ? Inf : 0.0
 
     return (-dμ^2, -σ^2, τ, 0.0)
 end
