@@ -7,8 +7,9 @@ using Random: seed!
 using InformativeSampling
 using .Maps: Map, generateAxes
 using .Samples: Sample, MapsSampler
-using .SampleCosts: EIGF, DistScaledEIGF
+using .SampleCosts: MIPT, EIGF, DistScaledEIGF, DerivVar, DistScaledDerivVar
 using .Missions: Mission
+using .Kernels: mtoKernel
 
 using InformativeSamplingUtils
 using .DataIO: GaussGroundTruth, Peak
@@ -78,8 +79,8 @@ function simMission(; seed_val=0, num_samples=30, num_peaks=3, priors=Bool[1,1,1
     ## initialize alg values
     # weights = (; μ=17, σ=1.5, τ=7)
     # weights = (; μ=3, σ=1, τ=.5, d=1)
-    # weights = (; μ=1, σ=1e1, τ=1, d=0) # sogp
-    weights = (; μ=1, σ=1e2, τ=1, d=0) # others
+    # weights = (; μ=1, σ=1e1, τ=1, d=1) # sogp
+    weights = (; μ=1, σ=1e2, τ=1, d=1) # others
     # weights = (; μ=1, σ=1, τ=.1, d=1)
     start_locs = [] # starting location
 
@@ -158,6 +159,10 @@ using .BeliefModels: outputCorMat
 using .Metrics: calcMetrics
 using .DataIO: save
 
+mission, _ = simMission()
+dir = "batch_means_eigf_noise"
+save(mission, [], []; file_name="$(dir)/mission")
+
 mission_peaks = [3,3,4,4,5,5]
 num_runs = 3
 metrics = Array{Any, 2}(undef, (length(mission_peaks), num_runs))
@@ -181,5 +186,5 @@ metrics = Array{Any, 2}(undef, (length(mission_peaks), num_runs))
         end
     end
     ## save outputs
-    save(metrics; file_name="batch_means_noise_rand_start_dist_scaled/metrics_$(join(priors))")
+    save(metrics; file_name="$(dir)/metrics_$(join(priors))")
 end
