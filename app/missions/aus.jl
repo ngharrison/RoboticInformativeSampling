@@ -8,14 +8,17 @@ using Random: seed!
 using InformativeSampling
 using .Maps: Map, getBounds
 using .Samples: Sample, MapsSampler, selectSampleLocation
-using .SampleCosts: EIGF, DistScaledEIGF
+using .SampleCosts: EIGF, DistScaledEIGF, DerivVar, DistScaledDerivVar
 using .Missions: Mission
 
 using InformativeSamplingUtils
 using .Visualization: vis
 using .DataIO: normalize, maps_dir, imgToMap
 
-function ausMission(; seed_val=0, num_samples=30, priors=Bool[1,1,1])
+function ausMission(; seed_val=0,
+                    num_samples=30,
+                    priors=Bool[1,1,1],
+                    sampleCostType=EIGF)
     # have it run around australia
 
     seed!(seed_val)
@@ -38,8 +41,6 @@ function ausMission(; seed_val=0, num_samples=30, priors=Bool[1,1,1])
 
     occupancy = imgToMap(Matrix{Bool}(reduce(.|, [isnan.(i)
                                                   for i in images])), bounds)
-
-    sampleCostType = EIGF
 
     ## initialize alg values
     # weights = [1e-1, 6, 5e-1, 3e-3] # mean, std, dist, prox
