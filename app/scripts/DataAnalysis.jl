@@ -67,7 +67,7 @@ plot(
 )
 gui()
 
-savefig(output_dir * "$dir/$(dir)_correlations.png")
+savefig(output_dir * "$dir/correlations.png")
 
 p = plot(
     maes[1:30,:],
@@ -90,7 +90,7 @@ p = plot(
 )
 gui()
 
-savefig(output_dir * "$dir/$(dir)_errors.png")
+savefig(output_dir * "$dir/errors.png")
 
 p = plot(
     dists[1:30,:],
@@ -113,7 +113,7 @@ p = plot(
 )
 gui()
 
-savefig(output_dir * "$dir/$(dir)_distances.png")
+savefig(output_dir * "$dir/distances.png")
 
 #* Batch
 dir = "batch_means_noise_rand_start_dist_scaled"
