@@ -180,8 +180,6 @@ for q in quantities
         array.layout.dim = std_msg.MultiArrayDimension.("", collect(dims), 1)
         array.layout.data_offset = 0
         array.data = data_flipped
-        array_publishers[q][i].publish(array)
-        rospy.sleep(.01) # allow the publisher time to publish
 
         l, h = extrema(data_flipped)
         data_scaled = (data_flipped .- l) ./ (h - l + eps())
