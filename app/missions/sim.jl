@@ -133,7 +133,7 @@ vis(mission.sampler..., prior_maps...;
     points=first.(getfield.(mission.prior_samples, :x)))
 
 ## run search alg
-@time samples, beliefs = mission(
+@time samples, beliefs, times = mission(
     vis;
     sleep_time=0.0
 );
@@ -143,7 +143,7 @@ vis(mission.sampler..., prior_maps...;
 # using .DataIO: save
 #
 # ## calculate errors
-# metrics = calcMetrics(mission, samples, beliefs, 1)
+# metrics = calcMetrics(mission, samples, beliefs, times, 1)
 #
 # ## save outputs
 # save(mission, samples, beliefs; animation=true)
@@ -178,11 +178,11 @@ metrics = Array{Any, 2}(undef, (length(mission_peaks), num_runs))
             println("Run number ", j)
             println()
             ## run search alg
-            @time samples, beliefs = mission(seed_val=j, sleep_time=0.0);
+            @time samples, beliefs, times = mission(seed_val=j, sleep_time=0.0);
             @debug "output correlation matrix:" outputCorMat(beliefs[end])
             # save(mission, samples, beliefs; animation=true)
             ## calculate errors
-            metrics[i,j] = calcMetrics(mission, samples, beliefs, 1)
+            metrics[i,j] = calcMetrics(mission, samples, beliefs, times, 1)
         end
     end
     ## save outputs

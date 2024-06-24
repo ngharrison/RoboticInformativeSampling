@@ -81,7 +81,7 @@ samples, beliefs = mission(visuals=true, sleep_time=0.5) # run the mission
 """
 function (M::Mission)(func=Returns(nothing);
                       samples=Sample[], beliefs=BeliefModel[],
-                      other_samples=Sample[],
+                      other_samples=Sample[], times=Float64[],
                       seed_val=0, sleep_time=0)
 
     # initialize
@@ -108,28 +108,31 @@ function (M::Mission)(func=Returns(nothing);
         append!(other_samples, new_samples[2:end]) # the ones we don't
         println("Sample values: $(getfield.(new_samples, :y))")
 
-        # new belief
-        beliefModel = BeliefModel([M.prior_samples; samples], bounds; M.noise, M.kernel)
-        push!(beliefs, beliefModel)
+        t = @elapsed begin # computation time
+            # new belief
+            beliefModel = BeliefModel([M.prior_samples; samples], bounds; M.noise, M.kernel)
+            push!(beliefs, beliefModel)
 
-        # new sample location
-        sampleCost = nothing
-        new_loc = nothing
-        if i < M.num_samples
-            if i < length(M.start_locs)
-                new_loc = M.start_locs[i+1]
-            else
-                sampleCost = M.sampleCostType(
-                    M.occupancy, samples, beliefModel, quantities, M.weights
-                )
-                new_loc = selectSampleLocation(sampleCost, bounds)
+            # new sample location
+            sampleCost = nothing
+            new_loc = nothing
+            if i < M.num_samples
+                if i < length(M.start_locs)
+                    new_loc = M.start_locs[i+1]
+                else
+                    sampleCost = M.sampleCostType(
+                        M.occupancy, samples, beliefModel, quantities, M.weights
+                    )
+                    new_loc = selectSampleLocation(sampleCost, bounds)
 
-                @debug "cost function values: $(Tuple(values(sampleCost, new_loc)))"
-                @debug "cost function weights: $(Tuple(M.weights))"
-                @debug "cost function terms: $(Tuple(values(sampleCost, new_loc)) .* Tuple(M.weights))"
-                @debug "cost function value: $(sampleCost(new_loc))"
+                    @debug "cost function values: $(Tuple(values(sampleCost, new_loc)))"
+                    @debug "cost function weights: $(Tuple(M.weights))"
+                    @debug "cost function terms: $(Tuple(values(sampleCost, new_loc)) .* Tuple(M.weights))"
+                    @debug "cost function value: $(sampleCost(new_loc))"
+                end
             end
         end
+        push!(times, t)
 
         # user-defined function (visualization, saving, etc.)
         func(M, [samples; other_samples], beliefModel, sampleCost, new_loc)
@@ -141,7 +144,7 @@ function (M::Mission)(func=Returns(nothing);
     println()
     println("Mission complete")
 
-    return [samples; other_samples], beliefs
+    return [samples; other_samples], beliefs, times
 end
 
 function replay(func, M::Mission, full_samples, beliefs; sleep_time=0.0)

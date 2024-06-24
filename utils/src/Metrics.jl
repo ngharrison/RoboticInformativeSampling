@@ -25,26 +25,28 @@ function calcMetrics(mission, samples, beliefs)
     mxb = zeros(length(beliefs), length(M.sampler))
     cors = Matrix{Any}(undef, (length(beliefs), length(M.sampler)))
     dists = zeros(length(beliefs), length(M.sampler))
-    for (q, map) in enumerate(M.sampler)
+    times = zeros(length(beliefs), length(M.sampler))
+    for q in eachindex(M.sampler)
         (mae[:,q], mu[:,q], mb[:,q],
          mxae[:,q], mxu[:,q], mxb[:,q],
-         cors[:,q], dists[:,q]) = calcMetrics(mission, samples, beliefs, q, points)
+         cors[:,q], dists[:,q],
+         times[:,q]) = calcMetrics(mission, samples, beliefs, times, q, points)
     end
 
-    return (; mae, mu, mb, mxae, mxu, mxb, cors, dists)
+    return (; mae, mu, mb, mxae, mxu, mxb, cors, dists, times)
 end
 
-function calcMetrics(mission, samples, beliefs, q)
+function calcMetrics(mission, samples, beliefs, times, q)
     mission.sampler isa MapsSampler ||
         error("don't know how to get a ground truth from that type of sampler")
 
     M = mission
     axs, points = generateAxes(M.occupancy)
 
-    return calcMetrics(mission, samples, beliefs, q, points)
+    return calcMetrics(mission, samples, beliefs, times, q, points)
 end
 
-function calcMetrics(mission, samples, beliefs, q, points)
+function calcMetrics(mission, samples, beliefs, times, q, points)
     mae = zeros(length(beliefs))
     mu = zeros(length(beliefs))
     mb = zeros(length(beliefs))
@@ -61,7 +63,7 @@ function calcMetrics(mission, samples, beliefs, q, points)
         dists[i] = i==1 ? 0.0 : norm(samples[i].x[1] - samples[i-1].x[1])
     end
 
-    return (; mae, mu, mb, mxae, mxu, mxb, cors, dists)
+    return (; mae, mu, mb, mxae, mxu, mxb, cors, dists, times)
 end
 
 function calcMetrics(mission, beliefModel::BeliefModel, q, points)

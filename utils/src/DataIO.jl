@@ -125,7 +125,7 @@ function dateTimeString(dt=now())
     return join(lpad.(dt .|> parts, 2, '0'), "-")
 end
 
-function save(mission, samples, beliefs;
+function save(mission, samples, beliefs, times;
               animation=false,
               sub_dir_name="",
               file_name=dateTimeString() * "_mission")
@@ -134,7 +134,7 @@ function save(mission, samples, beliefs;
 
     full_path_name = output_dir * sub_dir_name * "/" * file_name * output_ext
 
-    jldsave(full_path_name; mission, samples, beliefs)
+    jldsave(full_path_name; mission, samples, beliefs, times)
 
     if animation
         first_samples = filter(s->s.x[2]==1, samples)

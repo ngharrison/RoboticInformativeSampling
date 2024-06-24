@@ -36,10 +36,12 @@ file_name_m = output_dir * "$dir/metrics_111" * output_ext
 data = load(file_name_s)
 maes = data["metrics"].mae
 dists = cumsum(data["metrics"].dists)
+times = cumsum(data["metrics"].times)
 
 data = load(file_name_m)
 maes = [maes data["metrics"].mae]
 dists = [dists cumsum(data["metrics"].dists)]
+times = [times cumsum(data["metrics"].times)]
 cors = data["metrics"].cors
 dets = [u.^2 for u in cors]
 
@@ -133,6 +135,9 @@ det_stds = Vector{Any}(undef, 8)
 dist_means = zeros(30, 8)
 dist_stds = zeros(30, 8)
 
+time_means = zeros(30, 8)
+time_stds = zeros(30, 8)
+
 priors = [
     (0, 0, 0),
     (1, 0, 0),
@@ -155,6 +160,7 @@ for (i, p) in enumerate(priors)
     cors = [run.cors for run in data["metrics"]]
     dets = [[v.^2 for v in u] for u in cors]
     dists = [cumsum(run.dists) for run in data["metrics"]]
+    times = [cumsum(run.times) for run in data["metrics"]]
 
     err_means[:,i] .= mean(maes)
     err_stds[:,i] .= std(maes)
@@ -167,6 +173,9 @@ for (i, p) in enumerate(priors)
 
     dist_means[:,i] .= mean(dists)
     dist_stds[:,i] .= std(dists)
+
+    time_means[:,i] .= mean(times)
+    time_stds[:,i] .= std(times)
 
     plt = plot(hcat((c[2:end] for c in mean(dets))...)',
                ribbon=hcat((c[2:end] for c in stdM(dets))...)',
@@ -289,6 +298,29 @@ plot(
 gui()
 
 savefig(output_dir * "$dir/distances.png")
+
+idxs = [1,2,3,5,4,6,7,8]
+bar(
+    replace([join(c for (p, c) in zip(p, chars) if p==1) for p in priors][idxs], ""=>"none"),
+    time_means[end,idxs]/size(time_means,1),
+    xlabel="Sample Number",
+    ylabel="Average Computation Time (s)",
+    title="Computation Time per Sample",
+    ylim=(0,2),
+    seriescolors=[RGB((p.*0.8)...) for p in priors][idxs],
+    framestyle=:box,
+    markers=true,
+    titlefontsize=24,
+    markersize=8,
+    tickfontsize=15,
+    labelfontsize=20,
+    legend=nothing,
+    margin=5mm,
+    size=(width, height)
+)
+gui()
+
+savefig(output_dir * "$dir/computation_times.png")
 
 
 #* Calculating statistical significance of difference between means

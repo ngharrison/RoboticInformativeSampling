@@ -123,12 +123,12 @@ using .DataIO: save
     # empty!(mission.prior_samples)
 
     ## run search alg
-    @time samples, beliefs = mission(vis, sleep_time=0.0);
+    @time samples, beliefs, times = mission(vis, sleep_time=0.0);
     @debug "output correlation matrix:" outputCorMat(beliefs[end])
     # save(mission, samples, beliefs; animation=true)
 
     ## calculate errors
-    metrics = calcMetrics(mission, samples, beliefs, 1)
+    metrics = calcMetrics(mission, samples, beliefs, times, 1)
 
     ## save outputs
     dir = "aus_ave_means_noise_new"
