@@ -33,8 +33,13 @@ Designed on top of a Multi-output Gaussian Process, but can still be used with a
 single output.
 """
 struct BeliefModelSimple{T} <: BeliefModel
+    "posterior Gaussian Process used to do inference"
     gp
+    "number of outputs of the GP"
+    N
+    "kernel function used in the GP"
     kernel::T
+    "hyperparameters of the GP kernel function"
     θ
 end
 
@@ -126,18 +131,20 @@ function BeliefModel(samples, bounds::Bounds;
         Y_vals, Y_errs = Y, 0.0
     end
 
+    N = maximum(last, X) # number of outputs
+
     # choose noise
     σn = (noise.learned ? noise.value : fixed(noise.value))
-    θ0 = initHyperparams(X, Y_vals, bounds, kernel; σn)
+    θ0 = initHyperparams(X, Y_vals, bounds, N, kernel; σn)
 
     # optimize hyperparameters (train)
-    θ = optimizeLoss(createLossFunc(X, Y_vals, Y_errs, kernel), θ0)
+    θ = optimizeLoss(createLossFunc(X, Y_vals, Y_errs, N, kernel), θ0)
 
     # produce optimized gp belief model
-    fx = buildPriorGP(X, Y_vals, Y_errs, kernel, θ)
+    fx = buildPriorGP(X, Y_vals, Y_errs, N, kernel, θ)
     f_post = posterior(fx, Y_vals) # gp conditioned on training samples
 
-    return BeliefModelSimple(f_post, kernel, θ)
+    return BeliefModelSimple(f_post, N, kernel, θ)
 end
 
 # Produce a belief model with pre-chosen hyperparams
@@ -152,14 +159,16 @@ function BeliefModel(samples, θ; kernel=multiKernel)
         Y_vals, Y_errs = Y, 0.0
     end
 
-    fx = buildPriorGP(X, Y_vals, Y_errs, kernel, θ)
+    N = maximum(last, X) # number of outputs
+
+    fx = buildPriorGP(X, Y_vals, Y_errs, N, kernel, θ)
     f_post = posterior(fx, Y_vals) # gp conditioned on training samples
 
-    return BeliefModelSimple(f_post, kernel, θ)
+    return BeliefModelSimple(f_post, N, kernel, θ)
 end
 
-function buildPriorGP(X, Y_vals, Y_errs, kernel, θ, ϵ=0.0)
-    f = GP(multiMeanAve(X, Y_vals), kernel(θ))
+function buildPriorGP(X, Y_vals, Y_errs, N, kernel, θ, ϵ=0.0)
+    f = GP(multiMeanAve(X, Y_vals, N), kernel(θ))
     f(X, Y_errs.^2 .+ value(θ.σn).^2 .+ √eps() .+ ϵ) # eps to prevent numerical issues
 end
 
@@ -258,11 +267,11 @@ $(TYPEDSIGNATURES)
 This function creates the loss function for training the GP. The negative log
 marginal likelihood is used.
 """
-function createLossFunc(X, Y_vals, Y_errs, kernel)
+function createLossFunc(X, Y_vals, Y_errs, N, kernel)
     # returns a function for the negative log marginal likelihood
     θ -> begin
         try
-            fx = buildPriorGP(X, Y_vals, Y_errs, kernel, θ)
+            fx = buildPriorGP(X, Y_vals, Y_errs, N, kernel, θ)
             return -logpdf(fx, Y_vals)
         catch e
             # for PosDefException
@@ -271,7 +280,7 @@ function createLossFunc(X, Y_vals, Y_errs, kernel)
             @error e θ X Y_vals
 
             # NOTE this will probably break if reached with the multiKernel
-            fx = buildPriorGP(X, Y_vals, Y_errs, kernel, θ, 1e-1*maximum(θ.σ))
+            fx = buildPriorGP(X, Y_vals, Y_errs, N, kernel, θ, 1e-1*maximum(θ.σ))
             return -logpdf(fx, Y_vals)
         end
     end

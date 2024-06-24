@@ -13,11 +13,10 @@ include("CustomKernel.jl")
 
 ## Mean and kernel stuff
 
-function multiMeanAve(X, Y)
+function multiMeanAve(X, Y, N)
     # calculate means
-    T = maximum(last, X)
-    mean_vals = zeros(T)
-    nums = zeros(Int, T)
+    mean_vals = zeros(N)
+    nums = zeros(Int, N)
     for ((_, q), y) in zip(X, Y)
         mean_vals[q] += y
         nums[q] += 1
@@ -64,16 +63,16 @@ Creates an output covariance matrix from an array of parameters by filling a low
 triangular matrix.
 
 Inputs:
-- `a`: parameter vector, must hold (T+1)*T/2 parameters, where T = number of
+- `a`: parameter vector, must hold (N+1)*N/2 parameters, where N = number of
   outputs
 """
 function fullyConnectedCovMat(a)
 
-    T = floor(Int, sqrt(length(a)*2)) # (T+1)*T/2 in matrix
+    N = floor(Int, sqrt(length(a)*2)) # (N+1)*N/2 in matrix
 
     # cholesky factorization technique to create a free-form covariance matrix
     # that is positive semidefinite
-    L = [(v<=u ? a[u*(u-1)÷2 + v] : 0.0) for u in 1:T, v in 1:T]
+    L = [(v<=u ? a[u*(u-1)÷2 + v] : 0.0) for u in 1:N, v in 1:N]
     A = L*L' # lower triangular times upper
 
     return A + √eps()*I
@@ -88,17 +87,17 @@ Creates an output covariance matrix from an array of parameters by filling the
 first column and diagonal of a lower triangular matrix.
 
 Inputs:
-- `a`: parameter vector, must hold 2T-1 parameters, where T = number of
+- `a`: parameter vector, must hold 2N-1 parameters, where N = number of
   outputs
 """
 function manyToOneCovMat(a)
 
     # cholesky factorization technique to create a free-form covariance matrix
     # that is positive semidefinite
-    T = (length(a)+1)÷2 # T on column + T-1 more on diagonal = 2T-1
-    L = zeros(T,T) # will be lower triangular
+    N = (length(a)+1)÷2 # N on column + N-1 more on diagonal = 2N-1
+    L = zeros(N,N) # will be lower triangular
     L[1,1] = a[1]
-    for t=2:T
+    for t=2:N
         L[t,1] = a[1 + t-1]
         L[t,t] = a[1 + 2*(t-1)]
     end
@@ -114,9 +113,8 @@ $(TYPEDSIGNATURES)
 
 Creates the structure of hyperparameters for a MTGP and gives them initial values.
 """
-function initHyperparams(X, Y_vals, bounds, ::typeof(multiKernel); kwargs...)
-    T = maximum(last, X) # number of outputs
-    n = fullyConnectedCovNum(T)
+function initHyperparams(X, Y_vals, bounds, N, ::typeof(multiKernel); kwargs...)
+    n = fullyConnectedCovNum(N)
     σ = 0.5/sqrt(2) * ones(n)
     ℓ = mean(bounds.upper .- bounds.lower)
     return (; σ, ℓ, kwargs...)
@@ -128,9 +126,8 @@ $(TYPEDSIGNATURES)
 Creates the structure of hyperparameters for a MTGP and gives them initial values.
 This is for a specialized quantity covariance matrix with separation.
 """
-function initHyperparams(X, Y_vals, bounds, ::typeof(mtoKernel); kwargs...)
-    T = maximum(last, X) # number of outputs
-    n = manyToOneCovNum(T)
+function initHyperparams(X, Y_vals, bounds, N, ::typeof(mtoKernel); kwargs...)
+    n = manyToOneCovNum(N)
     σ = 0.5/sqrt(2) * ones(n)
     ℓ = mean(bounds.upper .- bounds.lower)
     return (; σ, ℓ, kwargs...)
@@ -141,16 +138,14 @@ $(TYPEDSIGNATURES)
 
 Creates the structure of hyperparameters for a SLFM and gives them initial values.
 """
-function initHyperparams(X, Y_vals, bounds, ::typeof(slfmKernel); kwargs...)
-    T = maximum(last, X) # number of outputs
-    σ = 0.5/sqrt(2) * ones(T,T)
-    ℓ = mean(bounds.upper .- bounds.lower) * ones(T)
+function initHyperparams(X, Y_vals, bounds, N, ::typeof(slfmKernel); kwargs...)
+    σ = 0.5/sqrt(2) * ones(N,N)
+    ℓ = mean(bounds.upper .- bounds.lower) * ones(N)
     return (; σ, ℓ, kwargs...)
 end
 
-function initHyperparams(X, Y_vals, bounds, ::typeof(customKernel); kwargs...)
-    T = maximum(last, X) # number of outputs
-    n = fullyConnectedCovNum(T)
+function initHyperparams(X, Y_vals, bounds, N, ::typeof(customKernel); kwargs...)
+    n = fullyConnectedCovNum(N)
     σ = 0.5/sqrt(2) * ones(n)
     ℓ = mean(bounds.upper .- bounds.lower) * ones(n)
     return (; σ, ℓ, kwargs...)
