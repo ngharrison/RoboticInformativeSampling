@@ -42,7 +42,7 @@ To understand more about the code and the Julia language in general, go to the [
 
 The easiest way to start using the code for your own purposes is to copy the =example.jl= file and change the data and settings to fit what you need. You can also look through the other files in =app/missions/= for inspiration, such as =aus.jl= for use with real data and =ros_test.jl= for use with ROS topics.
 
-An interesting mission is found in =user.jl=. This script does all the normal mapping and automatic sample location selection, but it asks for user input for every sample measurement.
+An interesting and flexible mission is found in =user.jl=. This script does all the normal mapping and automatic sample location selection, but it asks for user input for every sample measurement.
 
 ** Extra notes
 *** Activating a project
@@ -93,6 +93,29 @@ Pkg.activate(Base.source_dir() * "/..")
 You can also just run the same script from within the Julia REPL as described [[* Quick Start][above]]. The Julia code handles the actual connections to ROS and =rosrun= is just a convenience to find the executable scripts within the package. It also doesn't provide maintaining compilation and variables (for inspection) like the REPL does.
 
 ROS-related helper files are generally found in the =app/ros= directory.
+
+** ROS services
+
+This package has a number of services that can be called from other languages (e.g. Python, C++) through the ROS service protocol. The files describing these are contained in the =srv= directory:
+
+- GenerateBeliefModel.srv
+- GenerateBeliefMaps.srv
+- GenerateBeliefMapsFromModel.srv
+- NextSampleLocation.srv
+- BeliefMapsAndNextSampleLocation.srv
+
+
+These expose the main parts from the package core: creating belief models, belief maps, and choosing new locations to sample. This is useful if you want to build up an application of your own and embed some of the functionality from this package.
+
+The services do not expose all the options and features of this package. As a main example, they do not handle an entire sampling run since they don't provide methods for the actual sampling --- those would have to be written on the client side. If you want to use all the features of the package, you will need to run the Julia code itself.
+
+To use the services, run the =app/ros/server.jl= script (after setting up the ROS package as above):
+
+#+begin_src shell
+rosrun informative_sampling server.jl
+#+end_src
+
+To see how to call each service, look at the examples in the =app/ros/client_sim.py= script.
 
 * Documentation
 
