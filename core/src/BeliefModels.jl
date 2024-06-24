@@ -11,7 +11,7 @@ using DocStringExtensions: TYPEDSIGNATURES, TYPEDEF
 using ..Samples: SampleInput
 using ..Kernels: multiMeanAve, singleKernel, multiKernel, fullyConnectedCovNum,
                  slfmKernel, fullyConnectedCovMat, manyToOneCovNum, manyToOneCovMat,
-                 initHyperparams
+                 initHyperparams, mtoKernel
 using ..Maps: Bounds
 
 export BeliefModel, outputCorMat, meanDerivAndVar
@@ -32,8 +32,9 @@ Belief model struct and function for multiple outputs with 2D inputs.
 Designed on top of a Multi-output Gaussian Process, but can still be used with a
 single output.
 """
-struct BeliefModelSimple <: BeliefModel
+struct BeliefModelSimple{T} <: BeliefModel
     gp
+    kernel::T
     θ
 end
 
@@ -136,7 +137,7 @@ function BeliefModel(samples, bounds::Bounds;
     fx = buildPriorGP(X, Y_vals, Y_errs, kernel, θ)
     f_post = posterior(fx, Y_vals) # gp conditioned on training samples
 
-    return BeliefModelSimple(f_post, θ)
+    return BeliefModelSimple(f_post, kernel, θ)
 end
 
 # Produce a belief model with pre-chosen hyperparams
@@ -154,7 +155,7 @@ function BeliefModel(samples, θ; kernel=multiKernel)
     fx = buildPriorGP(X, Y_vals, Y_errs, kernel, θ)
     f_post = posterior(fx, Y_vals) # gp conditioned on training samples
 
-    return BeliefModelSimple(f_post, θ)
+    return BeliefModelSimple(f_post, kernel, θ)
 end
 
 function buildPriorGP(X, Y_vals, Y_errs, kernel, θ, ϵ=0.0)
@@ -284,8 +285,14 @@ outputCorMat(beliefModel::BeliefModel)
 
 Gives the correlation matrix between all outputs.
 """
-function outputCorMat(beliefModel::BeliefModelSimple)
+function outputCorMat(beliefModel::BeliefModelSimple{typeof(multiKernel)})
     cov_mat = fullyConnectedCovMat(beliefModel.θ.σ)
+    vars = diag(cov_mat)
+    return @. cov_mat / √(vars * vars') # broadcast shorthand
+end
+
+function outputCorMat(beliefModel::BeliefModelSimple{typeof(mtoKernel)})
+    cov_mat = manyToOneCovMat(beliefModel.θ.σ)
     vars = diag(cov_mat)
     return @. cov_mat / √(vars * vars') # broadcast shorthand
 end
