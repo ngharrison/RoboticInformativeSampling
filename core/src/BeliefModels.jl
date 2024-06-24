@@ -192,9 +192,9 @@ function (beliefModel::BeliefModelSimple)(x::SampleInput; kwargs...)
     return only.(beliefModel([x]); kwargs...)
 end
 
-function (beliefModel::BeliefModelSimple)(X::AbstractVector{SampleInput}; full_cov=false)
+function (beliefModel::BeliefModelSimple)(X::AbstractArray{SampleInput}; full_cov=false)
     func = full_cov ? mean_and_cov : mean_and_var
-    μ, σ² = func(beliefModel.gp, X)
+    μ, σ² = reshape.(func(beliefModel.gp, vec(X)), Ref(size(X)))
     return μ, .√clamp!(σ², 0.0, Inf) # avoid negative variances
 end
 
@@ -202,11 +202,13 @@ function meanDerivAndVar(beliefModel::BeliefModelSimple, x::SampleInput)
     return only.(meanDerivAndVar(beliefModel, [x]))
 end
 
-function meanDerivAndVar(beliefModel::BeliefModelSimple, X::AbstractVector{SampleInput})
+function meanDerivAndVar(beliefModel::BeliefModelSimple, X::AbstractArray{SampleInput})
+    Xv = vec(X)
+    dims = size(X)
     f = beliefModel.gp
-    C_xcond_x = cov(f.prior, f.data.x, X)
-    m_deriv_norm = meanDerivNorm(X, f.data.x, C_xcond_x, beliefModel.θ.ℓ, f.data.α)
-    C_post_diag = var(f.prior, X) - diag_Xt_invA_X(f.data.C, C_xcond_x)
+    C_xcond_x = cov(f.prior, f.data.x, Xv)
+    m_deriv_norm = reshape(meanDerivNorm(Xv, f.data.x, C_xcond_x, beliefModel.θ.ℓ, f.data.α), dims)
+    C_post_diag = reshape(var(f.prior, Xv) - diag_Xt_invA_X(f.data.C, C_xcond_x), dims)
     return m_deriv_norm, .√clamp!(C_post_diag, 0.0, Inf)
 end
 
@@ -235,7 +237,7 @@ X = [([.1, .2], 1),
 μ, σ = beliefModel(X) # result: [μ1, μ2], [σ1, σ2]
 ```
 """
-function (beliefModel::BeliefModelSplit)(X::Union{SampleInput, Vector{SampleInput}}; full_cov=false)
+function (beliefModel::BeliefModelSplit)(X::Union{SampleInput, AbstractArray{SampleInput}}; full_cov=false)
     μ, _ = beliefModel.combined(X; full_cov)
     _, σ = beliefModel.current(X; full_cov)
     return μ, σ

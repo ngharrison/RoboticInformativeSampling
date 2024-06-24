@@ -193,8 +193,8 @@ end
 
 function produceMaps(beliefModel::BeliefModel, bounds, dims; quantity=1)
     axs, points = generateAxes(bounds, dims)
-    μ, σ = beliefModel(tuple.(vec(points), quantity))
-    pred_map, err_map = (Map(reshape(v, dims), bounds) for v in (μ, σ))
+    μ, σ = beliefModel(tuple.(points, quantity))
+    pred_map, err_map = (Map(v, bounds) for v in (μ, σ))
 
     return pred_map, err_map
 end

@@ -60,9 +60,7 @@ for i in eachindex(beliefs)
     # GP maps
     axs, points = generateAxes(occ)
     dims = Tuple(length.(axs))
-    # μ, σ = beliefs[i](tuple.(vec(points), 1))
-    # pred_map = reshape(μ, dims)
-    # err_map = reshape(σ, dims)
+    # pred_map, err_map = beliefs[i](tuple.(points, 1))
     i = 0
     pred_map = zeros(dims)
     err_map = zeros(dims)
@@ -140,14 +138,11 @@ end
 # x2_m = getindex.(xp_m, 2)
 #
 # axs, points = generateAxes(occ)
-# dims = Tuple(length.(axs))
 #
 # for i in eachindex(beliefs)
 #     # GP maps
-#     μ, _ = beliefs[i](tuple.(vec(points), 1))
-#     pred_map = reshape(μ, dims)
-#     μ_m, _ = beliefs_m[i](tuple.(vec(points), 1))
-#     pred_map_m = reshape(μ_m, dims)
+#     pred_map, _ = beliefs[i](tuple.(points, 1))
+#     pred_map_m, _ = beliefs_m[i](tuple.(points, 1))
 #
 #     # blocked points
 #     pred_map[occ] .= NaN

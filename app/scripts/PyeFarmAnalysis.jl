@@ -180,9 +180,8 @@ occupancy = mission.occupancy
 bounds = getBounds(occupancy)
 
 axes, points = generateAxes(occupancy)
-dims = Tuple(length.(axes))
-μ, σ = gt_belief(tuple.(vec(points), 1))
-gt_pred_map = Map(reshape(μ, dims), bounds)
+μ, σ = gt_belief(tuple.(points, 1))
+gt_pred_map = Map(μ, bounds)
 
 name = "30samples_50x50_priors"
 file_name = output_dir * "pye_farm_trial_named/" * name * output_ext
@@ -190,8 +189,8 @@ data = load(file_name)
 beliefs = data["beliefs"]
 
 for i in 1:30
-    μ, σ = beliefs[i](tuple.(vec(points), 1))
-    pred_map = Map(reshape(μ, dims), bounds)
+    μ, σ = beliefs[i](tuple.(points, 1))
+    pred_map = Map(μ, bounds)
     err_map = abs.(pred_map .- gt_pred_map)
     vis(gt_pred_map, pred_map; titles=["gt", "belief"])
     println(mean(err_map))
@@ -199,8 +198,7 @@ for i in 1:30
 end
 
 maes = map(beliefs) do belief
-    μ, σ = belief(tuple.(vec(points), 1))
-    pred_map = reshape(μ, dims)
+    pred_map, err_map = belief(tuple.(points, 1))
     mean(abs.(pred_map .- gt_pred_map))
 end
 
@@ -223,9 +221,8 @@ beliefs = data["beliefs"]
 occupancy = mission.occupancy
 bounds = getBounds(occupancy)
 axes, points = generateAxes(occupancy)
-dims = Tuple(length.(axes))
 μ, σ = beliefs[15](tuple.(vec(points), 1))
-pred_map = Map(reshape(μ, dims), bounds)
+pred_map = Map(μ, bounds)
 
 fig, ax, hm = heatmap(pred_map')
 Colorbar(fig[1, 2], hm, width=20)
@@ -264,9 +261,7 @@ bm = BeliefModel([mission.prior_samples; samples], bounds)
 occupancy = mission.occupancy
 bounds = getBounds(occupancy)
 axs, points = generateAxes(occupancy)
-dims = Tuple(length.(axes))
-μ, σ = bm(tuple.(vec(points), 1))
-pred_map = reshape(μ, dims)
+pred_map, err_map = bm(tuple.(points, 1))
 
 p1 = plot(sat_img;
           title="Satellite Image",

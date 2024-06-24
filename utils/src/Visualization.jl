@@ -131,10 +131,7 @@ locations that they were generated from. Shows two plots side-by-side.
 """
 function visualize(beliefModel::BeliefModel, samples, occupancy, new_loc=nothing; quantity=1)
     axes, points = getAxes(occupancy)
-    dims = Tuple(length.(axes))
-    μ, σ = beliefModel(tuple.(vec(points), quantity))
-    pred_map = reshape(μ, dims)
-    err_map = reshape(σ, dims)
+    pred_map, err_map = beliefModel(tuple.(points, quantity))
 
     # blocked points
     pred_map[occupancy] .= NaN

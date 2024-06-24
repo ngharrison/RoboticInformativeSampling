@@ -166,14 +166,14 @@ M = mission
 other_bm = BeliefModel(filter(s->s.x[2]==2, samples), getBounds(M.occupancy);
                        M.noise, M.kernel)
 bm_vals = map(enumerate((beliefs[end], other_bm))) do (i, bm)
-    bm(tuple.(vec(points), i))
+    bm(tuple.(points, i))
 end
 
 for q in quantities
     for (i, data) in enumerate(bm_vals[q])
 
         # map to image
-        data_flipped = vec(reverse(permutedims(reshape(data, dims), (2, 1)), dims=1))
+        data_flipped = vec(reverse(permutedims(data, (2, 1)), dims=1))
 
         # publish as array
         array = std_msg.Float64MultiArray()

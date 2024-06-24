@@ -36,10 +36,7 @@ x2 = getindex.(xp, 2)
 i = 30
 # GP maps
 axs, points = generateAxes(occ)
-μ, σ = beliefs[i](tuple.(vec(points), 1))
-dims = Tuple(length.(axs))
-pred_map = reshape(μ, dims)
-err_map = reshape(σ, dims)
+pred_map, err_map = beliefs[i](tuple.(points, 1))
 
 #* plots
 p1 = heatmap(axs..., pred_map';
