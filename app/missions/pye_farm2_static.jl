@@ -3,7 +3,7 @@ using Logging: global_logger, ConsoleLogger, Info, Debug
 
 using InformativeSampling
 using .Samples: takeSamples
-using .ROSInterface: ROSConnection
+using .ROSInterface: ROSSampler
 
 using InformativeSamplingUtils
 using .DataIO: save
@@ -18,7 +18,7 @@ data_topics = [
 done_topic = "sortie_finished"
 pub_topic = "latest_sample"
 
-sampler = ROSConnection(data_topics, done_topic, pub_topic)
+sampler = ROSSampler(data_topics, done_topic, pub_topic)
 
 # 50x50 meter space (alt2)
 lower = [284725.0, 6241345.0]

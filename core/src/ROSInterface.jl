@@ -1,5 +1,3 @@
-#!/usr/bin/env julia
-
 module ROSInterface
 
 using PyCall: pyimport, PyNULL
@@ -7,7 +5,7 @@ using DocStringExtensions: TYPEDSIGNATURES, TYPEDFIELDS, FUNCTIONNAME
 
 using ..Samples: Location, SampleInput
 
-export ROSConnection
+export ROSSampler
 
 const rospy = PyNULL()
 const std_msg = PyNULL()
@@ -30,7 +28,7 @@ to get the name of each one.
 Fields:
 $(TYPEDFIELDS)
 """
-struct ROSConnection{T<:Union{String, NTuple{2, String}}}
+struct ROSSampler{T<:Union{String, NTuple{2, String}}}
     "vector of topic names that will be subscribed to to receive measurements"
     data_topics::Vector{T}
     "topic name that publishes a message to signify the traveling is done"
@@ -50,7 +48,7 @@ listen to. Each element of this list should be a 2-tuple of topics that will
 transmit the value and error for each sensor. This constructor initializes a ros
 node and sets up a publisher to pub_topic.
 """
-function ROSConnection(data_topics, done_topic, pub_topic)
+function ROSSampler(data_topics, done_topic, pub_topic)
     # initialize this node with its name
     rospy.init_node("informative_sampling")
 
@@ -58,18 +56,18 @@ function ROSConnection(data_topics, done_topic, pub_topic)
     publisher = rospy.Publisher(pub_topic, geo_msg.PoseStamped, queue_size=1, latch=true)
 
     # create connection object
-    rosConnection = ROSConnection(data_topics, done_topic, pub_topic, publisher)
+    rosConnection = ROSSampler(data_topics, done_topic, pub_topic, publisher)
 
     return rosConnection
 end
 
 # give it a length and indices
-Base.eachindex(R::ROSConnection) = eachindex(R.data_topics)
-Base.length(R::ROSConnection) = length(R.data_topics)
+Base.eachindex(R::ROSSampler) = eachindex(R.data_topics)
+Base.length(R::ROSSampler) = length(R.data_topics)
 
 """
 ```julia
-function (R::ROSConnection{String})(new_loc::Location)
+function (R::ROSSampler{String})(new_loc::Location)
 ```
 
 Returns a vector of values from the sample location, one for each sensor
@@ -87,14 +85,14 @@ data_topics = [
 done_topic = "sortie_finished"
 pub_topic = "latest_sample"
 
-sampler = ROSConnection(data_topics, done_topic, pub_topic)
+sampler = ROSSampler(data_topics, done_topic, pub_topic)
 
 location = [.1, .3]
 [value1, value2] = sampler(location)
 ```
 
 ```julia
-function (R::ROSConnection{NTuple{2, String}})(new_loc::Location)
+function (R::ROSSampler{NTuple{2, String}})(new_loc::Location)
 ```
 
 Returns a vector of (value, error) pairs from the sample location, one for each
@@ -112,13 +110,13 @@ data_topics = [
 done_topic = "sortie_finished"
 pub_topic = "latest_sample"
 
-sampler = ROSConnection(data_topics, done_topic, pub_topic)
+sampler = ROSSampler(data_topics, done_topic, pub_topic)
 
 location = [.1, .3]
 [(value1, error1), (value2, error2)] = sampler(location)
 ```
 """
-function (R::ROSConnection{String})(new_loc::Location)
+function (R::ROSSampler{String})(new_loc::Location)
     publishNextLocation(R.publisher, new_loc)
 
     rospy.wait_for_message(R.done_topic, std_msg.Bool) # a message means finished
@@ -134,7 +132,7 @@ function (R::ROSConnection{String})(new_loc::Location)
     return observations
 end
 
-function (R::ROSConnection{NTuple{2, String}})(new_loc::Location)
+function (R::ROSSampler{NTuple{2, String}})(new_loc::Location)
     publishNextLocation(R.publisher, new_loc)
 
     rospy.wait_for_message(R.done_topic, std_msg.Bool) # a message means finished
@@ -153,7 +151,7 @@ end
 
 """
 ```julia
-function (R::ROSConnection{String})(new_index::SampleInput)
+function (R::ROSSampler{String})(new_index::SampleInput)
 ```
 
 Returns a single value from the sample location of the chosen quantity.  It does
@@ -163,7 +161,7 @@ sampled, it calls out to each topic in sequence and waits for its message.
 Currently will be unused.
 
 ```julia
-function (R::ROSConnection{NTuple{2, String}})(new_index::SampleInput)
+function (R::ROSSampler{NTuple{2, String}})(new_index::SampleInput)
 ```
 
 Returns a single value and its error from the sample location of the chosen
@@ -173,7 +171,7 @@ its message.
 
 Currently will be unused.
 """
-function (R::ROSConnection{String})(new_index::SampleInput)
+function (R::ROSSampler{String})(new_index::SampleInput)
     loc, quantity = new_index
     publishNextLocation(R.publisher, loc)
 
@@ -191,7 +189,7 @@ function (R::ROSConnection{String})(new_index::SampleInput)
     return value
 end
 
-function (R::ROSConnection{NTuple{2, String}})(new_index::SampleInput)
+function (R::ROSSampler{NTuple{2, String}})(new_index::SampleInput)
     loc, quantity = new_index
     publishNextLocation(R.publisher, loc)
 

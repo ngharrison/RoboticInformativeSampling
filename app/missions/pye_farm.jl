@@ -10,7 +10,7 @@ using .Samples: Sample
 using .Missions: Mission
 
 # this requires a working rospy installation
-using .ROSInterface: ROSConnection
+using .ROSInterface: ROSSampler
 
 using InformativeSamplingUtils
 using .Visualization: vis
@@ -27,7 +27,7 @@ function pyeFarmMission(; num_samples=4)
     done_topic = "sortie_finished"
     pub_topic = "latest_sample"
 
-    sampler = ROSConnection(data_topics, done_topic, pub_topic)
+    sampler = ROSSampler(data_topics, done_topic, pub_topic)
 
     # # full bounds
     # lower=[284711.12, 6241319.42]

@@ -11,7 +11,7 @@ using .SampleCosts: EIGF
 using .Missions: Mission
 
 # this requires a working rospy installation
-using .ROSInterface: ROSConnection
+using .ROSInterface: ROSSampler
 
 function rosMission(; num_samples=4)
 
@@ -23,7 +23,7 @@ function rosMission(; num_samples=4)
     done_topic = "sortie_finished"
     pub_topic = "latest_sample"
 
-    sampler = ROSConnection(data_topics, done_topic, pub_topic)
+    sampler = ROSSampler(data_topics, done_topic, pub_topic)
 
     bounds = (lower = [1.0, 1.0], upper = [9.0, 9.0])
 

@@ -2,7 +2,7 @@
 using InformativeSampling
 using .Maps: Map, generateAxes
 using .Samples: Sample, takeSamples
-using .ROSInterface: ROSConnection
+using .ROSInterface: ROSSampler
 
 # the topics that will be listened to for measurements
 data_topics = [
@@ -12,7 +12,7 @@ data_topics = [
 done_topic = "sortie_finished"
 pub_topic = "latest_sample"
 
-sampler = ROSConnection(data_topics, done_topic, pub_topic)
+sampler = ROSSampler(data_topics, done_topic, pub_topic)
 
 bounds = (lower = [0.0, 0.0], upper = [1.0, 1.0])
 
