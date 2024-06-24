@@ -1,0 +1,8 @@
+informative_sampling/Sample[] samples
+informative_sampling/BeliefModelParameters params
+informative_sampling/Bounds bounds
+int64[] dims
+int64 quantity_index
+---
+std_msgs/Float64MultiArray belief_map
+std_msgs/Float64MultiArray uncertainty_map

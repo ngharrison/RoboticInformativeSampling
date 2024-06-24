@@ -17,6 +17,12 @@ samples = [
     Sample([.9, .1], 2, .1),
 ]
 
+params = BeliefModelParameters(
+    [0.5999898234956208, 0.2811307595186129, 0.20847681628154585],
+    0.15899537159833718,
+    0.0
+)
+
 bounds = Bounds([0.0, 0.0], [1.0, 1.0])
 
 noise = Noise(0.0, False)
@@ -56,6 +62,17 @@ def generateBeliefMapsClient():
     except rospy.ServiceException as e:
         print("Service call failed: %s"%e)
 
+def generateBeliefMapsFromModelClient():
+    print("Requesting belief maps from model")
+    rospy.wait_for_service('generate_belief_maps_from_model')
+    try:
+        proxy = rospy.ServiceProxy('generate_belief_maps_from_model', GenerateBeliefMapsFromModel)
+        result = proxy(samples, params, bounds, dims, quantity_index)
+        print("Received %s" % result)
+        return result
+    except rospy.ServiceException as e:
+        print("Service call failed: %s"%e)
+
 def nextSampleLocationClient():
     print("Requesting next sample location")
     service_name = 'next_sample_location'
@@ -84,6 +101,8 @@ if __name__ == "__main__":
     generateBeliefModelClient()
 
     generateBeliefMapsClient()
+
+    generateBeliefMapsFromModelClient()
 
     nextSampleLocationClient()
 

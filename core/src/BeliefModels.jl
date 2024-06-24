@@ -12,6 +12,7 @@ using ..Samples: SampleInput
 using ..Kernels: multiMeanAve, singleKernel, multiKernel, fullyConnectedCovNum,
                  slfmKernel, fullyConnectedCovMat, manyToOneCovNum, manyToOneCovMat,
                  initHyperparams
+using ..Maps: Bounds
 
 export BeliefModel, outputCorMat, meanDerivAndVar
 
@@ -110,7 +111,7 @@ conditioned on the samples given.
 A noise standard deviation can optionally be passed in either as a single scalar
 value for all samples or a vector of values, one for each sample.
 """
-function BeliefModel(samples, bounds;
+function BeliefModel(samples, bounds::Bounds;
                      noise=(value=0.0, learned=false),
                      kernel=multiKernel)
     # set up training data
@@ -138,8 +139,26 @@ function BeliefModel(samples, bounds;
     return BeliefModelSimple(f_post, θ)
 end
 
+# Produce a belief model with pre-chosen hyperparams
+function BeliefModel(samples, θ; kernel=multiKernel)
+    X = getfield.(samples, :x)
+    Y = getfield.(samples, :y)
+
+    # split measurements if needed
+    if Y isa AbstractArray{<:NTuple{2, <:Real}}
+        Y_vals, Y_errs = first.(Y), last.(Y)
+    else
+        Y_vals, Y_errs = Y, 0.0
+    end
+
+    fx = buildPriorGP(X, Y_vals, Y_errs, kernel, θ)
+    f_post = posterior(fx, Y_vals) # gp conditioned on training samples
+
+    return BeliefModelSimple(f_post, θ)
+end
+
 function buildPriorGP(X, Y_vals, Y_errs, kernel, θ, ϵ=0.0)
-    f = GP(multiMeanAve(X, Y_vals), kernel(θ)) # calculate
+    f = GP(multiMeanAve(X, Y_vals), kernel(θ))
     f(X, Y_errs.^2 .+ value(θ.σn).^2 .+ √eps() .+ ϵ) # eps to prevent numerical issues
 end
 

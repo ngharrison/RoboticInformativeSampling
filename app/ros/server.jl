@@ -7,7 +7,8 @@ Pkg.activate(Base.source_dir() * "/..")
 
 using RobotOS
 @rosimport informative_sampling.srv: GenerateBeliefModel, GenerateBeliefMaps,
-                                     NextSampleLocation, BeliefMapsAndNextSampleLocation
+                                     GenerateBeliefMapsFromModel, NextSampleLocation,
+                                     BeliefMapsAndNextSampleLocation
 @rosimport informative_sampling.msg:BeliefModelParameters
 @rosimport std_msgs.msg: Float64MultiArray, MultiArrayLayout, MultiArrayDimension
 rostypegen()
@@ -82,6 +83,38 @@ function handleGenerateBeliefMaps(req)
     return GenerateBeliefMapsResponse(belief_map, uncertainty_map)
 end
 
+function handleGenerateBeliefMapsFromModel(req)
+    println("Generating belief maps from model")
+
+    samples = map(req.samples) do s
+        Sample((s.location, s.quantity_index), s.measurement)
+    end
+    params = (
+        σ  = req.params.amplitudes,
+        ℓ  = req.params.length_scale,
+        σn = req.params.noise
+    )
+
+    beliefModel = BeliefModel(samples, params)
+
+    bounds = (; req.bounds.lower, req.bounds.upper)
+    dims = Tuple(req.dims)
+    quantity = req.quantity_index
+
+    _, points = generateAxes(bounds, dims)
+    μ, σ = beliefModel(tuple.(vec(points), quantity))
+
+    belief_map, uncertainty_map = (
+        Float64MultiArray(
+            MultiArrayLayout(MultiArrayDimension.("", collect(dims), 1), 0),
+            data
+        )
+        for data in (μ, σ)
+    )
+
+    return GenerateBeliefMapsFromModelResponse(belief_map, uncertainty_map)
+end
+
 function handleNextSampleLocation(req)
     println("Choosing next sample location")
 
@@ -108,7 +141,7 @@ function handleNextSampleLocation(req)
 end
 
 function handleBeliefMapsAndNextSampleLocation(req)
-    println("Choosing next sample location")
+    println("Generating belief maps and next sample location")
 
     seed!(0)
 
@@ -153,6 +186,8 @@ function main()
             catchErrors(handleGenerateBeliefModel))
     Service("generate_belief_maps", GenerateBeliefMaps,
             catchErrors(handleGenerateBeliefMaps))
+    Service("generate_belief_maps_from_model", GenerateBeliefMapsFromModel,
+            catchErrors(handleGenerateBeliefMapsFromModel))
     Service("next_sample_location", NextSampleLocation,
             catchErrors(handleNextSampleLocation))
     Service("belief_maps_and_next_sample_location", BeliefMapsAndNextSampleLocation,

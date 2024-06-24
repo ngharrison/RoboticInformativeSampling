@@ -69,6 +69,7 @@ add_service_files(
   FILES
   GenerateBeliefModel.srv
   GenerateBeliefMaps.srv
+  GenerateBeliefMapsFromModel.srv
   NextSampleLocation.srv
   BeliefMapsAndNextSampleLocation.srv
 )
