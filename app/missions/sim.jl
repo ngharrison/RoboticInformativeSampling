@@ -188,3 +188,229 @@ metrics = Array{Any, 2}(undef, (length(mission_peaks), num_runs))
     ## save outputs
     save(metrics; file_name="$(dir)/metrics_$(join(priors))")
 end
+
+#* Data analysis
+
+using InformativeSampling
+
+using InformativeSamplingUtils
+using .DataIO: output_dir, output_ext
+
+using Statistics: mean, std
+using FileIO: load
+using Plots
+using Plots: mm
+
+"""
+Calculates the standard deviation across elements of an array when the elements
+are arrays of arrays.
+"""
+function stdM(cors)
+    d = cors .- Ref(mean(cors))
+    l = [[v.^2 for v in u] for u in d]
+    s = sum(l) / (length(cors) - 1)
+    return [[sqrt(v) for v in u] for u in s]
+end
+
+
+p_err = Vector{Any}(undef, 8)
+p_cor = Vector{Any}(undef, 8)
+
+err_means = zeros(30, 8)
+err_stds = zeros(30, 8)
+
+max_err_means = zeros(30, 8)
+max_err_stds = zeros(30, 8)
+
+det_means = Vector{Any}(undef, 8)
+det_stds = Vector{Any}(undef, 8)
+
+dist_means = zeros(30, 8)
+dist_stds = zeros(30, 8)
+
+time_means = zeros(30, 8)
+time_stds = zeros(30, 8)
+
+priors = [
+    (0, 0, 0),
+    (1, 0, 0),
+    (0, 1, 0),
+    (1, 1, 0),
+    (0, 0, 1),
+    (1, 0, 1),
+    (0, 1, 1),
+    (1, 1, 1)
+]
+chars = "HML"
+colors = [(1,0,0), (0,1,0), (0,0,1)]
+
+for (i, p) in enumerate(priors)
+    file_name = output_dir * "$dir/metrics_$(join(p))" * output_ext
+
+    data = load(file_name)
+    maes = [run.mae for run in data["metrics"]]
+    mxaes = [run.mxae for run in data["metrics"]]
+    cors = [run.cors for run in data["metrics"]]
+    dets = [[v.^2 for v in u] for u in cors]
+    dists = [cumsum(run.dists) for run in data["metrics"]]
+    times = [cumsum(run.times) for run in data["metrics"]]
+
+    err_means[:,i] .= mean(maes)
+    err_stds[:,i] .= std(maes)
+
+    max_err_means[:,i] .= mean(mxaes)
+    max_err_stds[:,i] .= std(mxaes)
+
+    det_means[i] = mean(dets)
+    det_stds[i] = stdM(dets)
+
+    dist_means[:,i] .= mean(dists)
+    dist_stds[:,i] .= std(dists)
+
+    time_means[:,i] .= mean(times)
+    time_stds[:,i] .= std(times)
+
+    plt = plot(hcat((c[2:end] for c in mean(dets))...)',
+               ribbon=hcat((c[2:end] for c in stdM(dets))...)',
+               framestyle=:box,
+               labels=false,
+               markers=true,
+               left_margin=(i∈(2,4,6,8) ? 5mm : 0mm),
+               bottom_margin=(i∈(7,8) ? 5mm : 0mm),
+               xticks=(i∈(7,8) ? (0:5:30) : false),
+               yticks=(i∈(2,4,6,8) ? (0:0.5:1) : false),
+               xlabel=(i∈(7,8) ? "Sample Number" : ""),
+               # ylabel=(i∈(2,4,6,8) ? "\$ \\mathbf{\\rho^2} \$" : ""),
+               seriescolors=[(RGB((c.*0.8)...) for (i, c) in zip(p, colors) if i==1)...;;])
+    p_cor[i] = plt
+end
+
+width, height = 1200, 800
+
+p_cor[1] = plot([2 2 2],
+                framestyle=:none,
+                legend=(0.4, 0.7),
+                linewidth=4,
+                xticks=false,
+                yticks=false,
+                markers=false,
+                legendfontsize=16,
+                labels=[" High" " Medium" " Low"],
+                seriescolors=[(RGB((c.*0.8)...) for c in colors)...;;])
+plot(
+    p_cor[[2,1,4,3,6,5,8,7]]...,
+    plot_title="Hypothesis Scores",
+    plot_titlefontsize=24,
+    ylim=(0,1),
+    grid=false,
+    tickfontsize=15,
+    labelfontsize=20,
+    markersize=6,
+    # legendcolumns=3,
+    fg_legend=:transparent,
+    layout=grid(4,2),
+    # layout=@layout([grid(3,2){0.75h}; _ a{0.5w} b]),
+    size=(width, height)
+)
+gui()
+
+savefig(output_dir * "$dir/hypothesis_scores.png")
+
+plot(
+    err_means,
+    # ribbon=err_stds,
+    xlabel="Sample Number",
+    ylabel="Mean Absolute Map Error",
+    title="Prediction Errors",
+    ylim=(0,.35),
+    seriescolors=[(RGB((p.*0.8)...) for p in priors)...;;],
+    labels=[replace([join(c for (p, c) in zip(p, chars) if p==1) for p in priors], ""=>"none")...;;],
+    framestyle=:box,
+    markers=true,
+    legendcolumns=2, # OR layout=2,
+    titlefontsize=24,
+    markersize=8,
+    tickfontsize=15,
+    labelfontsize=20,
+    legendfontsize=16,
+    margin=5mm,
+    linewidth=4,
+    size=(width, height)
+)
+gui()
+
+savefig(output_dir * "$dir/errors.png")
+
+plot(
+    max_err_means,
+    # ribbon=max_err_stds,
+    xlabel="Sample Number",
+    ylabel="Max Absolute Map Error",
+    title="Max Prediction Errors",
+    ylim=(0,1),
+    seriescolors=[(RGB((p.*0.8)...) for p in priors)...;;],
+    labels=[replace([join(c for (p, c) in zip(p, chars) if p==1) for p in priors], ""=>"none")...;;],
+    framestyle=:box,
+    markers=true,
+    legendcolumns=2, # OR layout=2,
+    titlefontsize=24,
+    markersize=8,
+    tickfontsize=15,
+    labelfontsize=20,
+    legendfontsize=16,
+    margin=5mm,
+    linewidth=4,
+    size=(width, height)
+)
+gui()
+
+savefig(output_dir * "$dir/max_errors.png")
+
+plot(
+    dist_means,
+    # ribbon=err_stds,
+    xlabel="Sample Number",
+    ylabel="Cumulative Distance",
+    title="Distance Traveled",
+    ylim=(0,22),
+    seriescolors=[(RGB((p.*0.8)...) for p in priors)...;;],
+    labels=[replace([join(c for (p, c) in zip(p, chars) if p==1) for p in priors], ""=>"none")...;;],
+    framestyle=:box,
+    markers=true,
+    legendcolumns=2, # OR layout=2,
+    titlefontsize=24,
+    markersize=8,
+    tickfontsize=15,
+    labelfontsize=20,
+    legendfontsize=16,
+    legend=:topleft,
+    margin=5mm,
+    linewidth=4,
+    size=(width, height)
+)
+gui()
+
+savefig(output_dir * "$dir/distances.png")
+
+idxs = [1,2,3,5,4,6,7,8]
+bar(
+    replace([join(c for (p, c) in zip(p, chars) if p==1) for p in priors][idxs], ""=>"none"),
+    time_means[end,idxs]/size(time_means,1),
+    xlabel="Sample Number",
+    ylabel="Average Computation Time (s)",
+    title="Computation Time per Sample",
+    ylim=(0,2),
+    seriescolors=[RGB((p.*0.8)...) for p in priors][idxs],
+    framestyle=:box,
+    markers=true,
+    titlefontsize=24,
+    markersize=8,
+    tickfontsize=15,
+    labelfontsize=20,
+    legend=nothing,
+    margin=5mm,
+    size=(width, height)
+)
+gui()
+
+savefig(output_dir * "$dir/computation_times.png")
