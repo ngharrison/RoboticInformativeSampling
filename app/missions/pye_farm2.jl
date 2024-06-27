@@ -200,8 +200,10 @@ for q in quantities
         image.is_bigendian = 1
         image.step = env_width * 4
         image.data = img_data
+
+        array_publishers[q][i].publish(array)
         image_publishers[q][i].publish(image)
-        rospy.sleep(.01) # allow the publisher time to publish
+        rospy.sleep(.05) # allow the publishers time to publish
     end
 end
 
