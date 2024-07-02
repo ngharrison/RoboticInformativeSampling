@@ -90,6 +90,8 @@ end
 
 #* save dense grid maps
 
+dir = "pye_farm_trial2/"
+
 file_name = output_dir * dir * "named/50x50.jld2"
 data = load(file_name)
 mission = data["mission"]
@@ -144,3 +146,209 @@ vals = map((height_samples, ndvi_samples)) do a
 end
 
 cor(vals...)
+
+#*
+
+pyplot()
+
+#* some maps
+
+using .BeliefModels
+using .Maps
+
+using Plots
+
+
+dir = "pye_farm_trial2/named/"
+
+file_name = output_dir * dir * "50x50.jld2"
+data = load(file_name)
+mission = data["mission"]
+bounds = getBounds(mission.occupancy)
+
+axs, points = generateAxes(mission.occupancy)
+
+ranges = [(Inf, -Inf), (Inf, -Inf)]
+names = ["50x50", "50x50_dense_grid"]
+
+# will be (sampling, quantity)
+pred_maps = map(names) do name
+    file_name = output_dir * dir * "$name.jld2"
+    data = load(file_name)
+    samples = data["samples"]
+
+    things = [("height", "Estimated Plant Heights (mm)"),
+              ("ndvi", "Estimated NDVI")]
+
+    map(enumerate(things)) do (i, (quantity, title))
+        q_samples = filter(s -> s.x[2] == i, samples)
+
+        bm = BeliefModel(q_samples, bounds; mission.noise)
+        beliefs = bm(tuple.(vec(points), i))
+        pred_map, err_map = reshape.(beliefs, Ref(size(mission.occupancy)))
+
+        if quantity == "ndvi"
+            pred_map ./= 255
+        end
+
+        global ranges[i] = (min(minimum(pred_map), ranges[i][1]), max(maximum(pred_map), ranges[i][2]))
+
+        # xp = first.(getfield.(q_samples, :x))
+        # x1 = getindex.(xp, 1)
+        # x2 = getindex.(xp, 2)
+
+        heatmap(axs..., pred_map';
+            title,
+            framestyle=:none,
+            ticks=false,
+            size=(600, 500),
+            titlefontsize=21,
+            colorbar_tickfontsize=20,
+            legendfontsize=14,
+            aspect_ratio=:equal,
+            right_margin=7Plots.mm
+        )
+        # scatter!(x1, x2;
+        #     label=false,
+        #     color=:green,
+        #     legend=(0.15, 0.87),
+        #     markersize=8)
+        # gui()
+
+        savefig(output_dir * "jfr_paper/$(name)_$(quantity).png")
+
+        return pred_map
+    end
+end
+
+
+#* another
+
+p1 = heatmap(axs..., pred_maps[1][1]';
+    title="Estimated Height (mm)",
+    clim=ranges[1]
+)
+# scatter!(x1, x2;
+#          label=false,
+#          color=:green,
+#          markersize=8)
+
+p2 = heatmap(axs..., pred_maps[2][1]';
+    title="Estimated Height (mm)",
+    clim=ranges[1]
+)
+# scatter!(x1, x2;
+#          label=false,
+#          color=:green,
+#          markersize=8)
+
+p = plot(p1, p2;
+    layout=(1, 2),
+    framestyle=:none,
+    ticks=false,
+    size=(1000, 400),
+    titlefontsize=21,
+    colorbar_tickfontsize=20,
+    legendfontsize=14,
+    aspect_ratio=:equal,
+    right_margin=4Plots.mm
+    # left_margin=4Plots.mm,
+)
+gui()
+
+savefig(output_dir * "jfr_paper/sampling_comparison.png")
+
+#* all four in a grid
+
+# sampling
+# quantity
+
+plots = fill(plot(), 2, 2)
+
+i, j = 1, 1
+plots[i,j] = heatmap(pred_maps[i][j]';
+    title="Sparse Sampling",
+    ylabel="Plant Height (mm)",
+    clim=ranges[j]
+)
+i, j = 2, 1
+plots[i,j] = heatmap(pred_maps[i][j]';
+    title="Dense Sampling",
+    clim=ranges[j]
+)
+i, j = 1, 2
+plots[i,j] = heatmap(pred_maps[i][j]';
+    ylabel="NDVI",
+    seriescolor=:YlGn,
+    clim=ranges[j]
+)
+i, j = 2, 2
+plots[i,j] = heatmap(pred_maps[i][j]';
+    seriescolor=:YlGn,
+    clim=ranges[j]
+)
+
+p = plot(plots...;
+    framestyle=:none,
+    ticks=false,
+    size=(850, 700),
+    titlefontsize=25,
+    labelfontsize=21,
+    colorbar_tickfontsize=20,
+    legendfontsize=14,
+    aspect_ratio=:equal,
+)
+
+savefig(output_dir * "jfr_paper/50x50_results_grid.png")
+
+
+#* data
+
+mission, = simMission(; seed_val=3, num_peaks=4, priors=collect(Bool, (0,0,0)))
+
+@time samples, beliefs = mission(sleep_time=0.0);
+
+j = 12
+axs, points = generateAxes(mission.occupancy)
+dims = Tuple(length.(axs))
+μ, σ = beliefs[j](tuple.(vec(points), 1))
+pred_map = reshape(μ, dims)
+err_map = reshape(σ, dims)
+xp = first.(getfield.(samples[1:j], :x))
+x1 = getindex.(xp, 1)
+x2 = getindex.(xp, 2)
+
+#* plot maps
+
+p1 = heatmap(axs..., pred_map',
+             title="Estimated Values",
+             ticks=false,
+             )
+scatter!(x1, x2;
+         framestyle=:none,
+         aspect_ratio=:equal,
+         label="Samples",
+         color=:green,
+         legend=(0.02, 0.75),
+         markersize=10)
+p2 = heatmap(axs..., err_map',
+             title="Uncertainties",
+             ticks=false,
+             )
+scatter!(x1, x2;
+         framestyle=:none,
+         aspect_ratio=:equal,
+         label="Samples",
+         color=:green,
+         legend=(0.02, 0.75),
+         markersize=10)
+
+plot(p1, p2,
+     size=(1400, 600),
+     titlefontsize=40,
+     tickfontsize=20,
+     legendfontsize=22,
+     colorbar_tickfontsize=30,
+     )
+
+savefig(output_dir * "jfr_paper/example_gp_pyplot.png")
