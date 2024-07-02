@@ -117,6 +117,25 @@ rosrun informative_sampling server.jl
 
 To see how to call each service, look at the examples in the =app/ros/client_sim.py= script.
 
+** Other ways to use from python
+
+The code in this repository can be used from python through [[https://pyjulia.readthedocs.io/en/latest/][pyjulia]]. You will need to follow the instructions in their documentation to install the Julia package for python (within the =InformativeSampling= directory):
+
+#+begin_src shell
+python -m pip install --user julia
+python -c "from julia import Pkg, install; Pkg.activate('app'); install()"
+#+end_src
+
+If there are problems running code after the install, you may need to use =~/.local/bin/python-jl= instead of =python= for the rest of the commands.
+
+See =app/missions/from_python.py= for how one might run the Julia code from within python. If writing your own code, you will need to learn how the pyjulia package passes data structures between the two langauges. To run the script:
+
+#+begin_src shell
+python app/missions/from_python.py
+#+end_src
+
+Note that just the same as when running Julia code normally, if the interpreter process ends, all compilation will disappear. That means running scripts straight from the command line has to pay the start-up cost every time. If instead the code is run from within a python shell, it will keep compiled methods around and subsequent runs will go much faster.
+
 * Documentation
 
 To generate the docs, run the following command from the project root:
