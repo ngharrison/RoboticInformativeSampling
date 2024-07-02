@@ -11,9 +11,9 @@ using .DataIO: maps_dir
 # calculates the mean of a vector of matrices
 # can be passed a function, such as isnan, to skip certain elements
 function matMean(a; skip=Returns(false))
-    result = zero(a[1])
+    result = zeros(size(a[1]))
     for i in eachindex(result)
-        result[i] = mean(filter(!skip, getindex.(a, i)))
+        result[i] = mean([m[i] for m in a if !skip(m[i])])
     end
     return result
 end
