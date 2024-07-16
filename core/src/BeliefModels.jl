@@ -297,13 +297,13 @@ outputCorMat(beliefModel::BeliefModel)
 Gives the correlation matrix between all outputs.
 """
 function outputCorMat(beliefModel::BeliefModelSimple{typeof(multiKernel)})
-    cov_mat = fullyConnectedCovMat(beliefModel.θ.σ)
+    cov_mat = fullyConnectedCovMat(beliefModel.θ.σ) .+ beliefModel.θ.σn.^2
     vars = diag(cov_mat)
     return @. cov_mat / √(vars * vars') # broadcast shorthand
 end
 
 function outputCorMat(beliefModel::BeliefModelSimple{typeof(mtoKernel)})
-    cov_mat = manyToOneCovMat(beliefModel.θ.σ)
+    cov_mat = manyToOneCovMat(beliefModel.θ.σ) .+ beliefModel.θ.σn.^2
     vars = diag(cov_mat)
     return @. cov_mat / √(vars * vars') # broadcast shorthand
 end
