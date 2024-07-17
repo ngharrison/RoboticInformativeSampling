@@ -1,6 +1,6 @@
 module BeliefModels
 
-using LinearAlgebra: diag, PosDefException, norm
+using LinearAlgebra: diag, PosDefException, norm, Diagonal
 using AbstractGPs: GP, posterior, mean_and_var, mean_and_cov,
                    logpdf, cov, var, diag_Xt_invA_X
 using Statistics: mean, std
@@ -169,7 +169,8 @@ end
 
 function buildPriorGP(X, Y_vals, Y_errs, N, kernel, θ, ϵ=0.0)
     f = GP(multiMeanAve(X, Y_vals, N), kernel(θ))
-    f(X, Y_errs.^2 .+ value(θ.σn).^2 .+ √eps() .+ ϵ) # eps to prevent numerical issues
+    σn = θ.σn isa AbstractArray ? (θ.σn[x[2]] for x in X) : θ.σn
+    f(X, Y_errs.^2 .+ σn.^2 .+ √eps() .+ ϵ) # eps to prevent numerical issues
 end
 
 """
@@ -296,20 +297,22 @@ outputCorMat(beliefModel::BeliefModel)
 
 Gives the correlation matrix between all outputs.
 """
-function outputCorMat(beliefModel::BeliefModelSimple{typeof(multiKernel)})
-    cov_mat = fullyConnectedCovMat(beliefModel.θ.σ) .+ beliefModel.θ.σn.^2
+function outputCorMat(bm::BeliefModelSimple{typeof(multiKernel)})
+    σn = bm.θ.σn isa AbstractArray ? bm.θ.σn : fill(bm.θ.σn, bm.N)
+    cov_mat = fullyConnectedCovMat(bm.θ.σ) .+ Diagonal(σn.^2)
     vars = diag(cov_mat)
     return @. cov_mat / √(vars * vars') # broadcast shorthand
 end
 
-function outputCorMat(beliefModel::BeliefModelSimple{typeof(mtoKernel)})
-    cov_mat = manyToOneCovMat(beliefModel.θ.σ) .+ beliefModel.θ.σn.^2
+function outputCorMat(bm::BeliefModelSimple{typeof(mtoKernel)})
+    σn = bm.θ.σn isa AbstractArray ? bm.θ.σn : fill(bm.θ.σn, bm.N)
+    cov_mat = manyToOneCovMat(bm.θ.σ) .+ Diagonal(σn.^2)
     vars = diag(cov_mat)
     return @. cov_mat / √(vars * vars') # broadcast shorthand
 end
 
-function outputCorMat(beliefModel::BeliefModelSplit)
-    return outputCorMat(beliefModel.combined)
+function outputCorMat(bm::BeliefModelSplit)
+    return outputCorMat(bm.combined)
 end
 
 end
