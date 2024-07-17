@@ -2,7 +2,9 @@ module BeliefModels
 
 using LinearAlgebra: diag, PosDefException, norm, Diagonal
 using AbstractGPs: GP, posterior, mean_and_var, mean_and_cov,
-                   logpdf, cov, var, diag_Xt_invA_X
+                   logpdf, cov, var, diag_Xt_invA_X, cholesky,
+                   _symmetric, logdet, _sqmahal, Xt_invA_X
+using IrrationalConstants: log2π
 using Statistics: mean, std
 using Optim: optimize, Options, NelderMead, LBFGS
 using ParameterHandling: value_flatten, fixed, value
@@ -167,6 +169,36 @@ function buildPriorGP(X, Y_vals, Y_errs, N, kernel, θ, ϵ=0.0)
     f = GP(multiMeanAve(X, Y_vals, N), kernel(θ))
     σn = θ.σn isa AbstractArray ? (θ.σn[x[2]] for x in X) : θ.σn
     f(X, Y_errs.^2 .+ σn.^2 .+ √eps() .+ ϵ) # eps to prevent numerical issues
+end
+
+# the logpdf of a conditional distribution
+function condlogpdf(fx, Y_vals)
+    m, C_mat = mean_and_cov(fx)
+    X = fx.x
+
+    # partition
+    i1 = filter(i->X[i][2]==1, eachindex(X))
+    i2 = filter(i->X[i][2]!=1, eachindex(X))
+
+    y1 = Y_vals[i1]
+    y2 = Y_vals[i2]
+    m1 = m[i1]
+    m2 = m[i2]
+    Σ11 = C_mat[i1,i1]
+    Σ22 = cholesky(_symmetric(C_mat[i2,i2]))
+    Σ21 = C_mat[i2,i1]
+
+    # condition
+    m_post = m1 + Σ21' * (Σ22 \ (y2 - m2))
+    C_post = Σ11 - Xt_invA_X(Σ22, Σ21)
+
+    return _logpdf(m_post, C_post, y1)
+end
+
+function _logpdf(m, C_mat, Y::AbstractVecOrMat{<:Real})
+    C = cholesky(_symmetric(C_mat))
+    T = promote_type(eltype(m), eltype(C), eltype(Y))
+    return -((size(Y, 1) * T(log2π) + logdet(C)) .+ _sqmahal(m, C, Y)) ./ 2
 end
 
 """

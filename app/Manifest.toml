@@ -699,7 +699,7 @@ uuid = "d25df0c9-e2be-5dd7-82c8-3ad0b3e990b9"
 version = "0.1.5"
 
 [[deps.InformativeSampling]]
-deps = ["AbstractGPs", "DataStructures", "DocStringExtensions", "LinearAlgebra", "Optim", "ParameterHandling", "Pkg", "PyCall", "Random", "Rotations", "Statistics"]
+deps = ["AbstractGPs", "DataStructures", "DocStringExtensions", "IrrationalConstants", "LinearAlgebra", "Optim", "ParameterHandling", "Pkg", "PyCall", "Random", "Rotations", "Statistics"]
 path = "../core"
 uuid = "bfd01cc8-db36-4de5-b056-8ab04eef9441"
 version = "0.1.0"
