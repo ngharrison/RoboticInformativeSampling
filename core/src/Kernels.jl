@@ -4,28 +4,16 @@ using Statistics: I, mean
 using AbstractGPs: with_lengthscale, SqExponentialKernel, IntrinsicCoregionMOKernel, CustomMean
 using DocStringExtensions: TYPEDSIGNATURES
 
-export multiMeanAve, singleKernel, multiKernel, slfmKernel, mtoKernel,
+export singleKernel, multiKernel, slfmKernel, mtoKernel,
        fullyConnectedCovNum, fullyConnectedCovMat, manyToOneCovNum,
-       manyToOneCovMat, initHyperparams, customKernel
+       manyToOneCovMat, initHyperparams, customKernel, multiMean
 
 include("SLFMKernel.jl")
 include("CustomKernel.jl")
 
 ## Mean and kernel stuff
 
-function multiMeanAve(X, Y, N)
-    # calculate means
-    mean_vals = zeros(N)
-    nums = zeros(Int, N)
-    for ((_, q), y) in zip(X, Y)
-        mean_vals[q] += y
-        nums[q] += 1
-    end
-    mean_vals ./= nums
-
-    # return function inside CustomMean
-    CustomMean(x->mean_vals[x[2]])
-end
+multiMean(θ) = CustomMean(x->θ.μ[x[2]])
 
 """
 $(TYPEDSIGNATURES)
