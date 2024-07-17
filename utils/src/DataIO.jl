@@ -157,6 +157,14 @@ function save(metrics; sub_dir_name="", file_name=dateTimeString() * "_metrics")
     jldsave(full_path_name; metrics)
 end
 
+function save(; sub_dir_name="", file_name=dateTimeString() * "_data", kwargs...)
+    mkpath(output_dir * dirname(file_name))
+
+    full_path_name = output_dir * sub_dir_name * "/" * file_name * output_ext
+
+    jldsave(full_path_name; kwargs...)
+end
+
 # This is really just to give something out to munch,
 # so it needs to be an rgba png with the last channel as the amount
 function saveBeliefMapToPng(beliefModel, occupancy,
