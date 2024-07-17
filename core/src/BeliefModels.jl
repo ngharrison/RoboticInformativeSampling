@@ -121,17 +121,7 @@ function BeliefModel(samples, bounds::Bounds;
                      noise=(value=0.0, learned=false),
                      kernel=multiKernel)
     # set up training data
-    X = getfield.(samples, :x)
-    Y = getfield.(samples, :y)
-
-    # split measurements if needed
-    if Y isa AbstractArray{<:NTuple{2, <:Real}}
-        Y_vals, Y_errs = first.(Y), last.(Y)
-    else
-        Y_vals, Y_errs = Y, 0.0
-    end
-
-    N = maximum(last, X) # number of outputs
+    X, Y_vals, Y_errs, N = extractSampleVals(samples)
 
     # choose noise
     σn = (noise.learned ? noise.value : fixed(noise.value))
@@ -149,6 +139,15 @@ end
 
 # Produce a belief model with pre-chosen hyperparams
 function BeliefModel(samples, θ; kernel=multiKernel)
+    X, Y_vals, Y_errs, N = extractSampleVals(samples)
+
+    fx = buildPriorGP(X, Y_vals, Y_errs, N, kernel, θ)
+    f_post = posterior(fx, Y_vals) # gp conditioned on training samples
+
+    return BeliefModelSimple(f_post, N, kernel, θ)
+end
+
+function extractSampleVals(samples)
     X = getfield.(samples, :x)
     Y = getfield.(samples, :y)
 
@@ -161,10 +160,7 @@ function BeliefModel(samples, θ; kernel=multiKernel)
 
     N = maximum(last, X) # number of outputs
 
-    fx = buildPriorGP(X, Y_vals, Y_errs, N, kernel, θ)
-    f_post = posterior(fx, Y_vals) # gp conditioned on training samples
-
-    return BeliefModelSimple(f_post, N, kernel, θ)
+    return X, Y_vals, Y_errs, N
 end
 
 function buildPriorGP(X, Y_vals, Y_errs, N, kernel, θ, ϵ=0.0)
