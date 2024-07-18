@@ -182,36 +182,6 @@ function buildPriorGP(X, Y_errs, kernel, θ, ϵ=0.0)
     f(X, Y_errs.^2 .+ σn.^2 .+ √eps() .+ ϵ) # eps to prevent numerical issues
 end
 
-# the logpdf of a conditional distribution
-function condlogpdf(fx, Y_vals)
-    m, C_mat = mean_and_cov(fx)
-    X = fx.x
-
-    # partition
-    i1 = filter(i->X[i][2]==1, eachindex(X))
-    i2 = filter(i->X[i][2]!=1, eachindex(X))
-
-    y1 = Y_vals[i1]
-    y2 = Y_vals[i2]
-    m1 = m[i1]
-    m2 = m[i2]
-    Σ11 = C_mat[i1,i1]
-    Σ22 = cholesky(_symmetric(C_mat[i2,i2]))
-    Σ21 = C_mat[i2,i1]
-
-    # condition
-    m_post = m1 + Σ21' * (Σ22 \ (y2 - m2))
-    C_post = Σ11 - Xt_invA_X(Σ22, Σ21)
-
-    return _logpdf(m_post, C_post, y1)
-end
-
-function _logpdf(m, C_mat, Y::AbstractVecOrMat{<:Real})
-    C = cholesky(_symmetric(C_mat))
-    T = promote_type(eltype(m), eltype(C), eltype(Y))
-    return -((size(Y, 1) * T(log2π) + logdet(C)) .+ _sqmahal(m, C, Y)) ./ 2
-end
-
 """
 Inputs:
 - `X`: a single sample input or an array of multiple
@@ -236,29 +206,6 @@ function (beliefModel::BeliefModelSimple)(X::AbstractArray{SampleInput}; full_co
     func = full_cov ? mean_and_cov : mean_and_var
     μ, σ² = reshape.(func(beliefModel.gp, vec(X)), Ref(size(X)))
     return μ, .√clamp!(σ², 0.0, Inf) # avoid negative variances
-end
-
-function meanDerivAndVar(beliefModel::BeliefModelSimple, x::SampleInput)
-    return only.(meanDerivAndVar(beliefModel, [x]))
-end
-
-function meanDerivAndVar(beliefModel::BeliefModelSimple, X::AbstractArray{SampleInput})
-    Xv = vec(X)
-    dims = size(X)
-    f = beliefModel.gp
-    C_xcond_x = cov(f.prior, f.data.x, Xv)
-    m_deriv_norm = reshape(meanDerivNorm(Xv, f.data.x, C_xcond_x, beliefModel.θ.ℓ, f.data.α), dims)
-    C_post_diag = reshape(var(f.prior, Xv) - diag_Xt_invA_X(f.data.C, C_xcond_x), dims)
-    return m_deriv_norm, .√clamp!(C_post_diag, 0.0, Inf)
-end
-
-function meanDerivNorm(X, Xm, C_xcond_x, ℓ, α)
-    m_deriv_dims = map(eachindex(X[1][1])) do i
-        dif_mat = [xi[1][i] - xj[1][i] for xi in X, xj in Xm]
-        k_prime = -dif_mat ./ ℓ^2
-        (C_xcond_x' .* k_prime) * α
-    end
-    return sqrt.(sum(arr.^2 for arr in m_deriv_dims))
 end
 
 """
@@ -328,6 +275,59 @@ function createLossFunc(X, Y_vals, Y_errs, kernel)
     end
 end
 
+# the logpdf of a conditional distribution
+function condlogpdf(fx, Y_vals)
+    m, C_mat = mean_and_cov(fx)
+    X = fx.x
+
+    # partition
+    i1 = filter(i->X[i][2]==1, eachindex(X))
+    i2 = filter(i->X[i][2]!=1, eachindex(X))
+
+    y1 = Y_vals[i1]
+    y2 = Y_vals[i2]
+    m1 = m[i1]
+    m2 = m[i2]
+    Σ11 = C_mat[i1,i1]
+    Σ22 = cholesky(_symmetric(C_mat[i2,i2]))
+    Σ21 = C_mat[i2,i1]
+
+    # condition
+    m_post = m1 + Σ21' * (Σ22 \ (y2 - m2))
+    C_post = Σ11 - Xt_invA_X(Σ22, Σ21)
+
+    return _logpdf(m_post, C_post, y1)
+end
+
+function _logpdf(m, C_mat, Y::AbstractVecOrMat{<:Real})
+    C = cholesky(_symmetric(C_mat))
+    T = promote_type(eltype(m), eltype(C), eltype(Y))
+    return -((size(Y, 1) * T(log2π) + logdet(C)) .+ _sqmahal(m, C, Y)) ./ 2
+end
+
+
+function meanDerivAndVar(beliefModel::BeliefModelSimple, x::SampleInput)
+    return only.(meanDerivAndVar(beliefModel, [x]))
+end
+
+function meanDerivAndVar(beliefModel::BeliefModelSimple, X::AbstractArray{SampleInput})
+    Xv = vec(X)
+    dims = size(X)
+    f = beliefModel.gp
+    C_xcond_x = cov(f.prior, f.data.x, Xv)
+    m_deriv_norm = reshape(meanDerivNorm(Xv, f.data.x, C_xcond_x, beliefModel.θ.ℓ, f.data.α), dims)
+    C_post_diag = reshape(var(f.prior, Xv) - diag_Xt_invA_X(f.data.C, C_xcond_x), dims)
+    return m_deriv_norm, .√clamp!(C_post_diag, 0.0, Inf)
+end
+
+function meanDerivNorm(X, Xm, C_xcond_x, ℓ, α)
+    m_deriv_dims = map(eachindex(X[1][1])) do i
+        dif_mat = [xi[1][i] - xj[1][i] for xi in X, xj in Xm]
+        k_prime = -dif_mat ./ ℓ^2
+        (C_xcond_x' .* k_prime) * α
+    end
+    return sqrt.(sum(arr.^2 for arr in m_deriv_dims))
+end
 
 """
 ```julia
