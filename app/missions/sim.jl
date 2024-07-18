@@ -9,13 +9,18 @@ using .Maps: Map, generateAxes
 using .Samples: Sample, MapsSampler
 using .SampleCosts: MIPT, EIGF, DistScaledEIGF, DerivVar, DistScaledDerivVar
 using .Missions: Mission
-using .Kernels: mtoKernel
+using .Kernels: multiKernel, mtoKernel
+using .BeliefModels: outputCorMat
 
 using InformativeSamplingUtils
 using .DataIO: GaussGroundTruth, Peak
 using .Visualization: vis
 
-function simMission(; seed_val=0, num_samples=30, num_peaks=3, priors=Bool[1,1,1])
+function simMission(; seed_val=0, num_samples=30,
+                    num_peaks=3, priors=Bool[1, 1, 1],
+                    sampleCostType=DistScaledEIGF, kernel=multiKernel,
+                    use_means=true, noise_learned=true, use_cond_pdf=false)
+
     seed!(seed_val) # make random values deterministic
 
     bounds = (lower = [0.0, 0.0], upper = [1.0, 1.0])
@@ -74,8 +79,6 @@ function simMission(; seed_val=0, num_samples=30, num_peaks=3, priors=Bool[1,1,1
 
     sampler = MapsSampler(map0)
 
-    sampleCostType = DistScaledEIGF
-
     ## initialize alg values
     # weights = (; μ=17, σ=1.5, τ=7)
     # weights = (; μ=3, σ=1, τ=.5, d=1)
@@ -102,7 +105,7 @@ function simMission(; seed_val=0, num_samples=30, num_peaks=3, priors=Bool[1,1,1
     @debug [cor(map0.(points_sp), d.(points_sp)) for d in prior_maps]
     # @debug [cor(vec(map0), vec(d)) for d in prior_maps]
 
-    noise = (value=0.0, learned=true)
+    noise = (value = zeros(length(sampler) + sum(priors)), learned = noise_learned)
 
     mission = Mission(;
         occupancy,
@@ -112,7 +115,10 @@ function simMission(; seed_val=0, num_samples=30, num_peaks=3, priors=Bool[1,1,1
         weights,
         start_locs,
         prior_samples,
-        noise
+        kernel,
+        use_means,
+        noise,
+        use_cond_pdf,
     )
 
     return mission, prior_maps
@@ -122,55 +128,65 @@ end
 
 #* Run
 
-# set the logging level: Info or Debug
+# # set the logging level: Info or Debug
+# global_logger(ConsoleLogger(stderr, Debug))
+#
+# ## initialize data for mission
+# mission, prior_maps = simMission(num_samples=30, priors=Bool[1,1,1])
+#
+# vis(mission.sampler..., prior_maps...;
+#     titles=["QOI", "Scaling Factor", "Additive Noise", "Random Map"],
+#     points=first.(getfield.(mission.prior_samples, :x)))
+#
+# ## run search alg
+# @time samples, beliefs, times = mission(vis; sleep_time=0.0);
+#
+# for bm in beliefs
+#     println(outputCorMat(bm)[1,:])
+# end
+# println(beliefs[end].θ.σn)
+# println(beliefs[end].θ.μ)
+
+#* Compilation run
 global_logger(ConsoleLogger(stderr, Info))
-
-## initialize data for mission
-mission, prior_maps = simMission(num_samples=10)
-
-vis(mission.sampler..., prior_maps...;
-    titles=["QOI", "Scaling Factor", "Additive Noise", "Random Map"],
-    points=first.(getfield.(mission.prior_samples, :x)))
-
-## run search alg
-@time samples, beliefs, times = mission(
-    vis;
-    sleep_time=0.0
-);
-
-
-# using .Metrics: calcMetrics
-# using .DataIO: save
-#
-# ## calculate errors
-# metrics = calcMetrics(mission, samples, beliefs, times, 1)
-#
-# ## save outputs
-# save(mission, samples, beliefs; animation=true)
-# save(metrics)
-
+mission, = simMission(num_samples=4, priors=Bool[0,0,0])
+mission();
 
 #* Batch
 
 # set the logging level: Info or Debug
 global_logger(ConsoleLogger(stderr, Info))
 
-using .BeliefModels: outputCorMat
 using .Metrics: calcMetrics
 using .DataIO: save
 
-mission, _ = simMission()
-dir = "batch_means_eigf_noise"
-save(mission, [], []; file_name="$(dir)/mission")
+options = (
+    kernel = multiKernel,
+    use_means = true,
+    noise_learned = true,
+    use_cond_pdf = true,
+    sampleCostType = EIGF
+)
+
+k = options.kernel
+m = (options.use_means ? "means" : "zeromean")
+n = (options.noise_learned ? "noises" : "zeronoise")
+c = (options.use_cond_pdf ? "condpdf" : "fullpdf")
+s = options.sampleCostType
+
+dir = "new_runs/batch_$(k)_$(m)_$(n)_$(c)_$(s)"
+mission, _ = simMission(; options...)
+save(; file_name="$(dir)/mission", mission)
 
 mission_peaks = [3,3,4,4,5,5]
 num_runs = 3
+missions = Array{Any, 2}(undef, (length(mission_peaks), num_runs))
 metrics = Array{Any, 2}(undef, (length(mission_peaks), num_runs))
 # pick all the prior data combinations
 @time for priors in Iterators.product(fill(0:1,3)...)
     for (i, num_peaks) in enumerate(mission_peaks)
         ## initialize data for mission
-        mission, _ = simMission(; seed_val=i, num_peaks, priors=collect(Bool, priors))
+        mission, _ = simMission(; seed_val=i, num_peaks, priors=collect(Bool, priors), options...)
         for j in 1:num_runs
             println()
             println("Priors ", priors)
@@ -180,13 +196,13 @@ metrics = Array{Any, 2}(undef, (length(mission_peaks), num_runs))
             ## run search alg
             @time samples, beliefs, times = mission(seed_val=j, sleep_time=0.0);
             @debug "output correlation matrix:" outputCorMat(beliefs[end])
-            # save(mission, samples, beliefs; animation=true)
             ## calculate errors
+            missions[i,j] = (; mission, samples, beliefs, times)
             metrics[i,j] = calcMetrics(mission, samples, beliefs, times, 1)
         end
     end
     ## save outputs
-    save(metrics; file_name="$(dir)/metrics_$(join(priors))")
+    save(; file_name="$(dir)/data_$(join(priors))", missions, metrics)
 end
 
 #* Data analysis
@@ -245,7 +261,7 @@ chars = "HML"
 colors = [(1,0,0), (0,1,0), (0,0,1)]
 
 for (i, p) in enumerate(priors)
-    file_name = output_dir * "$dir/metrics_$(join(p))" * output_ext
+    file_name = output_dir * "$dir/data_$(join(p))" * output_ext
 
     data = load(file_name)
     maes = [run.mae for run in data["metrics"]]
@@ -393,13 +409,14 @@ gui()
 savefig(output_dir * "$dir/distances.png")
 
 idxs = [1,2,3,5,4,6,7,8]
+times_per_sample = time_means[end,idxs]/size(time_means,1)
 bar(
     replace([join(c for (p, c) in zip(p, chars) if p==1) for p in priors][idxs], ""=>"none"),
-    time_means[end,idxs]/size(time_means,1),
+    times_per_sample,
     xlabel="Sample Number",
     ylabel="Average Computation Time (s)",
     title="Computation Time per Sample",
-    ylim=(0,2),
+    ylim=(0,ceil(maximum(times_per_sample)/0.25)*0.25),
     seriescolors=[RGB((p.*0.8)...) for p in priors][idxs],
     framestyle=:box,
     markers=true,

@@ -7,7 +7,7 @@ using ..Maps: randomPoint, getBounds
 using ..Samples: Sample, selectSampleLocation, takeSamples
 using ..BeliefModels: BeliefModel, outputCorMat
 using ..Kernels: multiKernel
-using ..SampleCosts: values
+using ..SampleCosts: values, DistScaledEIGF
 
 export Mission, replay
 
@@ -35,18 +35,22 @@ mission = Mission(; occupancy,
     sampler
     "the number of samples to collect in one run"
     num_samples
-    "a constructor for the function that returns the (negated) value of taking a sample"
-    sampleCostType
+    "a constructor for the function that returns the (negated) value of taking a sample (default DistScaledEIGF)"
+    sampleCostType = DistScaledEIGF
     "weights for picking the next sample location"
     weights
-    "the locations that should be sampled first"
+    "the locations that should be sampled first (default [])"
     start_locs = []
     "any samples taken previously (default empty)"
     prior_samples = Sample[]
-    "a named tuple of global noise value and if learned further (default (0.0, false))"
-    noise = (value=0.0, learned=false)
     "the kernel to be used in the belief model (default multiKernel)"
     kernel = multiKernel
+    "whether or not to use a non-zero mean for each quantity (default true)"
+    use_means = true
+    "a named tuple of noise value(s) and if learned further (default (0.0, false))"
+    noise = (value=0.0, learned=false)
+    "whether or not to use the conditional distribution of the data to train the belief model (default false)"
+    use_cond_pdf = false
 end
 
 """
@@ -110,7 +114,8 @@ function (M::Mission)(func=Returns(nothing);
 
         t = @elapsed begin # computation time
             # new belief
-            beliefModel = BeliefModel([M.prior_samples; samples], bounds; M.noise, M.kernel)
+            beliefModel = BeliefModel([M.prior_samples; samples], bounds;
+                M.kernel, M.use_means, M.noise, M.use_cond_pdf)
             push!(beliefs, beliefModel)
 
             # new sample location
@@ -187,7 +192,8 @@ end
 
 function replay(func, M::Mission, full_samples; sleep_time=0.0)
     beliefs = map(1:length(full_samples)) do i
-        BeliefModel([M.prior_samples; full_samples[1:i]], getBounds(M.occupancy))
+        BeliefModel([M.prior_samples; full_samples[1:i]], getBounds(M.occupancy);
+            M.kernel, M.use_means, M.noise, M.use_cond_pdf)
     end
     replay(func, M, full_samples, beliefs; sleep_time)
 end

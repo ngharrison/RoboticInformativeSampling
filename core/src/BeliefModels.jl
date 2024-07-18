@@ -98,14 +98,12 @@ beliefModel = BeliefModel(samples, M.prior_samples, bounds)
 beliefModel = BeliefModel([M.prior_samples; samples], bounds)
 ```
 """
-function BeliefModel(samples, prior_samples, bounds;
-                     noise=(value=0.0, learned=false),
-                     kernel=multiKernel)
+function BeliefModel(samples, prior_samples, bounds; kwargs...)
     # create a simple belief model for the current samples
-    current = BeliefModel(samples, bounds; noise, kernel)
+    current = BeliefModel(samples, bounds; kwargs...)
     isempty(prior_samples) && return current
     # create a simple belief model for the prior current samples combined
-    combined = BeliefModel([prior_samples; samples], bounds; noise, kernel)
+    combined = BeliefModel([prior_samples; samples], bounds; kwargs...)
     # split is a combination of the two
     return BeliefModelSplit(current, combined)
 end
@@ -120,18 +118,19 @@ A noise standard deviation can optionally be passed in either as a single scalar
 value for all samples or a vector of values, one for each sample.
 """
 function BeliefModel(samples, bounds::Bounds;
+                     kernel=multiKernel, use_means=true,
                      noise=(value=0.0, learned=false),
-                     kernel=multiKernel)
+                     use_cond_pdf=false)
     # set up training data
     X, Y_vals, Y_errs, N = extractSampleVals(samples)
 
     # choose noise
     σn = (noise.learned ? noise.value : fixed(noise.value))
-    μ = fixed(calcMeans(X, Y_vals, N))
+    μ = fixed(use_means ? calcMeans(X, Y_vals, N) : zeros(N))
     θ0 = initHyperparams(X, Y_vals, bounds, N, kernel; μ, σn)
 
     # optimize hyperparameters (train)
-    θ = optimizeLoss(createLossFunc(X, Y_vals, Y_errs, kernel), θ0)
+    θ = optimizeLoss(createLossFunc(X, Y_vals, Y_errs, kernel, use_cond_pdf), θ0)
 
     # produce optimized gp belief model
     fx = buildPriorGP(X, Y_errs, kernel, θ)
@@ -256,12 +255,13 @@ $(TYPEDSIGNATURES)
 This function creates the loss function for training the GP. The negative log
 marginal likelihood is used.
 """
-function createLossFunc(X, Y_vals, Y_errs, kernel)
+function createLossFunc(X, Y_vals, Y_errs, kernel, use_cond_pdf)
     # returns a function for the negative log marginal likelihood
     θ -> begin
         try
             fx = buildPriorGP(X, Y_errs, kernel, θ)
-            return -logpdf(fx, Y_vals)
+            logpdf_func = (use_cond_pdf ? condlogpdf : logpdf)
+            return -logpdf_func(fx, Y_vals)
         catch e
             # for PosDefException
             # this seems to happen when θ.σ is extremely large and θ.ℓ is
@@ -270,7 +270,8 @@ function createLossFunc(X, Y_vals, Y_errs, kernel)
 
             # NOTE this will probably break if reached with the multiKernel
             fx = buildPriorGP(X, Y_errs, kernel, θ, 1e-1*maximum(θ.σ))
-            return -logpdf(fx, Y_vals)
+            logpdf_func = (use_cond_pdf ? condlogpdf : logpdf)
+            return -logpdf_func(fx, Y_vals)
         end
     end
 end

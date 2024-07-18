@@ -1,5 +1,6 @@
 module Kernels
 
+using LinearAlgebra: eigmin
 using Statistics: I, mean
 using AbstractGPs: with_lengthscale, SqExponentialKernel, IntrinsicCoregionMOKernel, CustomMean
 using DocStringExtensions: TYPEDSIGNATURES
@@ -61,9 +62,17 @@ function fullyConnectedCovMat(a)
     # cholesky factorization technique to create a free-form covariance matrix
     # that is positive semidefinite
     L = [(v<=u ? a[u*(u-1)÷2 + v] : 0.0) for u in 1:N, v in 1:N]
-    A = L*L' # lower triangular times upper
+    A = L*L' + √eps()*I # lower triangular times upper
 
-    return A + √eps()*I
+    # fix for numerical inaccuracy making it non positive semidefinite
+    if eigmin(A) < 0
+        max_diag = maximum(A[i,i] for i in axes(A,1))
+        for i in axes(A,1)
+            A[i,i] += 1e-6 * max_diag
+        end
+    end
+
+    return A
 end
 
 fullyConnectedCovNum(num_outputs) = (num_outputs+1)*num_outputs÷2
@@ -89,9 +98,17 @@ function manyToOneCovMat(a)
         L[t,1] = a[1 + t-1]
         L[t,t] = a[1 + 2*(t-1)]
     end
-    A = L'*L # upper triangular times lower
+    A = L'*L + √eps()*I # upper triangular times lower
 
-    return A + √eps()*I
+    # fix for numerical inaccuracy making it non positive semidefinite
+    if eigmin(A) < 0
+        max_diag = maximum(A[i,i] for i in axes(A,1))
+        for i in axes(A,1)
+            A[i,i] += 1e-6 * max_diag
+        end
+    end
+
+    return A
 end
 
 manyToOneCovNum(num_outputs) = 2*num_outputs - 1
