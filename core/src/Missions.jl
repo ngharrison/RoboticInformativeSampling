@@ -53,7 +53,7 @@ mission = Mission(; occupancy,
     "whether or not to use the conditional distribution of the data to train the belief model (default false)"
     use_cond_pdf = false
     "whether or not to drop hypotheses and settings for it (default false)"
-    hyp_drop = (dropout=false, start=10, num=5, threshold=0.5)
+    hyp_drop = (dropout=false, start=10, num=5, threshold=0.4)
 end
 
 """
@@ -99,8 +99,9 @@ function (M::Mission)(func=Returns(nothing);
     quantities = 1:1 # only first quantity
 
     prior_samples = copy(M.prior_samples)
-    L, N = extrema(s->s.x[2], prior_samples)
-    prior_quantities = collect(range(L, N))
+    num_q = length(quantities) # number of quantities being sampled
+    N = maximum(s->s.x[2], prior_samples, init=num_q) # defaults to num_q
+    prior_quantities = collect(range(num_q+1, N)) # will be empty if no prior_quantities
 
     println("Mission started")
 
@@ -129,28 +130,34 @@ function (M::Mission)(func=Returns(nothing);
             c = outputCorMat(beliefModel)[:,1]
             push!(cors, c)
 
-            # hypothesis dropout
-            if M.hyp_drop.dropout && i >= M.hyp_drop.start && !isempty(prior_quantities)
-                # use coefficient of determination to pick dropout
-                # consistent, above medium threshold, within reach of the best
+            # hypothesis dropout chosen by coefficient of determination
+            if (M.hyp_drop.dropout
+                && M.hyp_drop.start <= i < M.num_samples - 1
+                && !isempty(prior_quantities))
 
                 # calculate mean and std of cd over past five
                 recent_cors = cors[(i-M.hyp_drop.num+1):i] # vector of vectors
                 recent_coeffs = [r.^2 for r in recent_cors]
-                # transpose it around
-                recent_coeffs_q = [getindex.(recent_coeffs, i) for i in eachindex(recent_coeffs[1])]
-                medians, mads = medianAndAbsoluteDeviation(recent_coeffs_q) # each a vector
-                best_q = argmax(q->medians[q], prior_quantities)
-                old_length = length(prior_quantities)
-                # keep best ones that haven't already been dropped
-                filter!(prior_quantities) do q
-                    (medians[q] >= M.hyp_drop.threshold # majority above threshold
-                     && (medians[q] + mads[q]) >= (medians[best_q] - mads[best_q])) # within reach of best
+
+                # transpose it around so it's by quantity
+                recent_coeffs_q = [getindex.(recent_coeffs, q) for q in eachindex(recent_coeffs[1])]
+
+                # choose worst quantity by most recent
+                worst_q = argmin(q->recent_coeffs[end][q], prior_quantities)
+                others_q = filter(!=(worst_q), prior_quantities)
+
+                # uniformly below threshold or uniformly below another quantity
+                if (all(recent_coeffs_q[worst_q] .< M.hyp_drop.threshold)
+                    || any(all(recent_coeffs_q[worst_q] .< other_recent_coeffs)
+                           for other_recent_coeffs in recent_coeffs_q[others_q]))
+                    filter!(!=(worst_q), prior_quantities)
+                    filter!(s -> s.x[2] != worst_q, prior_samples)
                 end
-                # filter samples
-                if length(prior_quantities) < old_length
-                    filter!(s -> s.x[2] in prior_quantities, prior_samples)
-                end
+            end
+
+            # set back to all priors for the last sample
+            if i == M.num_samples - 1
+                prior_samples = M.prior_samples
             end
 
             # new sample location

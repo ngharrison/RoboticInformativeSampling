@@ -107,7 +107,7 @@ function simMission(; seed_val=0, num_samples=30,
     # @debug [cor(vec(map0), vec(d)) for d in prior_maps]
 
     noise = (value = zeros(length(sampler) + sum(priors)), learned = noise_learned)
-    hyp_drop = (dropout=use_hyp_drop, start=10, num=5, threshold=0.5)
+    hyp_drop = (dropout=use_hyp_drop, start=10, num=5, threshold=0.4)
 
     mission = Mission(;
         occupancy,
