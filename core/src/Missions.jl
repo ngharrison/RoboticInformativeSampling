@@ -1,6 +1,7 @@
 module Missions
 
 using Random: seed!
+using Statistics: median
 using DocStringExtensions: TYPEDSIGNATURES, TYPEDFIELDS
 
 using ..Maps: randomPoint, getBounds
@@ -51,6 +52,8 @@ mission = Mission(; occupancy,
     noise = (value=0.0, learned=false)
     "whether or not to use the conditional distribution of the data to train the belief model (default false)"
     use_cond_pdf = false
+    "whether or not to drop hypotheses and settings for it (default false)"
+    hyp_drop = (dropout=false, start=10, num=5, threshold=0.5)
 end
 
 """
@@ -85,7 +88,7 @@ samples, beliefs = mission(visuals=true, sleep_time=0.5) # run the mission
 """
 function (M::Mission)(func=Returns(nothing);
                       samples=Sample[], beliefs=BeliefModel[],
-                      other_samples=Sample[], times=Float64[],
+                      other_samples=Sample[], times=Float64[], cors=Vector{Float64}[],
                       seed_val=0, sleep_time=0)
 
     # initialize
@@ -94,6 +97,10 @@ function (M::Mission)(func=Returns(nothing);
 
     bounds = getBounds(M.occupancy)
     quantities = 1:1 # only first quantity
+
+    prior_samples = copy(M.prior_samples)
+    L, N = extrema(s->s.x[2], prior_samples)
+    prior_quantities = collect(range(L, N))
 
     println("Mission started")
 
@@ -114,9 +121,37 @@ function (M::Mission)(func=Returns(nothing);
 
         t = @elapsed begin # computation time
             # new belief
-            beliefModel = BeliefModel([M.prior_samples; samples], bounds;
+            beliefModel = BeliefModel([prior_samples; samples], bounds, N;
                 M.kernel, M.use_means, M.noise, M.use_cond_pdf)
             push!(beliefs, beliefModel)
+
+            # calculate correlations to first
+            c = outputCorMat(beliefModel)[:,1]
+            push!(cors, c)
+
+            # hypothesis dropout
+            if M.hyp_drop.dropout && i >= M.hyp_drop.start && !isempty(prior_quantities)
+                # use coefficient of determination to pick dropout
+                # consistent, above medium threshold, within reach of the best
+
+                # calculate mean and std of cd over past five
+                recent_cors = cors[(i-M.hyp_drop.num+1):i] # vector of vectors
+                recent_coeffs = [r.^2 for r in recent_cors]
+                # transpose it around
+                recent_coeffs_q = [getindex.(recent_coeffs, i) for i in eachindex(recent_coeffs[1])]
+                medians, mads = medianAndAbsoluteDeviation(recent_coeffs_q) # each a vector
+                best_q = argmax(q->medians[q], prior_quantities)
+                old_length = length(prior_quantities)
+                # keep best ones that haven't already been dropped
+                filter!(prior_quantities) do q
+                    (medians[q] >= M.hyp_drop.threshold # majority above threshold
+                     && (medians[q] + mads[q]) >= (medians[best_q] - mads[best_q])) # within reach of best
+                end
+                # filter samples
+                if length(prior_quantities) < old_length
+                    filter!(s -> s.x[2] in prior_quantities, prior_samples)
+                end
+            end
 
             # new sample location
             sampleCost = nothing
@@ -142,14 +177,14 @@ function (M::Mission)(func=Returns(nothing);
         # user-defined function (visualization, saving, etc.)
         func(M, [samples; other_samples], beliefModel, sampleCost, new_loc)
         @debug "belief model hyperparams: " beliefModel.θ
-        @debug "output correlation matrix:" outputCorMat(beliefModel)
+        @debug "output correlations: " c
         sleep(sleep_time)
     end
 
     println()
     println("Mission complete")
 
-    return [samples; other_samples], beliefs, times
+    return [samples; other_samples], beliefs, cors, times
 end
 
 function replay(func, M::Mission, full_samples, beliefs; sleep_time=0.0)
@@ -200,6 +235,16 @@ end
 
 function replay(M::Mission, full_samples; sleep_time=0.0)
     replay(Returns(nothing), M, full_samples; sleep_time)
+end
+
+function medianAndAbsoluteDeviation(X::AbstractArray)
+    medX = median(X)
+    return medX, median(abs.(X .- medX))
+end
+
+function medianAndAbsoluteDeviation(Xs::AbstractArray{<:AbstractArray})
+    medXs = median.(Xs)
+    return medXs, median.(abs.(X .- medX) for (X, medX) in zip(Xs, medXs))
 end
 
 end

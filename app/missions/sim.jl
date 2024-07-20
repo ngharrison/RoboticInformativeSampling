@@ -19,7 +19,8 @@ using .Visualization: vis
 function simMission(; seed_val=0, num_samples=30,
                     num_peaks=3, priors=Bool[1, 1, 1],
                     sampleCostType=DistScaledEIGF, kernel=multiKernel,
-                    use_means=true, noise_learned=true, use_cond_pdf=false)
+                    use_means=true, noise_learned=true, use_cond_pdf=false,
+                    use_hyp_drop=false)
 
     seed!(seed_val) # make random values deterministic
 
@@ -106,6 +107,7 @@ function simMission(; seed_val=0, num_samples=30,
     # @debug [cor(vec(map0), vec(d)) for d in prior_maps]
 
     noise = (value = zeros(length(sampler) + sum(priors)), learned = noise_learned)
+    hyp_drop = (dropout=use_hyp_drop, start=10, num=5, threshold=0.5)
 
     mission = Mission(;
         occupancy,
@@ -119,6 +121,7 @@ function simMission(; seed_val=0, num_samples=30,
         use_means,
         noise,
         use_cond_pdf,
+        hyp_drop,
     )
 
     return mission, prior_maps
@@ -132,14 +135,14 @@ end
 # global_logger(ConsoleLogger(stderr, Debug))
 #
 # ## initialize data for mission
-# mission, prior_maps = simMission(num_samples=30, priors=Bool[1,1,1])
+# mission, prior_maps = simMission(num_samples=30, priors=Bool[1,1,1], use_hyp_drop=true)
 #
 # vis(mission.sampler..., prior_maps...;
 #     titles=["QOI", "Scaling Factor", "Additive Noise", "Random Map"],
 #     points=first.(getfield.(mission.prior_samples, :x)))
 #
 # ## run search alg
-# @time samples, beliefs, times = mission(vis; sleep_time=0.0);
+# @time samples, beliefs, cors, times = mission(vis; sleep_time=0.0);
 #
 # for bm in beliefs
 #     println(outputCorMat(bm)[1,:])
@@ -164,7 +167,8 @@ options = (
     kernel = multiKernel,
     use_means = true,
     noise_learned = true,
-    use_cond_pdf = true,
+    use_cond_pdf = false,
+    use_hyp_drop = false,
     sampleCostType = EIGF
 )
 
@@ -172,9 +176,10 @@ k = options.kernel
 m = (options.use_means ? "means" : "zeromean")
 n = (options.noise_learned ? "noises" : "zeronoise")
 c = (options.use_cond_pdf ? "condpdf" : "fullpdf")
+h = (options.use_hyp_drop ? "hypdrop" : "nodrop")
 s = options.sampleCostType
 
-dir = "new_runs/batch_$(k)_$(m)_$(n)_$(c)_$(s)"
+dir = "new_runs/batch_$(k)_$(m)_$(n)_$(c)_$(h)_$(s)"
 mission, _ = simMission(; options...)
 save(; file_name="$(dir)/mission", mission)
 
@@ -194,7 +199,7 @@ metrics = Array{Any, 2}(undef, (length(mission_peaks), num_runs))
             println("Run number ", j)
             println()
             ## run search alg
-            @time samples, beliefs, times = mission(seed_val=j, sleep_time=0.0);
+            @time samples, beliefs, cors, times = mission(seed_val=j, sleep_time=0.0);
             @debug "output correlation matrix:" outputCorMat(beliefs[end])
             ## calculate errors
             missions[i,j] = (; mission, samples, beliefs, times)

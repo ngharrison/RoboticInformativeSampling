@@ -5,7 +5,6 @@ using AbstractGPs: GP, posterior, mean_and_var, mean_and_cov,
                    logpdf, cov, var, diag_Xt_invA_X, cholesky,
                    _symmetric, logdet, _sqmahal, Xt_invA_X
 using IrrationalConstants: log2π
-using Statistics: mean, std
 using Optim: optimize, Options, NelderMead, LBFGS
 using ParameterHandling: value_flatten, fixed, value
 using DocStringExtensions: TYPEDSIGNATURES, TYPEDEF
@@ -117,12 +116,12 @@ conditioned on the samples given.
 A noise standard deviation can optionally be passed in either as a single scalar
 value for all samples or a vector of values, one for each sample.
 """
-function BeliefModel(samples, bounds::Bounds;
+function BeliefModel(samples, bounds::Bounds, N;
                      kernel=multiKernel, use_means=true,
                      noise=(value=0.0, learned=false),
                      use_cond_pdf=false)
     # set up training data
-    X, Y_vals, Y_errs, N = extractSampleVals(samples)
+    X, Y_vals, Y_errs = extractSampleVals(samples)
 
     # choose noise
     σn = (noise.learned ? noise.value : fixed(noise.value))
@@ -160,9 +159,7 @@ function extractSampleVals(samples)
         Y_vals, Y_errs = Y, 0.0
     end
 
-    N = maximum(last, X) # number of outputs
-
-    return X, Y_vals, Y_errs, N
+    return X, Y_vals, Y_errs
 end
 
 function calcMeans(X, Y, N)
@@ -341,14 +338,22 @@ function outputCorMat(bm::BeliefModelSimple{typeof(multiKernel)})
     σn = bm.θ.σn isa AbstractArray ? bm.θ.σn : fill(bm.θ.σn, bm.N)
     cov_mat = fullyConnectedCovMat(bm.θ.σ) .+ Diagonal(σn.^2)
     vars = diag(cov_mat)
-    return @. cov_mat / √(vars * vars') # broadcast shorthand
+    R = @. cov_mat / √(vars * vars') # broadcast shorthand
+    idxs = isnan.(bm.θ.μ)
+    R[idxs,:] .= NaN
+    R[:,idxs] .= NaN
+    return R
 end
 
 function outputCorMat(bm::BeliefModelSimple{typeof(mtoKernel)})
     σn = bm.θ.σn isa AbstractArray ? bm.θ.σn : fill(bm.θ.σn, bm.N)
     cov_mat = manyToOneCovMat(bm.θ.σ) .+ Diagonal(σn.^2)
     vars = diag(cov_mat)
-    return @. cov_mat / √(vars * vars') # broadcast shorthand
+    R = @. cov_mat / √(vars * vars') # broadcast shorthand
+    idxs = isnan.(bm.θ.μ)
+    R[idxs,:] .= NaN
+    R[:,idxs] .= NaN
+    return R
 end
 
 function outputCorMat(bm::BeliefModelSplit)
