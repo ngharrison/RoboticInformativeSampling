@@ -155,6 +155,106 @@ global_logger(ConsoleLogger(stderr, Info))
 mission, = simMission(num_samples=4, priors=Bool[0,0,0])
 mission();
 
+#* Runs
+
+runs = [
+
+    # only var
+    (
+        kernel = multiKernel,
+        use_means = true,
+        noise_learned = true,
+        use_cond_pdf = false,
+        use_hyp_drop = false,
+        sampleCostType = OnlyVar
+    ),
+
+    # no means
+    (
+        kernel = multiKernel,
+        use_means = false,
+        noise_learned = true,
+        use_cond_pdf = false,
+        use_hyp_drop = false,
+        sampleCostType = OnlyVar
+    ),
+
+    # eigf
+    (
+        kernel = multiKernel,
+        use_means = true,
+        noise_learned = true,
+        use_cond_pdf = false,
+        use_hyp_drop = false,
+        sampleCostType = EIGF
+    ),
+
+    # deriv var
+    (
+        kernel = multiKernel,
+        use_means = true,
+        noise_learned = true,
+        use_cond_pdf = false,
+        use_hyp_drop = false,
+        sampleCostType = DerivVar
+    ),
+
+    # dist-scaled eigf
+    (
+        kernel = multiKernel,
+        use_means = true,
+        noise_learned = true,
+        use_cond_pdf = false,
+        use_hyp_drop = false,
+        sampleCostType = DistScaledEIGF
+    ),
+
+    # dist-scaled deriv var
+    (
+        kernel = multiKernel,
+        use_means = true,
+        noise_learned = true,
+        use_cond_pdf = false,
+        use_hyp_drop = false,
+        sampleCostType = DistScaledDerivVar
+    ),
+
+    # many-to-one
+    (
+        kernel = mtoKernel,
+        use_means = true,
+        noise_learned = true,
+        use_cond_pdf = false,
+        use_hyp_drop = false,
+        sampleCostType = DistScaledEIGF
+    ),
+
+    # conditional likelihood
+    (
+        kernel = multiKernel,
+        use_means = true,
+        noise_learned = true,
+        use_cond_pdf = true,
+        use_hyp_drop = false,
+        sampleCostType = DistScaledEIGF
+    ),
+
+    # hypothesis dropout
+    (
+        kernel = multiKernel,
+        use_means = true,
+        noise_learned = true,
+        use_cond_pdf = false,
+        use_hyp_drop = true,
+        sampleCostType = DistScaledEIGF
+    ),
+
+
+]
+
+for options in runs
+
+
 #* Batch
 
 # set the logging level: Info or Debug
@@ -163,14 +263,14 @@ global_logger(ConsoleLogger(stderr, Info))
 using .Metrics: calcMetrics
 using .DataIO: save
 
-options = (
-    kernel = multiKernel,
-    use_means = true,
-    noise_learned = true,
-    use_cond_pdf = false,
-    use_hyp_drop = false,
-    sampleCostType = EIGF
-)
+# options = (
+#     kernel = multiKernel,
+#     use_means = true,
+#     noise_learned = true,
+#     use_cond_pdf = false,
+#     use_hyp_drop = false,
+#     sampleCostType = DistScaledEIGF
+# )
 
 k = options.kernel
 m = (options.use_means ? "means" : "zeromean")
@@ -436,3 +536,8 @@ bar(
 gui()
 
 savefig(output_dir * "$dir/computation_times.png")
+
+
+#* End Runs
+
+end
