@@ -123,7 +123,7 @@ function BeliefModel(samples, bounds::Bounds, N;
     # set up training data
     X, Y_vals, Y_errs = extractSampleVals(samples)
 
-    # choose noise
+    # choose noise and mean
     σn = (noise.learned ? noise.value : fixed(noise.value))
     μ = fixed(use_means ? calcMeans(X, Y_vals, N) : zeros(N))
     θ0 = initHyperparams(X, Y_vals, bounds, N, kernel; μ, σn)
@@ -265,7 +265,6 @@ function createLossFunc(X, Y_vals, Y_errs, kernel, use_cond_pdf)
             # much bigger than the search region dimensions
             @error e θ X Y_vals
 
-            # NOTE this will probably break if reached with the multiKernel
             fx = buildPriorGP(X, Y_errs, kernel, θ, 1e-1*maximum(θ.σ))
             logpdf_func = (use_cond_pdf ? condlogpdf : logpdf)
             return -logpdf_func(fx, Y_vals)
