@@ -48,11 +48,11 @@ function simMission(; seed_val=0, num_samples=30,
     prior_maps = []
 
     # multiplicative
-    m = Map(abs.(map0 .* randn()), bounds)
+    m = Map(map0 .* 2*(2*rand() - 1) .+ 2*(2*rand() - 1), bounds)
     push!(prior_maps, m)
 
     # additive
-    m = Map(abs.(map0 .+ 0.2 .* randn(size(map0))), bounds)
+    m = Map(map0 .+ 0.2 .* randn(size(map0)), bounds)
     push!(prior_maps, m)
 
     # # both
@@ -179,7 +179,7 @@ c = (options.use_cond_pdf ? "condpdf" : "fullpdf")
 h = (options.use_hyp_drop ? "hypdrop" : "nodrop")
 s = options.sampleCostType
 
-dir = "new_runs/batch_$(k)_$(m)_$(n)_$(c)_$(h)_$(s)"
+dir = "new_data/batch_$(k)_$(m)_$(n)_$(c)_$(h)_$(s)"
 mission, _ = simMission(; options...)
 save(; file_name="$(dir)/mission", mission)
 
