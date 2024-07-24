@@ -141,7 +141,7 @@ Note that just the same as when running Julia code normally, if the interpreter 
 To generate the docs, run the following command from the project root:
 
 #+begin_src shell
-julia --project=docs using Pkg; Pkg.instantiate() # only needed first time
+julia --project=docs -e "using Pkg; Pkg.instantiate()" # only needed first time
 julia --project=docs docs/make.jl
 #+end_src
 
