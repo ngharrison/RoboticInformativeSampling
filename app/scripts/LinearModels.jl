@@ -10,6 +10,7 @@ using .Samples: Sample
 using InformativeSamplingUtils
 using .DataIO: output_dir, output_ext
 
+using LinearAlgebra: tr, diag
 using Statistics: mean, std
 using StatsBase: mean_and_cov, AnalyticWeights
 using FileIO: load
@@ -18,22 +19,36 @@ using Plots
 const CI = CartesianIndex
 
 struct LinearModel
-    a::Float64
-    b::Float64
+    a
+    b
 end
 
 """
-Returns a linear model from second variable to first variable.
-Requires mean of each variable, the covariance between them,
-and the variance of the second variable.
+Returns a linear model of set of variables Y conditioned on set X.
+Requires full mean vector and covariance matrix of the joint normal
+distribution.
 """
-function LinearModel(mean_y, mean_x, cov_xy, var_x)
-    b = cov_xy/var_x
-    a = mean_y - b*mean_x # y-intercept
+function LinearModel(μ, Σ, Y, X)
+    b = Σ[X,X]\Σ[X,Y] # slope
+    a = μ[Y] - b'*μ[X] # intercept
     return LinearModel(a,b)
 end
 
-(lm::LinearModel)(x) = lm.a + lm.b*x
+(lm::LinearModel)(x) = lm.a .+ lm.b'*x
+
+rSquared(Σ, Y, X) = tr(Σ[X,Y]'*(Σ[X,X]\Σ[X,Y]))/tr(Σ[Y,Y])
+
+# # three ways:
+# vars = vars = diag(Σ)
+# R = @. Σ / √(vars * vars')
+# c = R[X,Y]
+# c'*(R[X,X]\c)
+#
+# Σ_cond = Σ[Y,Y] - Σ[X,Y]'*(Σ[X,X]\Σ[X,Y])
+# 1 - tr(Σ_cond)/tr(Σ[Y,Y])
+#
+# tr(Σ[X,Y]'*(Σ[X,X]\Σ[X,Y]))/tr(Σ[Y,Y])
+
 
 #* load mission
 dir = "aus_ave"
@@ -54,6 +69,7 @@ vals = [getfield.(filter(s->s.x[2]==i, all_samples), :y)
 extrema.(vals)
 beliefModel = beliefs[end]
 A = fullyConnectedCovMat(beliefModel.θ.σ)
+means = beliefModel.θ.μ
 
 #* linear model --- measurements
 
@@ -78,15 +94,12 @@ savefig(output_dir * "linear_models/from_samples.svg")
 
 #* linear model --- GP cov mat
 
-fs2 = []
-for k in 1:num_quant
-    ixs = [1,k]
-    means = mean.(vals[ixs])
-    sub_cov_mat = A[CI.((i,j) for i in ixs, j in ixs)]
-    push!(fs2, LinearModel(means..., sub_cov_mat[1,2], sub_cov_mat[2,2]))
-    println("r^2 = $(sub_cov_mat[1,2]/sqrt(sub_cov_mat[1,1]*sub_cov_mat[2,2]))")
+i = 1
+fs2 = map(1:num_quant) do k
+    lm = LinearModel(means, A, i, k)
+    println("r^2 = $(rSquared(A, i, k))")
+    lm
 end
-fs2
 
 plot([x->f(x) for f in fs2], 0, 1;
      title="Modeling Vegetation from Others",
