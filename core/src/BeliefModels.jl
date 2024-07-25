@@ -15,7 +15,7 @@ using ..Kernels: multiMean, singleKernel, multiKernel, fullyConnectedCovNum,
                  initHyperparams, mtoKernel
 using ..Maps: Bounds
 
-export BeliefModel, outputCorMat, meanDerivAndVar
+export BeliefModel, outputCovMat, outputCorMat, meanDerivAndVar
 
 """
 $(TYPEDEF)
@@ -326,6 +326,16 @@ function meanDerivNorm(X, Xm, C_xcond_x, ℓ, α)
     return sqrt.(sum(arr.^2 for arr in m_deriv_dims))
 end
 
+function outputCovMat(bm::BeliefModelSimple{typeof(multiKernel)})
+    σn = bm.θ.σn isa AbstractArray ? bm.θ.σn : fill(bm.θ.σn, bm.N)
+    return fullyConnectedCovMat(bm.θ.σ) .+ Diagonal(σn.^2)
+end
+
+function outputCovMat(bm::BeliefModelSimple{typeof(mtoKernel)})
+    σn = bm.θ.σn isa AbstractArray ? bm.θ.σn : fill(bm.θ.σn, bm.N)
+    return manyToOneCovMat(bm.θ.σ) .+ Diagonal(σn.^2)
+end
+
 """
 ```julia
 outputCorMat(beliefModel::BeliefModel)
@@ -333,20 +343,8 @@ outputCorMat(beliefModel::BeliefModel)
 
 Gives the correlation matrix between all outputs.
 """
-function outputCorMat(bm::BeliefModelSimple{typeof(multiKernel)})
-    σn = bm.θ.σn isa AbstractArray ? bm.θ.σn : fill(bm.θ.σn, bm.N)
-    cov_mat = fullyConnectedCovMat(bm.θ.σ) .+ Diagonal(σn.^2)
-    vars = diag(cov_mat)
-    R = @. cov_mat / √(vars * vars') # broadcast shorthand
-    idxs = isnan.(bm.θ.μ)
-    R[idxs,:] .= NaN
-    R[:,idxs] .= NaN
-    return R
-end
-
-function outputCorMat(bm::BeliefModelSimple{typeof(mtoKernel)})
-    σn = bm.θ.σn isa AbstractArray ? bm.θ.σn : fill(bm.θ.σn, bm.N)
-    cov_mat = manyToOneCovMat(bm.θ.σ) .+ Diagonal(σn.^2)
+function outputCorMat(bm::BeliefModelSimple)
+    cov_mat = outputCovMat(bm)
     vars = diag(cov_mat)
     R = @. cov_mat / √(vars * vars') # broadcast shorthand
     idxs = isnan.(bm.θ.μ)
