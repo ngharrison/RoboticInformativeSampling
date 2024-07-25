@@ -7,14 +7,20 @@ using Random: seed!
 using InformativeSampling
 using .Maps: Map
 using .Samples: Sample, MapsSampler
-using .SampleCosts: EIGF, DistScaledEIGF
+using .SampleCosts: MIPT, EIGF, DistScaledEIGF, OnlyVar, DerivVar, DistScaledDerivVar
 using .Missions: Mission
+using .Kernels: multiKernel, mtoKernel
 
 using InformativeSamplingUtils
 using .Visualization: vis
 using .DataIO: normalize, maps_dir, imgToMap
 
-function nswMission(; seed_val=0, num_samples=30, priors=Bool[1,1,1])
+function nswMission(; seed_val=0, num_samples=30,
+                    priors=Bool[1, 1, 1],
+                    sampleCostType=DistScaledEIGF, kernel=multiKernel,
+                    use_means=true, noise_learned=true, use_cond_pdf=false,
+                    use_hyp_drop=false)
+
     # have it run around australia
 
     seed!(seed_val)
@@ -40,7 +46,7 @@ function nswMission(; seed_val=0, num_samples=30, priors=Bool[1,1,1])
     occupancy = imgToMap(Matrix{Bool}(reduce(.|, [isnan.(i)
                                                   for i in ims_sm])), bounds)
 
-    sampleCostType = DistScaledEIGF
+    sampleCostType = EIGF
 
     ## initialize alg values
     # weights = [1e-1, 6, 5e-1, 3e-3] # mean, std, dist, prox
@@ -66,7 +72,8 @@ function nswMission(; seed_val=0, num_samples=30, priors=Bool[1,1,1])
     [cor(vec(map0[.!occupancy]), vec(d[.!occupancy])) for d in prior_maps]
     # scatter(vec(map0[.!occupancy]), [vec(d[.!occupancy]) for d in prior_maps], layout=3)
 
-    noise = (value=0.0001, learned=false)
+    noise = (value = zeros(length(sampler) + sum(priors)), learned = noise_learned)
+    hyp_drop = (dropout=use_hyp_drop, start=10, num=5, threshold=0.4)
 
     mission = Mission(;
         occupancy,
@@ -76,7 +83,11 @@ function nswMission(; seed_val=0, num_samples=30, priors=Bool[1,1,1])
         weights,
         start_locs,
         prior_samples,
-        noise
+        kernel,
+        use_means,
+        noise,
+        use_cond_pdf,
+        hyp_drop,
     )
 
     return mission, prior_maps
@@ -87,21 +98,126 @@ end
 
 #* Run
 
-# set the logging level: Info or Debug
+# # set the logging level: Info or Debug
+# global_logger(ConsoleLogger(stderr, Info))
+#
+# ## initialize data for mission
+# mission, prior_maps = nswMission(num_samples=30)
+#
+# vis(mission.sampler..., prior_maps...;
+#     titles=["Vegetation", "Elevation", "Ground Temperature", "Rainfall"],
+#     points=first.(getfield.(mission.prior_samples, :x)))
+#
+# ## run search alg
+# @time samples, beliefs = mission(
+#     vis;
+#     sleep_time=0.0
+# );
+
+
+#* Compilation run
 global_logger(ConsoleLogger(stderr, Info))
+mission, = nswMission(num_samples=4, priors=Bool[0,0,0])
+mission();
 
-## initialize data for mission
-mission, prior_maps = nswMission(num_samples=30)
+#* Runs
 
-vis(mission.sampler..., prior_maps...;
-    titles=["Vegetation", "Elevation", "Ground Temperature", "Rainfall"],
-    points=first.(getfield.(mission.prior_samples, :x)))
+runs = [
 
-## run search alg
-@time samples, beliefs = mission(
-    vis;
-    sleep_time=0.0
-);
+    # only var
+    (
+        kernel = multiKernel,
+        use_means = true,
+        noise_learned = true,
+        use_cond_pdf = false,
+        use_hyp_drop = false,
+        sampleCostType = OnlyVar
+    ),
+
+    # no means
+    (
+        kernel = multiKernel,
+        use_means = false,
+        noise_learned = true,
+        use_cond_pdf = false,
+        use_hyp_drop = false,
+        sampleCostType = OnlyVar
+    ),
+
+    # eigf
+    (
+        kernel = multiKernel,
+        use_means = true,
+        noise_learned = true,
+        use_cond_pdf = false,
+        use_hyp_drop = false,
+        sampleCostType = EIGF
+    ),
+
+    # deriv var
+    (
+        kernel = multiKernel,
+        use_means = true,
+        noise_learned = true,
+        use_cond_pdf = false,
+        use_hyp_drop = false,
+        sampleCostType = DerivVar
+    ),
+
+    # dist-scaled eigf
+    (
+        kernel = multiKernel,
+        use_means = true,
+        noise_learned = true,
+        use_cond_pdf = false,
+        use_hyp_drop = false,
+        sampleCostType = DistScaledEIGF
+    ),
+
+    # dist-scaled deriv var
+    (
+        kernel = multiKernel,
+        use_means = true,
+        noise_learned = true,
+        use_cond_pdf = false,
+        use_hyp_drop = false,
+        sampleCostType = DistScaledDerivVar
+    ),
+
+    # many-to-one
+    (
+        kernel = mtoKernel,
+        use_means = true,
+        noise_learned = true,
+        use_cond_pdf = false,
+        use_hyp_drop = false,
+        sampleCostType = DistScaledEIGF
+    ),
+
+    # conditional likelihood
+    (
+        kernel = multiKernel,
+        use_means = true,
+        noise_learned = true,
+        use_cond_pdf = true,
+        use_hyp_drop = false,
+        sampleCostType = DistScaledEIGF
+    ),
+
+    # hypothesis dropout
+    (
+        kernel = multiKernel,
+        use_means = true,
+        noise_learned = true,
+        use_cond_pdf = false,
+        use_hyp_drop = true,
+        sampleCostType = DistScaledEIGF
+    ),
+
+
+]
+
+# for options in runs
 
 
 #* Pair
@@ -114,22 +230,154 @@ using .BeliefModels: outputCorMat
 using .Metrics: calcMetrics
 using .DataIO: save
 
-@time for priors in [(0,0,0), (1,1,1)]
+options = runs[1]
+
+k = options.kernel
+m = (options.use_means ? "means" : "zeromean")
+n = (options.noise_learned ? "noises" : "zeronoise")
+c = (options.use_cond_pdf ? "condpdf" : "fullpdf")
+h = (options.use_hyp_drop ? "hypdrop" : "nodrop")
+s = options.sampleCostType
+
+dir = "new_nsw/nsw_$(k)_$(m)_$(n)_$(c)_$(h)_$(s)"
+
+all_metrics = Array{Any}(undef, 2)
+
+@time for (i, priors) in enumerate([(0,0,0), (1,1,1)])
     ## initialize data for mission
     # priors = (0,0,0)
     mission, _ = nswMission(priors=collect(Bool, priors))
     # empty!(mission.prior_samples)
 
     ## run search alg
-    @time samples, beliefs, times = mission(vis, sleep_time=0.0);
+    @time samples, beliefs, cors, times = mission(sleep_time=0.0);
     @debug "output correlation matrix:" outputCorMat(beliefs[end])
     # save(mission, samples, beliefs; animation=true)
 
     ## calculate errors
     metrics = calcMetrics(mission, samples, beliefs, times, 1)
+    all_metrics[i] = metrics
 
     ## save outputs
-    dir = "aus_patch_ave_means_dist_scaled"
-    save(metrics; file_name="$(dir)/metrics_$(join(priors))")
-    save(mission, samples, beliefs; file_name="$(dir)/mission_$(join(priors))")
+    save(; file_name="$(dir)/data_$(join(priors))", mission, samples, beliefs, metrics)
 end
+
+#* Data analysis
+
+using InformativeSampling
+
+using InformativeSamplingUtils
+using .DataIO: output_dir, output_ext
+
+using Statistics: mean, std
+using FileIO: load
+using Plots
+using Plots: mm
+
+maes = stack(metrics.mae for metrics in all_metrics)
+dists = stack(cumsum(metrics.dists) for metrics in all_metrics)
+times = stack(cumsum(metrics.times) for metrics in all_metrics)
+all_metrics[2].times
+
+cors = all_metrics[2].cors
+dets = [u.^2 for u in cors]
+
+width, height = 1200, 800
+
+plot(
+    hcat((c[2:end] for c in cors[1:30,:])...)',
+    title="Estimated Correlation to Vegetation",
+    labels=["Elevation" "Ground Temperature" "Rainfall"],
+    xlabel="Sample Number",
+    ylabel="Correlation",
+    seriescolors=[RGB(0.4, 0.2, 0.1) RGB(0.9, 0.4, 0.0) RGB(0.1,0.3,1)],
+    legend=(0.73,0.42),
+    framestyle=:box,
+    marker=true,
+    ylim=(-1,1),
+    titlefontsize=24,
+    markersize=8,
+    tickfontsize=15,
+    labelfontsize=20,
+    legendfontsize=16,
+    margin=5mm,
+    linewidth=4,
+    size=(width, height)
+)
+gui()
+
+savefig(output_dir * "$dir/correlations.png")
+
+p = plot(
+    maes[1:30,:],
+    title="Prediction Errors",
+    xlabel="Sample Number",
+    ylabel="Mean Absolute Map Error",
+    labels=["No Priors" "Priors"],
+    seriescolors=[:black RGB(0.1,0.7,0.2)],
+    framestyle=:box,
+    marker=true,
+    # ylim=(0,.5),
+    titlefontsize=24,
+    markersize=8,
+    tickfontsize=15,
+    labelfontsize=20,
+    legendfontsize=16,
+    margin=5mm,
+    linewidth=4,
+    size=(width, height)
+)
+gui()
+
+savefig(output_dir * "$dir/errors.png")
+
+p = plot(
+    dists[1:30,:],
+    title="Distance Traveled",
+    xlabel="Sample Number",
+    ylabel="Cumulative Distance",
+    labels=["No Priors" "Priors"],
+    seriescolors=[:black RGB(0.1,0.7,0.2)],
+    framestyle=:box,
+    marker=true,
+    # ylim=(0,.5),
+    titlefontsize=24,
+    markersize=8,
+    tickfontsize=15,
+    labelfontsize=20,
+    legendfontsize=16,
+    margin=5mm,
+    linewidth=4,
+    size=(width, height)
+)
+gui()
+
+savefig(output_dir * "$dir/distances.png")
+
+times_per_sample = times[end,:]/size(times,1)
+bar(
+    ["No Priors", "Priors"],
+    times_per_sample,
+    xlabel="Sample Number",
+    ylabel="Average Computation Time (s)",
+    title="Computation Time per Sample",
+    ylim=(0,ceil(maximum(times_per_sample)/0.25)*0.25),
+    seriescolors=[:black, RGB(0.1,0.7,0.2)],
+    framestyle=:box,
+    markers=true,
+    titlefontsize=24,
+    markersize=8,
+    tickfontsize=15,
+    labelfontsize=20,
+    legend=nothing,
+    margin=5mm,
+    size=(width, height)
+)
+gui()
+
+savefig(output_dir * "$dir/computation_times.png")
+
+
+#* End Runs
+
+# end
