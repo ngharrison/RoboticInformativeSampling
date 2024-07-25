@@ -7,7 +7,7 @@ using Random: seed!
 using InformativeSampling
 using .Maps: Map, generateAxes
 using .Samples: Sample, MapsSampler
-using .SampleCosts: MIPT, EIGF, DistScaledEIGF, DerivVar, DistScaledDerivVar
+using .SampleCosts: MIPT, EIGF, DistScaledEIGF, OnlyVar, DerivVar, DistScaledDerivVar
 using .Missions: Mission
 using .Kernels: multiKernel, mtoKernel
 using .BeliefModels: outputCorMat
@@ -252,7 +252,7 @@ runs = [
 
 ]
 
-for options in runs
+# for options in runs
 
 
 #* Batch
@@ -271,6 +271,8 @@ using .DataIO: save
 #     use_hyp_drop = false,
 #     sampleCostType = DistScaledEIGF
 # )
+
+options = runs[9]
 
 k = options.kernel
 m = (options.use_means ? "means" : "zeromean")
@@ -493,7 +495,7 @@ plot(
     xlabel="Sample Number",
     ylabel="Cumulative Distance",
     title="Distance Traveled",
-    ylim=(0,22),
+    ylim=(0,25),
     seriescolors=[(RGB((p.*0.8)...) for p in priors)...;;],
     labels=[replace([join(c for (p, c) in zip(p, chars) if p==1) for p in priors], ""=>"none")...;;],
     framestyle=:box,
@@ -540,4 +542,4 @@ savefig(output_dir * "$dir/computation_times.png")
 
 #* End Runs
 
-end
+# end
