@@ -3,14 +3,13 @@ using InformativeSampling
 
 using .Maps: res, generateAxes
 using .Missions: Mission
-using .BeliefModels: BeliefModel
-using .Kernels: fullyConnectedCovMat
+using .BeliefModels: BeliefModel, outputCovMat
 using .Samples: Sample
 
 using InformativeSamplingUtils
 using .DataIO: output_dir, output_ext
 
-using LinearAlgebra: tr, diag
+using LinearAlgebra: tr, diag, Diagonal
 using Statistics: mean, std
 using StatsBase: mean_and_cov, AnalyticWeights
 using FileIO: load
@@ -68,7 +67,7 @@ vals = [getfield.(filter(s->s.x[2]==i, all_samples), :y)
         for i in 1:num_quant]
 extrema.(vals)
 beliefModel = beliefs[end]
-A = fullyConnectedCovMat(beliefModel.θ.σ)
+A = outputCovMat(beliefModel)
 means = beliefModel.θ.μ
 
 #* linear model --- measurements
