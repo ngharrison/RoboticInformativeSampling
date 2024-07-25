@@ -30,8 +30,8 @@ end
 #* Aus
 dir = "aus_patch_ave_means_dist_scaled"
 # file_name = output_dir * "2023-08-28-16-58-29_metrics" * output_ext
-file_name_s = output_dir * "$dir/metrics_000" * output_ext
-file_name_m = output_dir * "$dir/metrics_111" * output_ext
+file_name_s = output_dir * "$dir/data_000" * output_ext
+file_name_m = output_dir * "$dir/data_111" * output_ext
 
 data = load(file_name_s)
 maes = data["metrics"].mae
@@ -117,6 +117,30 @@ gui()
 
 savefig(output_dir * "$dir/distances.png")
 
+times_per_sample = times[end,:]/size(times,1)
+bar(
+    ["No Priors", "Priors"],
+    times_per_sample,
+    xlabel="Sample Number",
+    ylabel="Average Computation Time (s)",
+    title="Computation Time per Sample",
+    ylim=(0,ceil(maximum(times_per_sample)/0.25)*0.25),
+    seriescolors=[:black, RGB(0.1,0.7,0.2)],
+    framestyle=:box,
+    markers=true,
+    titlefontsize=24,
+    markersize=8,
+    tickfontsize=15,
+    labelfontsize=20,
+    legend=nothing,
+    margin=5mm,
+    size=(width, height)
+)
+gui()
+
+savefig(output_dir * "$dir/computation_times.png")
+
+
 #* Batch
 dir = "batch_means_noise_rand_start_dist_scaled"
 
@@ -152,7 +176,7 @@ chars = "HML"
 colors = [(1,0,0), (0,1,0), (0,0,1)]
 
 for (i, p) in enumerate(priors)
-    file_name = output_dir * "$dir/metrics_$(join(p))" * output_ext
+    file_name = output_dir * "$dir/data_$(join(p))" * output_ext
 
     data = load(file_name)
     maes = [run.mae for run in data["metrics"]]
@@ -279,7 +303,7 @@ plot(
     xlabel="Sample Number",
     ylabel="Cumulative Distance",
     title="Distance Traveled",
-    ylim=(0,22),
+    ylim=(0,25),
     seriescolors=[(RGB((p.*0.8)...) for p in priors)...;;],
     labels=[replace([join(c for (p, c) in zip(p, chars) if p==1) for p in priors], ""=>"none")...;;],
     framestyle=:box,
@@ -300,13 +324,14 @@ gui()
 savefig(output_dir * "$dir/distances.png")
 
 idxs = [1,2,3,5,4,6,7,8]
+times_per_sample = time_means[end,idxs]/size(time_means,1)
 bar(
     replace([join(c for (p, c) in zip(p, chars) if p==1) for p in priors][idxs], ""=>"none"),
-    time_means[end,idxs]/size(time_means,1),
+    times_per_sample,
     xlabel="Sample Number",
     ylabel="Average Computation Time (s)",
     title="Computation Time per Sample",
-    ylim=(0,2),
+    ylim=(0,ceil(maximum(times_per_sample)/0.25)*0.25),
     seriescolors=[RGB((p.*0.8)...) for p in priors][idxs],
     framestyle=:box,
     markers=true,
