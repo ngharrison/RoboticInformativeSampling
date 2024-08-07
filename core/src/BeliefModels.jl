@@ -97,12 +97,12 @@ beliefModel = BeliefModel(samples, M.prior_samples, bounds)
 beliefModel = BeliefModel([M.prior_samples; samples], bounds)
 ```
 """
-function BeliefModel(samples, prior_samples, bounds; kwargs...)
+function BeliefModel(samples, prior_samples, bounds, N; kwargs...)
     # create a simple belief model for the current samples
-    current = BeliefModel(samples, bounds; kwargs...)
+    current = BeliefModel(samples, bounds, N; kwargs...)
     isempty(prior_samples) && return current
     # create a simple belief model for the prior current samples combined
-    combined = BeliefModel([prior_samples; samples], bounds; kwargs...)
+    combined = BeliefModel([prior_samples; samples], bounds, N; kwargs...)
     # split is a combination of the two
     return BeliefModelSplit(current, combined)
 end
@@ -139,8 +139,8 @@ function BeliefModel(samples, bounds::Bounds, N;
 end
 
 # Produce a belief model with pre-chosen hyperparams
-function BeliefModel(samples, θ; kernel=multiKernel)
-    X, Y_vals, Y_errs, N = extractSampleVals(samples)
+function BeliefModel(samples, θ, N; kernel=multiKernel)
+    X, Y_vals, Y_errs = extractSampleVals(samples)
 
     fx = buildPriorGP(X, Y_errs, kernel, θ)
     f_post = posterior(fx, Y_vals) # gp conditioned on training samples
