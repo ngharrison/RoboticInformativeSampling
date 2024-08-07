@@ -9,7 +9,9 @@ using ..Paths: PathCost
 
 export SampleCost, values, DistProx,
        LogNormed, MIPT, EIGF, OnlyVar,
-       DistScaledEIGF, DistLogEIGF, DerivVar, DistScaledDerivVar
+       DistScaledEIGF, DistLogEIGF,
+       DerivVar, DistScaledDerivVar,
+       InfoGain
 
 abstract type SampleCost end
 
@@ -38,5 +40,6 @@ include("sc_types/MEPE.jl")
 include("sc_types/DerivVar.jl")
 include("sc_types/OnlyVar.jl")
 include("sc_types/DistScaledDerivVar.jl")
+include("sc_types/InfoGain.jl")
 
 end
