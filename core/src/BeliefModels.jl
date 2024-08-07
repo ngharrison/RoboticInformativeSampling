@@ -1,6 +1,6 @@
 module BeliefModels
 
-using LinearAlgebra: diag, PosDefException, norm, Diagonal
+using LinearAlgebra: diag, PosDefException, norm, Diagonal, I
 using AbstractGPs: GP, posterior, mean_and_var, mean_and_cov,
                    logpdf, cov, var, diag_Xt_invA_X, cholesky,
                    _symmetric, logdet, _sqmahal, Xt_invA_X
@@ -15,7 +15,7 @@ using ..Kernels: multiMean, singleKernel, multiKernel, fullyConnectedCovNum,
                  initHyperparams, mtoKernel
 using ..Maps: Bounds
 
-export BeliefModel, outputCovMat, outputCorMat, meanDerivAndVar
+export BeliefModel, outputCovMat, outputCorMat, meanDerivAndVar, fullCov
 
 """
 $(TYPEDEF)
@@ -198,10 +198,13 @@ function (beliefModel::BeliefModelSimple)(x::SampleInput; kwargs...)
     return only.(beliefModel([x]); kwargs...)
 end
 
-function (beliefModel::BeliefModelSimple)(X::AbstractArray{SampleInput}; full_cov=false)
-    func = full_cov ? mean_and_cov : mean_and_var
-    μ, σ² = reshape.(func(beliefModel.gp, vec(X)), Ref(size(X)))
+function (beliefModel::BeliefModelSimple)(X::AbstractArray{SampleInput})
+    μ, σ² = reshape.(mean_and_var(beliefModel.gp, vec(X)), Ref(size(X)))
     return μ, .√clamp!(σ², 0.0, Inf) # avoid negative variances
+end
+
+function fullCov(beliefModel::BeliefModelSimple, X::AbstractArray{SampleInput})
+    return cov(beliefModel.gp, X) + I*√eps() # avoid negative eigenvalues
 end
 
 """
