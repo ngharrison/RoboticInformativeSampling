@@ -245,7 +245,7 @@ all_metrics = Array{Any}(undef, 2)
 @time for (i, priors) in enumerate([(0,0,0), (1,1,1)])
     ## initialize data for mission
     # priors = (0,0,0)
-    mission, _ = ausMission(priors=collect(Bool, priors))
+    mission, _ = ausMission(; priors=collect(Bool, priors), options...)
     # empty!(mission.prior_samples)
 
     ## run search alg
