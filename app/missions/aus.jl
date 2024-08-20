@@ -8,7 +8,7 @@ using Random: seed!
 using InformativeSampling
 using .Maps: Map, getBounds
 using .Samples: Sample, MapsSampler, selectSampleLocation
-using .SampleCosts: MIPT, EIGF, DistScaledEIGF, OnlyVar, DerivVar, DistScaledDerivVar
+using .SampleCosts: MIPT, EIGF, DistScaledEIGF, OnlyVar, DerivVar, DistScaledDerivVar, LogLikelihood
 using .Missions: Mission
 using .Kernels: multiKernel, mtoKernel
 
@@ -101,7 +101,18 @@ end
 # global_logger(ConsoleLogger(stderr, Info))
 #
 # ## initialize data for mission
-# mission, prior_maps = ausMission(num_samples=30)
+#
+# # LogLikelihood
+# options = (
+#     kernel = multiKernel,
+#     use_means = true,
+#     noise_learned = true,
+#     use_cond_pdf = false,
+#     use_hyp_drop = false,
+#     sampleCostType = LogLikelihood
+# )
+#
+# mission, prior_maps = ausMission(; num_samples=30, priors=Bool[1,1,1], options...)
 #
 # vis(mission.sampler..., prior_maps...;
 #     titles=["Vegetation", "Elevation", "Ground Temperature", "Rainfall"],
@@ -229,7 +240,17 @@ using .BeliefModels: outputCorMat
 using .Metrics: calcMetrics
 using .DataIO: save
 
-options = runs[1]
+options = runs[3]
+
+# # LogLikelihood
+# options = (
+#     kernel = multiKernel,
+#     use_means = true,
+#     noise_learned = true,
+#     use_cond_pdf = false,
+#     use_hyp_drop = false,
+#     sampleCostType = LogLikelihood
+# )
 
 k = options.kernel
 m = (options.use_means ? "means" : "zeromean")

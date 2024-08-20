@@ -7,7 +7,7 @@ using Random: seed!
 using InformativeSampling
 using .Maps: Map, generateAxes
 using .Samples: Sample, MapsSampler
-using .SampleCosts: MIPT, EIGF, DistScaledEIGF, OnlyVar, DerivVar, DistScaledDerivVar
+using .SampleCosts: MIPT, EIGF, DistScaledEIGF, OnlyVar, DerivVar, DistScaledDerivVar, LogLikelihood
 using .Missions: Mission
 using .Kernels: multiKernel, mtoKernel
 using .BeliefModels: outputCorMat
@@ -272,7 +272,17 @@ using .DataIO: save
 #     sampleCostType = DistScaledEIGF
 # )
 
-options = runs[9]
+options = runs[1]
+
+# # LogLikelihood
+# options = (
+#     kernel = multiKernel,
+#     use_means = true,
+#     noise_learned = true,
+#     use_cond_pdf = false,
+#     use_hyp_drop = false,
+#     sampleCostType = LogLikelihood
+# )
 
 k = options.kernel
 m = (options.use_means ? "means" : "zeromean")

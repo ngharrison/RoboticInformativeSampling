@@ -11,7 +11,7 @@ export SampleCost, values, DistProx,
        LogNormed, MIPT, EIGF, OnlyVar,
        DistScaledEIGF, DistLogEIGF,
        DerivVar, DistScaledDerivVar,
-       InfoGain, VarTrace
+       InfoGain, VarTrace, LogLikelihood
 
 abstract type SampleCost end
 
@@ -42,5 +42,6 @@ include("sc_types/OnlyVar.jl")
 include("sc_types/DistScaledDerivVar.jl")
 include("sc_types/InfoGain.jl")
 include("sc_types/VarTrace.jl")
+include("sc_types/LogLikelihood.jl")
 
 end
