@@ -234,3 +234,54 @@ p = plot(Iterators.flatten(plots)...,
     size=(1000, 1300))
 
 savefig(output_dir * "thesis/aus_000/full_run_comparison.png")
+
+#* Other
+
+using Plots
+
+# gradually-delayed distance scaling
+
+n_scale = n -> 2/(1 + exp(1 - n)) - 1
+plot(
+    n_scale, 1, 8,
+    title="Sample Scaling",
+    xlabel="Sample Number",
+    ylabel="Scaling Factor",
+    framestyle=:box,
+    legend=false,
+    titlefontsize=19,
+    tickfontsize=13,
+    labelfontsize=17,
+    linewidth=3,
+    size=(700,500)
+)|>display
+
+savefig(output_dir * "thesis/sample_scaling.png")
+
+d_scale = d -> 1/(1 + 1*d^2)
+plot(
+    d_scale, 0, 2,
+    title="Distance Scaling",
+    xlabel="Distance",
+    ylabel="Scaling Factor",
+    framestyle=:box,
+    legend=false,
+    titlefontsize=19,
+    tickfontsize=13,
+    labelfontsize=17,
+    linewidth=3,
+    size=(700,500)
+)|>display
+
+savefig(output_dir * "thesis/distance_scaling.png")
+
+full_scale = (n,d) -> 1/(1 + n_scale(n)*d^2)
+n, d = 1:8, 0:0.01:2
+# z = Surface((x,y)->rosenbrock([x,y]), x, y)
+surface(
+    n, d, full_scale,
+    xlabel="Samples",
+    ylabel="Distance",
+    zlabel="Scaling",
+    camera = (60, 20)
+)|>display
