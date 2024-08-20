@@ -274,6 +274,7 @@ using Plots
 using Plots: mm
 
 maes = stack(metrics.mae for metrics in all_metrics)
+mxaes = stack(metrics.mxae for metrics in all_metrics)
 dists = stack(cumsum(metrics.dists) for metrics in all_metrics)
 times = stack(cumsum(metrics.times) for metrics in all_metrics)
 
@@ -315,7 +316,7 @@ p = plot(
     seriescolors=[:black RGB(0.1,0.7,0.2)],
     framestyle=:box,
     marker=true,
-    # ylim=(0,.5),
+    ylim=(0,.3),
     titlefontsize=24,
     markersize=8,
     tickfontsize=15,
@@ -328,6 +329,29 @@ p = plot(
 gui()
 
 savefig(output_dir * "$dir/errors.png")
+
+p_max_errs = plot(
+    mxaes[1:30,:],
+    title="Max Prediction Errors",
+    xlabel="Sample Number",
+    ylabel="Max Absolute Map Error",
+    labels=["No Priors" "Priors"],
+    seriescolors=[:black RGB(0.1,0.7,0.2)],
+    framestyle=:box,
+    marker=true,
+    ylim=(0,.9),
+    titlefontsize=24,
+    markersize=8,
+    tickfontsize=15,
+    labelfontsize=20,
+    legendfontsize=16,
+    margin=5mm,
+    linewidth=4,
+    size=(width, height)
+)
+gui()
+
+savefig(output_dir * "$dir/max_errors.png")
 
 p = plot(
     dists[1:30,:],

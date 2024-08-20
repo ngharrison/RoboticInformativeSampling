@@ -28,18 +28,21 @@ end
 
 
 #* Aus
-dir = "aus_patch_ave_means_dist_scaled"
+# for dir in readdir(output_dir * "new_aus", join=true)
+dir = output_dir * "new_aus/aus_multiKernel_means_noises_fullpdf_nodrop_LogLikelihood"
 # file_name = output_dir * "2023-08-28-16-58-29_metrics" * output_ext
-file_name_s = output_dir * "$dir/data_000" * output_ext
-file_name_m = output_dir * "$dir/data_111" * output_ext
+file_name_s = "$dir/data_000" * output_ext
+file_name_m = "$dir/data_111" * output_ext
 
 data = load(file_name_s)
 maes = data["metrics"].mae
+mxaes = data["metrics"].mxae
 dists = cumsum(data["metrics"].dists)
 times = cumsum(data["metrics"].times)
 
 data = load(file_name_m)
 maes = [maes data["metrics"].mae]
+mxaes = [mxaes data["metrics"].mxae]
 dists = [dists cumsum(data["metrics"].dists)]
 times = [times cumsum(data["metrics"].times)]
 cors = data["metrics"].cors
@@ -47,7 +50,7 @@ dets = [u.^2 for u in cors]
 
 width, height = 1200, 800
 
-plot(
+p_cors = plot(
     hcat((c[2:end] for c in cors[1:30,:])...)',
     title="Estimated Correlation to Vegetation",
     labels=["Elevation" "Ground Temperature" "Rainfall"],
@@ -69,9 +72,9 @@ plot(
 )
 gui()
 
-savefig(output_dir * "$dir/correlations.png")
+savefig("$dir/correlations.png")
 
-p = plot(
+p_errs = plot(
     maes[1:30,:],
     title="Prediction Errors",
     xlabel="Sample Number",
@@ -80,7 +83,7 @@ p = plot(
     seriescolors=[:black RGB(0.1,0.7,0.2)],
     framestyle=:box,
     marker=true,
-    # ylim=(0,.5),
+    ylim=(0,.3),
     titlefontsize=24,
     markersize=8,
     tickfontsize=15,
@@ -92,9 +95,32 @@ p = plot(
 )
 gui()
 
-savefig(output_dir * "$dir/errors.png")
+savefig("$dir/errors.png")
 
-p = plot(
+p_max_errs = plot(
+    mxaes[1:30,:],
+    title="Max Prediction Errors",
+    xlabel="Sample Number",
+    ylabel="Max Absolute Map Error",
+    labels=["No Priors" "Priors"],
+    seriescolors=[:black RGB(0.1,0.7,0.2)],
+    framestyle=:box,
+    marker=true,
+    ylim=(0,.9),
+    titlefontsize=24,
+    markersize=8,
+    tickfontsize=15,
+    labelfontsize=20,
+    legendfontsize=16,
+    margin=5mm,
+    linewidth=4,
+    size=(width, height)
+)
+gui()
+
+savefig("$dir/max_errors.png")
+
+p_dists = plot(
     dists[1:30,:],
     title="Distance Traveled",
     xlabel="Sample Number",
@@ -115,10 +141,10 @@ p = plot(
 )
 gui()
 
-savefig(output_dir * "$dir/distances.png")
+savefig("$dir/distances.png")
 
 times_per_sample = times[end,:]/size(times,1)
-bar(
+p_comp = bar(
     ["No Priors", "Priors"],
     times_per_sample,
     xlabel="Sample Number",
@@ -138,11 +164,12 @@ bar(
 )
 gui()
 
-savefig(output_dir * "$dir/computation_times.png")
+savefig("$dir/computation_times.png")
 
+# end
 
 #* Batch
-dir = "batch_means_noise_rand_start_dist_scaled"
+dir = "new_data/batch_multiKernel_means_noises_fullpdf_nodrop_EIGF"
 
 p_err = Vector{Any}(undef, 8)
 p_cor = Vector{Any}(undef, 8)
