@@ -69,21 +69,21 @@ prior_samples = [Sample((x, i+length(sampler)), d(x))
 
 #* plot maps
 p1 = heatmap(axs..., map0', title="QOI", ticks=false, framestyle=:none)
-p2 = heatmap(axs..., prior_maps[1]', title="Scaling Factor", ticks=false)
+p2 = heatmap(axs..., prior_maps[1]', title="High Dependence", ticks=false)
 scatter!(first.(points_sp), last.(points_sp);
          framestyle=:none,
          label="Samples",
          color=:green,
          legend=(0.15, 0.87),
          markersize=6)
-p3 = heatmap(axs..., prior_maps[2]', title="Additive Noise", ticks=false)
+p3 = heatmap(axs..., prior_maps[2]', title="Medium Dependence", ticks=false)
 scatter!(first.(points_sp), last.(points_sp);
          framestyle=:none,
          label="Samples",
          color=:green,
          legend=(0.15, 0.87),
          markersize=6)
-p4 = heatmap(axs..., prior_maps[3]', title="Random Map", ticks=false)
+p4 = heatmap(axs..., prior_maps[3]', title="Low Dependence", ticks=false)
 scatter!(first.(points_sp), last.(points_sp);
          framestyle=:none,
          label="Samples",
@@ -97,7 +97,7 @@ cbar = heatmap([0], cy, reshape(cy, :, 1),
                yticks=0:0.5:1,
                mirror=true
                )
-plot(p1, p2, p3, p4, cbar,
+p = plot(p1, p2, p3, p4, cbar,
      layout=@layout([grid(2,2){0.95w} c]),
      clim=(0,1),
      colorbar=false,
@@ -108,4 +108,4 @@ plot(p1, p2, p3, p4, cbar,
      margin=4Plots.mm
 )
 
-savefig(output_dir * "paper/qoi_priors.png")
+savefig(output_dir * "paper/qoi_priors_alt.png")
