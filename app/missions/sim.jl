@@ -136,8 +136,14 @@ end
 # # set the logging level: Info or Debug
 # global_logger(ConsoleLogger(stderr, Debug))
 #
+# options = (
+#     use_means=true,
+#     noise_learned=true,
+#     sampleCostType=OnlyVar
+# )
+#
 # ## initialize data for mission
-# mission, prior_maps = simMission(num_samples=30, priors=Bool[1,1,1], use_hyp_drop=true)
+# mission, prior_maps = simMission(; num_samples=30, priors=Bool[1,1,1], seed_val=0, options...)
 #
 # vis(mission.sampler..., prior_maps...;
 #     titles=["QOI", "Scaling Factor", "Additive Noise", "Random Map"],
@@ -186,6 +192,16 @@ runs = [
         kernel = multiKernel,
         use_means = true,
         noise_learned = true,
+        use_cond_pdf = false,
+        use_hyp_drop = false,
+        sampleCostType = EIGF
+    ),
+
+    # no noise
+    (
+        kernel = multiKernel,
+        use_means = true,
+        noise_learned = false,
         use_cond_pdf = false,
         use_hyp_drop = false,
         sampleCostType = EIGF

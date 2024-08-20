@@ -46,8 +46,6 @@ function nswMission(; seed_val=0, num_samples=30,
     occupancy = imgToMap(Matrix{Bool}(reduce(.|, [isnan.(i)
                                                   for i in ims_sm])), bounds)
 
-    sampleCostType = EIGF
-
     ## initialize alg values
     # weights = [1e-1, 6, 5e-1, 3e-3] # mean, std, dist, prox
     # weights = (; μ=1, σ=5e3, τ=1, d=1) # others
@@ -163,6 +161,16 @@ runs = [
         kernel = multiKernel,
         use_means = true,
         noise_learned = true,
+        use_cond_pdf = false,
+        use_hyp_drop = false,
+        sampleCostType = EIGF
+    ),
+
+    # no noise
+    (
+        kernel = multiKernel,
+        use_means = true,
+        noise_learned = false,
         use_cond_pdf = false,
         use_hyp_drop = false,
         sampleCostType = EIGF

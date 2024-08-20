@@ -166,6 +166,16 @@ runs = [
         sampleCostType = EIGF
     ),
 
+    # no noise
+    (
+        kernel = multiKernel,
+        use_means = true,
+        noise_learned = false,
+        use_cond_pdf = false,
+        use_hyp_drop = false,
+        sampleCostType = EIGF
+    ),
+
     # deriv var
     (
         kernel = multiKernel,
