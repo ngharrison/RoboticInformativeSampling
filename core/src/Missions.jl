@@ -47,7 +47,7 @@ mission = Mission(; occupancy,
     "the kernel to be used in the belief model (default multiKernel)"
     kernel = multiKernel
     "whether or not to use a non-zero mean for each quantity (default true)"
-    use_means = true
+    means = (use=true, learned=true)
     "a named tuple of noise value(s) and if learned further (default (0.0, false))"
     noise = (value=0.0, learned=false)
     "whether or not to use the conditional distribution of the data to train the belief model (default false)"
@@ -123,7 +123,7 @@ function (M::Mission)(func=Returns(nothing);
         t = @elapsed begin # computation time
             # new belief
             beliefModel = BeliefModel([prior_samples; samples], bounds, N;
-                M.kernel, M.use_means, M.noise, M.use_cond_pdf)
+                M.kernel, M.means, M.noise, M.use_cond_pdf)
             push!(beliefs, beliefModel)
 
             # calculate correlations to first
@@ -235,7 +235,7 @@ end
 function replay(func, M::Mission, full_samples; sleep_time=0.0)
     beliefs = map(1:length(full_samples)) do i
         BeliefModel([M.prior_samples; full_samples[1:i]], getBounds(M.occupancy);
-            M.kernel, M.use_means, M.noise, M.use_cond_pdf)
+            M.kernel, M.means, M.noise, M.use_cond_pdf)
     end
     replay(func, M, full_samples, beliefs; sleep_time)
 end

@@ -76,6 +76,8 @@ function ausMission(; seed_val=0, num_samples=30,
     noise = (value = zeros(length(sampler) + sum(priors)), learned = noise_learned)
     hyp_drop = (dropout=use_hyp_drop, start=10, num=5, threshold=0.4)
 
+    means = (use = use_means, learned = true)
+
     mission = Mission(;
         occupancy,
         sampler,
@@ -85,7 +87,7 @@ function ausMission(; seed_val=0, num_samples=30,
         start_locs,
         prior_samples,
         kernel,
-        use_means,
+        means,
         noise,
         use_cond_pdf,
         hyp_drop,

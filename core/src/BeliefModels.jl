@@ -117,7 +117,7 @@ A noise standard deviation can optionally be passed in either as a single scalar
 value for all samples or a vector of values, one for each sample.
 """
 function BeliefModel(samples, bounds::Bounds, N;
-                     kernel=multiKernel, use_means=true,
+                     kernel=multiKernel, means=(use=true, learned=true),
                      noise=(value=0.0, learned=false),
                      use_cond_pdf=false)
     # set up training data
@@ -125,11 +125,16 @@ function BeliefModel(samples, bounds::Bounds, N;
 
     # choose noise and mean
     σn = (noise.learned ? noise.value : fixed(noise.value))
-    μ = fixed(use_means ? calcMeans(X, Y_vals, N) : zeros(N))
+    μ = (means.use && means.learned ? calcMeans(X, Y_vals, N) :
+         fixed(means.use ? calcMeans(X, Y_vals, N) : zeros(N)))
     θ0 = initHyperparams(X, Y_vals, bounds, N, kernel; μ, σn)
+
+    @debug "calculated means:" calcMeans(X, Y_vals, N)
 
     # optimize hyperparameters (train)
     θ = optimizeLoss(createLossFunc(X, Y_vals, Y_errs, kernel, use_cond_pdf), θ0)
+
+    @debug "learned means:" θ.μ
 
     # produce optimized gp belief model
     fx = buildPriorGP(X, Y_errs, kernel, θ)
@@ -277,10 +282,11 @@ end
 
 # the logpdf of a conditional distribution
 function condlogpdf(fx, Y_vals)
+    # GP prior distribution for the observations
     m, C_mat = mean_and_cov(fx)
     X = fx.x
 
-    # partition
+    # partition into primary and secondary
     i1 = filter(i->X[i][2]==1, eachindex(X))
     i2 = filter(i->X[i][2]!=1, eachindex(X))
 
@@ -292,7 +298,7 @@ function condlogpdf(fx, Y_vals)
     Σ22 = cholesky(_symmetric(C_mat[i2,i2]))
     Σ21 = C_mat[i2,i1]
 
-    # condition
+    # condition primary on secondary
     m_post = m1 + Σ21' * (Σ22 \ (y2 - m2))
     C_post = Σ11 - Xt_invA_X(Σ22, Σ21)
 
