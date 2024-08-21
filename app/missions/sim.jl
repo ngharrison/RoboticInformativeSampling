@@ -7,7 +7,9 @@ using Random: seed!
 using InformativeSampling
 using .Maps: Map, generateAxes
 using .Samples: Sample, MapsSampler
-using .SampleCosts: MIPT, EIGF, DistScaledEIGF, OnlyVar, DerivVar, DistScaledDerivVar, LogLikelihood
+using .SampleCosts: MIPT, EIGF, DistScaledEIGF, OnlyVar,
+                    DerivVar, DistScaledDerivVar, LogLikelihood,
+                    LogLikelihoodFull
 using .Missions: Mission
 using .Kernels: multiKernel, mtoKernel
 using .BeliefModels: outputCorMat
