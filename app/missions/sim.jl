@@ -398,13 +398,12 @@ colors = [(1,0,0), (0,1,0), (0,0,1)]
 for (i, p) in enumerate(priors)
     file_name = output_dir * "$dir/data_$(join(p))" * output_ext
 
-    data = load(file_name)
-    maes = [run.mae for run in data["metrics"]]
-    mxaes = [run.mxae for run in data["metrics"]]
-    cors = [run.cors for run in data["metrics"]]
+    maes = [run.mae for run in metrics]
+    mxaes = [run.mxae for run in metrics]
+    cors = [run.cors for run in metrics]
     dets = [[v.^2 for v in u] for u in cors]
-    dists = [cumsum(run.dists) for run in data["metrics"]]
-    times = [cumsum(run.times) for run in data["metrics"]]
+    dists = [cumsum(run.dists) for run in metrics]
+    times = [cumsum(run.times) for run in metrics]
 
     err_means[:,i] .= mean(maes)
     err_stds[:,i] .= std(maes)
