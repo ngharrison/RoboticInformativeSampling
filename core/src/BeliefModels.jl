@@ -97,12 +97,12 @@ beliefModel = BeliefModel(samples, M.prior_samples, bounds)
 beliefModel = BeliefModel([M.prior_samples; samples], bounds)
 ```
 """
-function BeliefModel(samples, prior_samples, bounds, N; kwargs...)
+function BeliefModel(samples, prior_samples, bounds; kwargs...)
     # create a simple belief model for the current samples
-    current = BeliefModel(samples, bounds, N; kwargs...)
+    current = BeliefModel(samples, bounds; kwargs...)
     isempty(prior_samples) && return current
     # create a simple belief model for the prior current samples combined
-    combined = BeliefModel([prior_samples; samples], bounds, N; kwargs...)
+    combined = BeliefModel([prior_samples; samples], bounds; kwargs...)
     # split is a combination of the two
     return BeliefModelSplit(current, combined)
 end
@@ -116,7 +116,7 @@ conditioned on the samples given.
 A noise standard deviation can optionally be passed in either as a single scalar
 value for all samples or a vector of values, one for each sample.
 """
-function BeliefModel(samples, bounds::Bounds, N;
+function BeliefModel(samples, bounds::Bounds; N=maximum(s->s.x[2], samples),
                      kernel=multiKernel, means=(use=true, learned=true),
                      noise=(value=0.0, learned=false),
                      use_cond_pdf=false)
@@ -144,7 +144,8 @@ function BeliefModel(samples, bounds::Bounds, N;
 end
 
 # Produce a belief model with pre-chosen hyperparams
-function BeliefModel(samples, θ, N; kernel=multiKernel)
+function BeliefModel(samples, θ; N=maximum(s->s.x[2], samples),
+                     kernel=multiKernel)
     X, Y_vals, Y_errs = extractSampleVals(samples)
 
     fx = buildPriorGP(X, Y_errs, kernel, θ)

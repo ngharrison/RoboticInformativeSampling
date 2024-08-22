@@ -122,8 +122,8 @@ function (M::Mission)(func=Returns(nothing);
 
         t = @elapsed begin # computation time
             # new belief
-            beliefModel = BeliefModel([prior_samples; samples], bounds, N;
-                M.kernel, M.means, M.noise, M.use_cond_pdf)
+            beliefModel = BeliefModel([prior_samples; samples], bounds;
+                                      N, M.kernel, M.means, M.noise, M.use_cond_pdf)
             push!(beliefs, beliefModel)
 
             # calculate correlations to first
@@ -233,9 +233,12 @@ function replay(M::Mission, full_samples, beliefs; sleep_time=0.0)
 end
 
 function replay(func, M::Mission, full_samples; sleep_time=0.0)
+    quantities = 1:1 # only first quantity
+    num_q = length(quantities) # number of quantities being sampled
+    N = maximum(s->s.x[2], M.prior_samples, init=num_q) # defaults to num_q
     beliefs = map(1:length(full_samples)) do i
         BeliefModel([M.prior_samples; full_samples[1:i]], getBounds(M.occupancy);
-            M.kernel, M.means, M.noise, M.use_cond_pdf)
+                    N, M.kernel, M.means, M.noise, M.use_cond_pdf)
     end
     replay(func, M, full_samples, beliefs; sleep_time)
 end
