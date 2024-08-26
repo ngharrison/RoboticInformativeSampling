@@ -432,6 +432,29 @@ gui()
 
 savefig(output_dir * "$dir/computation_times.png")
 
+plot(
+    times,
+    title="Average Computation Time",
+    xlabel="Sample Number",
+    ylabel="Average Computation Time (s)",
+    labels=["No Priors" "Priors"],
+    seriescolors=[:black RGB(0.1,0.7,0.2)],
+    framestyle=:box,
+    marker=true,
+    # ylim=(0,25),
+    titlefontsize=24,
+    markersize=8,
+    tickfontsize=15,
+    labelfontsize=20,
+    legendfontsize=16,
+    margin=5mm,
+    linewidth=4,
+    size=(width, height)
+)
+gui()
+
+savefig(output_dir * "$dir/computation_times_full_run.png")
+
 
 #* End Runs
 

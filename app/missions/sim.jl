@@ -387,10 +387,10 @@ time_stds = zeros(30, 8)
 priors = [
     (0, 0, 0),
     (1, 0, 0),
-    (0, 1, 0),
-    (1, 1, 0),
     (0, 0, 1),
     (1, 0, 1),
+    (0, 1, 0),
+    (1, 1, 0),
     (0, 1, 1),
     (1, 1, 1)
 ]
@@ -451,7 +451,7 @@ p_cor[1] = plot([2 2 2],
                 labels=[" High" " Medium" " Low"],
                 seriescolors=[(RGB((c.*0.8)...) for c in colors)...;;])
 plot(
-    p_cor[[2,1,4,3,6,5,8,7]]...,
+    p_cor...,
     plot_title="Hypothesis Scores",
     plot_titlefontsize=24,
     ylim=(0,1),
@@ -545,7 +545,7 @@ gui()
 
 savefig(output_dir * "$dir/distances.png")
 
-idxs = [1,2,3,5,4,6,7,8]
+idxs = [1,3,5,2,7,4,6,8]
 times_per_sample = time_means[end,idxs]/size(time_means,1)
 bar(
     replace([join(c for (p, c) in zip(p, chars) if p==1) for p in priors][idxs], ""=>"none"),
@@ -568,6 +568,33 @@ bar(
 gui()
 
 savefig(output_dir * "$dir/computation_times.png")
+
+plot(
+    time_means,
+    # ribbon=err_stds,
+    xlabel="Sample Number",
+    ylabel="Average Computation Time (s)",
+    title="Average Computation Time",
+    # ylim=(0,25),
+    seriescolors=[(RGB((p.*0.8)...) for p in priors)...;;],
+    labels=[replace([join(c for (p, c) in zip(p, chars) if p==1) for p in priors], ""=>"none")...;;],
+    framestyle=:box,
+    markers=true,
+    legendcolumns=2, # OR layout=2,
+    titlefontsize=24,
+    markersize=8,
+    tickfontsize=15,
+    labelfontsize=20,
+    legendfontsize=16,
+    legend=:topleft,
+    margin=5mm,
+    linewidth=4,
+    size=(width, height)
+)
+gui()
+
+savefig(output_dir * "$dir/computation_times_full_run.png")
+
 
 
 #* End Runs
