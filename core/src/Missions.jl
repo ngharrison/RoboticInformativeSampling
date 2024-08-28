@@ -135,7 +135,7 @@ function (M::Mission)(func=Returns(nothing);
                 && M.hyp_drop.start <= i < M.num_samples - 1
                 && !isempty(prior_quantities))
 
-                # calculate mean and std of cd over past five
+                # get coefficients of determination over past five samples
                 recent_cors = cors[(i-M.hyp_drop.num+1):i] # vector of vectors
                 recent_coeffs = [r.^2 for r in recent_cors]
 
