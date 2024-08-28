@@ -22,11 +22,11 @@ end
 #* data
 
 # This is old code and would need to be re-written
-mission = simMission(; seed_val=3, num_peaks=4, priors=collect(Bool, (0,0,0)))
+mission, = simMission(; seed_val=3, num_peaks=4, priors=collect(Bool, (0,0,0)))
 
-@time samples, beliefs = mission(visuals=false, sleep_time=0.0);
+@time samples, beliefs = mission(sleep_time=0.0);
 
-j = 12
+j = 13
 axs, points = generateAxes(mission.occupancy)
 dims = Tuple(length.(axs))
 pred_map, err_map = beliefs[j](tuple.(points, 1))
@@ -43,7 +43,7 @@ scatter!(x1, x2;
          label="Samples",
          color=:green,
          legend=(0.2, 0.87),
-         markersize=6)
+         markersize=8)
 l1, h1 = extrema(pred_map)
 cy1 = l1:.001*(h1-l1):h1
 cbar1 = heatmap([0], cy1, reshape(cy1, :, 1),
@@ -61,7 +61,7 @@ scatter!(x1, x2;
          label="Samples",
          color=:green,
          legend=(0.2, 0.87),
-         markersize=6)
+         markersize=8)
 l2, h2 = extrema(err_map)
 cy2 = l2:.001*(h2-l2):h2
 cbar2 = heatmap([0], cy2, reshape(cy2, :, 1),
@@ -80,4 +80,4 @@ plot(p1, p2,
      right_margin=17mm,
      )
 
-savefig(output_dir * "paper/example_gp.png")
+savefig(output_dir * "paper/example_gp_alt.png")
