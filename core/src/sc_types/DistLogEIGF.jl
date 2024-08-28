@@ -25,10 +25,11 @@ function values(sc::DistLogEIGF, loc)
     τ = sc.pathCost(pointToCell(loc, sc.occupancy)) # distance to location
     bounds = getBounds(sc.occupancy)
     τ_norm = τ / mean(bounds.upper .- bounds.lower) # normalized
+    n_scale = 2/(1 + exp(1 - length(sc.samples))) - 1
 
     closest_sample = argmin(sample -> norm(sample.x[1] - loc), sc.samples)
 
     μ_err = μ - closest_sample.y[1]
 
-    return (-μ_err^2, -log(σ^2), τ_norm^2, 0.0)
+    return (-μ_err^2, -log(σ^2), n_scale*τ_norm^2, 0.0)
 end
