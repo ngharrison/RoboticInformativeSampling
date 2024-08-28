@@ -9,7 +9,7 @@ using .Maps: Map, generateAxes
 using .Samples: Sample, MapsSampler
 using .SampleCosts: MIPT, EIGF, DistScaledEIGF, OnlyVar,
                     DerivVar, DistScaledDerivVar, LogLikelihood,
-                    LogLikelihoodFull
+                    LogLikelihoodFull, DistLogEIGF
 using .Missions: Mission
 using .Kernels: multiKernel, mtoKernel
 using .BeliefModels: outputCorMat
@@ -199,15 +199,15 @@ runs = [
         sampleCostType = EIGF
     ),
 
-    # no noise
-    (
-        kernel = multiKernel,
-        use_means = true,
-        noise_learned = false,
-        use_cond_pdf = false,
-        use_hyp_drop = false,
-        sampleCostType = EIGF
-    ),
+    # # no noise
+    # (
+    #     kernel = multiKernel,
+    #     use_means = true,
+    #     noise_learned = false,
+    #     use_cond_pdf = false,
+    #     use_hyp_drop = false,
+    #     sampleCostType = EIGF
+    # ),
 
     # deriv var
     (
@@ -229,15 +229,15 @@ runs = [
         sampleCostType = DistScaledEIGF
     ),
 
-    # dist-scaled deriv var
-    (
-        kernel = multiKernel,
-        use_means = true,
-        noise_learned = true,
-        use_cond_pdf = false,
-        use_hyp_drop = false,
-        sampleCostType = DistScaledDerivVar
-    ),
+    # # dist-scaled deriv var
+    # (
+    #     kernel = multiKernel,
+    #     use_means = true,
+    #     noise_learned = true,
+    #     use_cond_pdf = false,
+    #     use_hyp_drop = false,
+    #     sampleCostType = DistScaledDerivVar
+    # ),
 
     # many-to-one
     (

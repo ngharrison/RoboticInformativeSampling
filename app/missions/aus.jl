@@ -166,15 +166,15 @@ runs = [
         sampleCostType = EIGF
     ),
 
-    # no noise
-    (
-        kernel = multiKernel,
-        use_means = true,
-        noise_learned = false,
-        use_cond_pdf = false,
-        use_hyp_drop = false,
-        sampleCostType = EIGF
-    ),
+    # # no noise
+    # (
+    #     kernel = multiKernel,
+    #     use_means = true,
+    #     noise_learned = false,
+    #     use_cond_pdf = false,
+    #     use_hyp_drop = false,
+    #     sampleCostType = EIGF
+    # ),
 
     # deriv var
     (
@@ -196,15 +196,15 @@ runs = [
         sampleCostType = DistScaledEIGF
     ),
 
-    # dist-scaled deriv var
-    (
-        kernel = multiKernel,
-        use_means = true,
-        noise_learned = true,
-        use_cond_pdf = false,
-        use_hyp_drop = false,
-        sampleCostType = DistScaledDerivVar
-    ),
+    # # dist-scaled deriv var
+    # (
+    #     kernel = multiKernel,
+    #     use_means = true,
+    #     noise_learned = true,
+    #     use_cond_pdf = false,
+    #     use_hyp_drop = false,
+    #     sampleCostType = DistScaledDerivVar
+    # ),
 
     # many-to-one
     (
@@ -239,7 +239,7 @@ runs = [
 
 ]
 
-# for options in runs
+for options in runs
 
 
 #* Pair
@@ -252,7 +252,7 @@ using .BeliefModels: outputCorMat
 using .Metrics: calcMetrics
 using .DataIO: save
 
-options = runs[3]
+# options = runs[3]
 
 # # LogLikelihood
 # options = (
@@ -458,4 +458,4 @@ savefig(output_dir * "$dir/computation_times_full_run.png")
 
 #* End Runs
 
-# end
+end
