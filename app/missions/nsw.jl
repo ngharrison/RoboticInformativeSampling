@@ -19,7 +19,7 @@ function nswMission(; seed_val=0, num_samples=30,
                     priors=Bool[1, 1, 1],
                     sampleCostType=DistScaledEIGF, kernel=multiKernel,
                     use_means=true, noise_learned=true, use_cond_pdf=false,
-                    use_hyp_drop=false)
+                    use_hyp_drop=false, weights = (; μ=1, σ=1e2, τ=1, d=1))
 
     # have it run around australia
 
@@ -49,8 +49,8 @@ function nswMission(; seed_val=0, num_samples=30,
     ## initialize alg values
     # weights = [1e-1, 6, 5e-1, 3e-3] # mean, std, dist, prox
     # weights = (; μ=1, σ=5e3, τ=1, d=1) # others
-    weights = (; μ=1, σ=5e2, τ=1, d=1) # others
-    start_locs = [[.14, 0.56]] # starting locations
+    # weights = (; μ=1, σ=5e2, τ=1, d=1) # others
+    start_locs = [[.14, 0.54]] # starting locations
 
 
     # sample sparsely from the prior maps
@@ -110,7 +110,8 @@ end
 #     noise_learned = true,
 #     use_cond_pdf = false,
 #     use_hyp_drop = false,
-#     sampleCostType = LogLikelihood
+#     sampleCostType = DistScaledEIGF,
+#     weights = (; μ=1, σ=1e2, τ=1, d=1)
 # )
 #
 # ## initialize data for mission
@@ -121,7 +122,7 @@ end
 #     points=first.(getfield.(mission.prior_samples, :x)))
 #
 # ## run search alg
-# @time samples, beliefs = mission(
+# @time samples, beliefs, cors, times = mission(
 #     vis;
 #     sleep_time=0.0
 # );
@@ -254,14 +255,13 @@ using .DataIO: save
 
 # options = runs[3]
 
-# # LogLikelihood
 # options = (
 #     kernel = multiKernel,
 #     use_means = true,
 #     noise_learned = true,
 #     use_cond_pdf = false,
 #     use_hyp_drop = false,
-#     sampleCostType = LogLikelihood
+#     sampleCostType = DistScaledEIGF
 # )
 
 k = options.kernel
@@ -271,14 +271,16 @@ c = (options.use_cond_pdf ? "condpdf" : "fullpdf")
 h = (options.use_hyp_drop ? "hypdrop" : "nodrop")
 s = options.sampleCostType
 
-dir = "new_nsw/nsw_$(k)_$(m)_$(n)_$(c)_$(h)_$(s)"
+dir = "new_nsw2/nsw_$(k)_$(m)_$(n)_$(c)_$(h)_$(s)"
 
 all_metrics = Array{Any}(undef, 2)
 
 @time for (i, priors) in enumerate([(0,0,0), (1,1,1)])
     ## initialize data for mission
     # priors = (0,0,0)
-    mission, _ = nswMission(; priors=collect(Bool, priors), options...)
+    mission, _ = nswMission(; priors=collect(Bool, priors),
+                            weights = (; μ=1, σ=1e2, τ=1, d=1),
+                            options...)
     # empty!(mission.prior_samples)
 
     ## run search alg
@@ -349,7 +351,7 @@ p = plot(
     seriescolors=[:black RGB(0.1,0.7,0.2)],
     framestyle=:box,
     marker=true,
-    ylim=(0,.35),
+    # ylim=(0,.2),
     titlefontsize=24,
     markersize=8,
     tickfontsize=15,
@@ -372,7 +374,7 @@ p_max_errs = plot(
     seriescolors=[:black RGB(0.1,0.7,0.2)],
     framestyle=:box,
     marker=true,
-    ylim=(0,.9),
+    # ylim=(0,.8),
     titlefontsize=24,
     markersize=8,
     tickfontsize=15,

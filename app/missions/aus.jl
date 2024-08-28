@@ -20,7 +20,7 @@ function ausMission(; seed_val=0, num_samples=30,
                     priors=Bool[1, 1, 1],
                     sampleCostType=DistScaledEIGF, kernel=multiKernel,
                     use_means=true, noise_learned=true, use_cond_pdf=false,
-                    use_hyp_drop=false)
+                    use_hyp_drop=false, weights = (; μ=1, σ=1e2, τ=1, d=1))
 
     # have it run around australia
 
@@ -48,7 +48,7 @@ function ausMission(; seed_val=0, num_samples=30,
     ## initialize alg values
     # weights = [1e-1, 6, 5e-1, 3e-3] # mean, std, dist, prox
     # weights = (; μ=1, σ=5e3, τ=1, d=1) # others
-    weights = (; μ=1, σ=1e2, τ=1, d=1) # others
+    # weights = (; μ=1, σ=1e2, τ=1, d=1) # others
     start_locs = [[0.8, 0.6]] # starting locations
 
 
@@ -104,14 +104,14 @@ end
 #
 # ## initialize data for mission
 #
-# # LogLikelihood
 # options = (
 #     kernel = multiKernel,
 #     use_means = true,
 #     noise_learned = true,
 #     use_cond_pdf = false,
 #     use_hyp_drop = false,
-#     sampleCostType = LogLikelihood
+#     sampleCostType = DistScaledEIGF,
+#     weights = (; μ=1, σ=1e2, τ=1, d=1)
 # )
 #
 # mission, prior_maps = ausMission(; num_samples=30, priors=Bool[1,1,1], options...)
@@ -271,14 +271,16 @@ c = (options.use_cond_pdf ? "condpdf" : "fullpdf")
 h = (options.use_hyp_drop ? "hypdrop" : "nodrop")
 s = options.sampleCostType
 
-dir = "new_aus/aus_$(k)_$(m)_$(n)_$(c)_$(h)_$(s)"
+dir = "new_aus2/aus_$(k)_$(m)_$(n)_$(c)_$(h)_$(s)"
 
 all_metrics = Array{Any}(undef, 2)
 
 @time for (i, priors) in enumerate([(0,0,0), (1,1,1)])
     ## initialize data for mission
     # priors = (0,0,0)
-    mission, _ = ausMission(; priors=collect(Bool, priors), options...)
+    mission, _ = ausMission(; priors=collect(Bool, priors),
+                            weights = (; μ=1, σ=5e1, τ=1, d=1),
+                            options...)
     # empty!(mission.prior_samples)
 
     ## run search alg
