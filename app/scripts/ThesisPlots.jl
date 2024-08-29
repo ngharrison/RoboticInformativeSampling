@@ -286,6 +286,43 @@ surface(
     camera = (60, 20)
 )|>display
 
+#* load mission
+dir = "new_syn/syn_multiKernel_zeromean_noises_fullpdf_nodrop_OnlyVar"
+file_name = output_dir * "$dir/data_000" * output_ext
+
+data = load(file_name)
+maes = data["metrics"][1].mae
+mxaes = data["metrics"][1].mxae
+dists = cumsum(data["metrics"][1].dists)
+times = cumsum(data["metrics"][1].times)
+
+mission = data["missions"][1].mission
+samples = data["missions"][1].samples
+beliefs = data["missions"][1].beliefs
+
+occ = mission.occupancy
+quantities = eachindex(mission.sampler)
+num_quant = length(mission.sampler)
+
+xp = first.(getfield.(samples, :x))
+x1 = getindex.(xp, 1)
+x2 = getindex.(xp, 2)
+
+pred_range = (Inf, -Inf)
+err_range = (Inf, -Inf)
+
+for bm in beliefs
+axs, points = generateAxes(occ)
+pred, err = bm(tuple.(vec(points), 1))
+global pred_range = (min(minimum(pred), pred_range[1]), max(maximum(pred), pred_range[2]))
+global err_range = (min(minimum(err), err_range[1]), max(maximum(err), err_range[2]))
+end
+
+err_range = (0.0, err_range[2])
+
+pred_ticks = createColorbarTicks(pred_range)
+err_ticks = createColorbarTicks(err_range)
+
 #* objective function plots
 
 using .SampleCosts, .Samples, .Maps
