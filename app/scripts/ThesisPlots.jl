@@ -356,7 +356,8 @@ scatter!(x1[1:i], x2[1:i];
 scatter!([new_loc[1]], [new_loc[2]],
     label=false,
     color=:red,
-    markersize=12)
+    shape=:xcross,
+    markersize=14)
 
 sampleCost = EIGF(
     occ, samples[1:i], bm, quantities, weights
@@ -382,7 +383,8 @@ scatter!(x1[1:i], x2[1:i];
 scatter!([new_loc[1]], [new_loc[2]],
     label=false,
     color=:red,
-    markersize=12)
+    shape=:xcross,
+    markersize=14)
 
 plt = plot(
     pred_plt, err_plt,
@@ -447,12 +449,14 @@ scatter!(x1[1:i-1], x2[1:i-1];
     markersize=8)
 scatter!(x1[i:i], x2[i:i];
     label=false,
-    color=:lightblue,
-    markersize=12)
+    color=:royalblue,
+    shape=:utriangle,
+    markersize=14)
 scatter!([new_loc_eigf[1]], [new_loc_eigf[2]],
     label=false,
     color=:red,
-    markersize=12)
+    shape=:xcross,
+    markersize=14)
 
 
 dist_plt = heatmap(axs..., data_dist',
@@ -468,12 +472,14 @@ scatter!(x1[1:i-1], x2[1:i-1];
     markersize=8)
 scatter!(x1[i:i], x2[i:i];
     label=false,
-    color=:lightblue,
-    markersize=12)
+    color=:royalblue,
+    shape=:utriangle,
+    markersize=14)
 scatter!([new_loc_dist[1]], [new_loc_dist[2]],
     label=false,
     color=:red,
-    markersize=12)
+    shape=:xcross,
+    markersize=14)
 
 
 plt = plot(
