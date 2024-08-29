@@ -318,7 +318,7 @@ dets = [u.^2 for u in cors]
 
 width, height = 1200, 800
 
-plot(
+p_cors = plot(
     hcat((c[2:end] for c in cors[1:30,:])...)',
     title="Estimated Correlation to Vegetation",
     labels=["Elevation" "Ground Temperature" "Rainfall"],
@@ -342,7 +342,7 @@ gui()
 
 savefig(output_dir * "$dir/correlations.png")
 
-p = plot(
+p_errs = plot(
     maes[1:30,:],
     title="Prediction Errors",
     xlabel="Sample Number",
@@ -351,7 +351,7 @@ p = plot(
     seriescolors=[:black RGB(0.1,0.7,0.2)],
     framestyle=:box,
     marker=true,
-    ylim=(0,.3),
+    ylim=(0,.4),
     titlefontsize=24,
     markersize=8,
     tickfontsize=15,
@@ -374,7 +374,7 @@ p_max_errs = plot(
     seriescolors=[:black RGB(0.1,0.7,0.2)],
     framestyle=:box,
     marker=true,
-    ylim=(0,.9),
+    ylim=(0,1),
     titlefontsize=24,
     markersize=8,
     tickfontsize=15,
@@ -388,7 +388,7 @@ gui()
 
 savefig(output_dir * "$dir/max_errors.png")
 
-p = plot(
+p_dists = plot(
     dists[1:30,:],
     title="Distance Traveled",
     xlabel="Sample Number",
@@ -397,7 +397,7 @@ p = plot(
     seriescolors=[:black RGB(0.1,0.7,0.2)],
     framestyle=:box,
     marker=true,
-    # ylim=(0,.5),
+    ylim=(0,25),
     titlefontsize=24,
     markersize=8,
     tickfontsize=15,
@@ -412,13 +412,13 @@ gui()
 savefig(output_dir * "$dir/distances.png")
 
 times_per_sample = times[end,:]/size(times,1)
-bar(
+p_comp = bar(
     ["No Priors", "Priors"],
     times_per_sample,
     xlabel="Sample Number",
     ylabel="Average Computation Time (s)",
     title="Computation Time per Sample",
-    ylim=(0,ceil(maximum(times_per_sample)/0.25)*0.25),
+    ylim=(0,1.5),
     seriescolors=[:black, RGB(0.1,0.7,0.2)],
     framestyle=:box,
     markers=true,
