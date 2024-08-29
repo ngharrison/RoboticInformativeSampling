@@ -16,16 +16,39 @@ using Plots
 using Plots: mm
 
 """
-Calculates the standard deviation across elements of an array when the elements
-are arrays of arrays.
+Return the sum and number of elements that are not NaN. Accepts an iterable.
 """
-function stdM(cors)
-    d = cors .- Ref(mean(cors))
-    l = [[v.^2 for v in u] for u in d]
-    s = sum(l) / (length(cors) - 1)
-    return [[sqrt(v) for v in u] for u in s]
+function sumCountSkip(a; skip=isnan)
+    tot = 0.0
+    cnt = 0
+    for x in a
+        if !skip(x)
+            tot += x
+            cnt += 1
+        end
+    end
+    return tot, cnt
 end
 
+"""
+Calculates the mean and standard deviation across elements of an array when the
+elements are arrays of arrays. Also skip any NaN values and only give a value if
+2 or more elements were not NaN.
+"""
+function meanAndStdM(dets)
+    m = [zeros(size(dets[1][1])) for _ in eachindex(dets[1])]
+    s = [zeros(size(dets[1][1])) for _ in eachindex(dets[1])]
+    for i in eachindex(m), j in eachindex(m[1])
+        tot, cnt = sumCountSkip(v[i][j] for v in dets)
+        m[i][j] = tot/cnt
+        tot, cnt = sumCountSkip((v[i][j] - m[i][j])^2 for v in dets)
+        s[i][j] = sqrt(tot/(cnt-1))
+        if isnan(s[i][j])
+            m[i][j] = NaN
+        end
+    end
+    return m, s
+end
 
 #* Aus
 # for dir in readdir(output_dir * "new_aus", join=true)
@@ -243,8 +266,7 @@ for (i, p) in enumerate(priors)
     max_err_means[:,i] .= mean(mxaes)
     max_err_stds[:,i] .= std(mxaes)
 
-    det_means[i] = mean(dets)
-    det_stds[i] = stdM(dets)
+    det_means[i], det_stds[i] = meanAndStdM(dets)
 
     dist_means[:,i] .= mean(dists)
     dist_stds[:,i] .= std(dists)
@@ -252,8 +274,8 @@ for (i, p) in enumerate(priors)
     time_means[:,i] .= mean(times)
     time_stds[:,i] .= std(times)
 
-    plt = plot(hcat((c[2:end] for c in mean(dets))...)',
-               ribbon=hcat((c[2:end] for c in stdM(dets))...)',
+    plt = plot(hcat((c[2:end] for c in det_means[i])...)',
+               ribbon=hcat((c[2:end] for c in det_stds[i])...)',
                framestyle=:box,
                labels=false,
                markers=true,
