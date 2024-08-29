@@ -46,13 +46,13 @@ mission = Mission(; occupancy,
     prior_samples = Sample[]
     "the kernel to be used in the belief model (default multiKernel)"
     kernel = multiKernel
-    "whether or not to use a non-zero mean for each quantity (default true)"
+    "whether or not to use a non-zero mean for each quantity and to learn means (default (true, false))"
     means = (use=true, learned=false)
     "a named tuple of noise value(s) and if learned further (default (0.0, false))"
     noise = (value=0.0, learned=false)
     "whether or not to use the conditional distribution of the data to train the belief model (default false)"
     use_cond_pdf = false
-    "whether or not to drop hypotheses and settings for it (default false)"
+    "whether or not to drop hypotheses and settings for it (default (false, 10, 5, 0.4))"
     hyp_drop = (dropout=false, start=10, num=5, threshold=0.4)
 end
 
