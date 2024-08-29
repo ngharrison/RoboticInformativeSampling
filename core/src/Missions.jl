@@ -132,7 +132,7 @@ function (M::Mission)(func=Returns(nothing);
 
             # hypothesis dropout chosen by coefficient of determination
             if (M.hyp_drop.dropout
-                && M.hyp_drop.start <= i < M.num_samples - 1
+                && M.hyp_drop.start <= i < M.num_samples
                 && !isempty(prior_quantities))
 
                 # get coefficients of determination over past five samples
@@ -153,11 +153,6 @@ function (M::Mission)(func=Returns(nothing);
                     filter!(!=(worst_q), prior_quantities)
                     filter!(s -> s.x[2] != worst_q, prior_samples)
                 end
-            end
-
-            # set back to all priors for the last sample
-            if i == M.num_samples - 1
-                prior_samples = M.prior_samples
             end
 
             # new sample location
