@@ -54,6 +54,7 @@ end
 using DelimitedFiles
 
 using .BeliefModels: BeliefModel
+using .Maps
 
 dir = "pye_farm_trial2/"
 file_names = filter(n->!any(contains.(n, ("strange", "grid"))),
@@ -75,6 +76,26 @@ for file_name in file_names
 
     writedlm(output_dir * dir * "packaged/" * base_name * "/avg_height_belief.csv", m, ',')
     writedlm(output_dir * dir * "packaged/" * base_name * "/avg_height_uncertainty.csv", s, ',')
+
+    mkpath(output_dir * dir * "packaged/" * base_name * "/avg_height_beliefs")
+    mkpath(output_dir * dir * "packaged/" * base_name * "/avg_height_uncertainties")
+    mkpath(output_dir * dir * "packaged/" * base_name * "/sample_utilities")
+
+    height_samples = filter(s->s.x[2]==1, samples)
+
+    for (i, belief) in enumerate(beliefs)
+        belief_maps = produceMaps(belief, mission.occupancy)
+        m, s = mapToImg.(belief_maps)
+
+        sampleCost = mission.sampleCostType(mission.occupancy, height_samples[1:i], belief, 1:1, mission.weights)
+        axs, points = generateAxes(mission.occupancy)
+        u = mapToImg(-sampleCost.(points))
+
+        n = lpad(i, 2, '0')
+        writedlm(output_dir * dir * "packaged/" * base_name * "/avg_height_beliefs/$n.csv", m, ',')
+        writedlm(output_dir * dir * "packaged/" * base_name * "/avg_height_uncertainties/$n.csv", s, ',')
+        writedlm(output_dir * dir * "packaged/" * base_name * "/sample_utilities/$n.csv", u, ',')
+    end
 
     ndvi_samples = filter(s->s.x[2]==2, samples)
     if !isempty(ndvi_samples)

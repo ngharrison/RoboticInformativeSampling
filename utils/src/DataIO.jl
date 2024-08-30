@@ -15,7 +15,7 @@ using ..Visualization: visualize
 
 export normalize, spatialAve, imgToMap, save, maps_dir,
        output_dir, output_ext, saveBeliefMapToPng,
-       produceMap, produceMaps
+       produceMap, produceMaps, mapToImg
 
 const maps_dir = dirname(Base.active_project()) * "/maps/"
 const output_dir = dirname(Base.active_project()) * "/output/"
