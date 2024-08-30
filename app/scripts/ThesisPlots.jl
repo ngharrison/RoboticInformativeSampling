@@ -689,3 +689,72 @@ plts = map(missions) do mission
 end
 
 plot(plts..., layout=(3,6), size=(1200, 800)) |> display
+
+
+#* combine runs into single plots (this isn't currently used)
+
+#** load
+
+gr()
+
+comp_dir = output_dir * "new_aus2/aus_multiKernel_zeromean_noises_fullpdf_nodrop_OnlyVar"
+
+temp = [
+    "new_aus2/aus_multiKernel_means_noises_fullpdf_nodrop_OnlyVar",
+    "new_aus2/aus_multiKernel_means_noises_fullpdf_nodrop_EIGF",
+    "new_aus2/aus_multiKernel_means_noises_fullpdf_nodrop_DistScaledEIGF",
+    # "new_aus2/aus_multiKernel_means_noises_condpdf_nodrop_DistScaledEIGF",
+    # "new_aus2/aus_mtoKernel_means_noises_fullpdf_nodrop_DistScaledEIGF",
+    "new_aus2/aus_multiKernel_means_noises_fullpdf_hypdrop_DistScaledEIGF",
+]
+dirs =  output_dir .* temp
+
+comp_name = comp_dir * "/data_000" * output_ext
+names = dirs .* "/data_111" .* output_ext
+
+all_names = [comp_name; names]
+
+datas = load.(all_names)
+
+maes = stack(data["metrics"].mae for data in datas)
+
+#** run
+
+labels = [
+    "Zero Mean";;
+    "MQGP + Variance";;
+    "Nearest Difference";;
+    "Distance-Scaled";;
+    # "Conditional Likelihood";;
+    # "Many-To-One";;
+    "Hypothesis Dropout"
+]
+
+colors = reduce(hcat, colormap("Blues", length(labels)))
+
+p_errs = plot(maes;
+    title="Prediction Errors",
+    xlabel="Sample Number",
+    ylabel="Mean Absolute Map Error",
+    labels,
+    color=colors,
+    framestyle=:box,
+    ylim=(0, 0.4),
+    titlefontsize=24,
+    tickfontsize=15,
+    labelfontsize=20,
+    legendfontsize=16,
+    marker=true,
+    markersize=8,
+    linewidth=4,
+    margin=5mm,
+    size=(width, height)
+)
+# for data in datas
+#     metrics = data["metrics"]
+#     plot!(
+#         metrics.mae,
+#     )
+# end
+
+display(p_errs)
