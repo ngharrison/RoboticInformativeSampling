@@ -53,7 +53,7 @@ end
 
 using DelimitedFiles
 
-using .BeliefModels: BeliefModel
+using .BeliefModels: BeliefModel, outputCorMat
 using .Maps
 
 dir = "pye_farm_trial2/"
@@ -71,37 +71,42 @@ for file_name in file_names
     new_samples = (s->((s.x...,), s.y)).(samples)
     writedlm(output_dir * dir * "packaged/" * base_name * "/samples.txt", [new_samples], "\n")
 
+    cors = [outputCorMat(bm)[:, 1] for bm in beliefs]
+
+    writedlm(output_dir * dir * "packaged/" * base_name * "/correlations.txt", [cors], "\n")
+
     belief_maps = produceMaps(beliefs[end], mission.occupancy)
     m, s = mapToImg.(belief_maps)
 
     writedlm(output_dir * dir * "packaged/" * base_name * "/avg_height_belief.csv", m, ',')
     writedlm(output_dir * dir * "packaged/" * base_name * "/avg_height_uncertainty.csv", s, ',')
 
-    mkpath(output_dir * dir * "packaged/" * base_name * "/avg_height_beliefs")
-    mkpath(output_dir * dir * "packaged/" * base_name * "/avg_height_uncertainties")
-    mkpath(output_dir * dir * "packaged/" * base_name * "/sample_utilities")
+    # currently exporting maps to only 25x25 for comparison with dense sampling
+    mkpath(output_dir * dir * "packaged/" * base_name * "/avg_height_beliefs_25x25")
+    mkpath(output_dir * dir * "packaged/" * base_name * "/avg_height_uncertainties_25x25")
+    mkpath(output_dir * dir * "packaged/" * base_name * "/sample_utilities_25x25")
 
     height_samples = filter(s->s.x[2]==1, samples)
 
     for (i, belief) in enumerate(beliefs)
-        belief_maps = produceMaps(belief, mission.occupancy)
+        belief_maps = produceMaps(belief, mission.occupancy.bounds, (25, 25))
         m, s = mapToImg.(belief_maps)
 
         sampleCost = mission.sampleCostType(mission.occupancy, height_samples[1:i], belief, 1:1, mission.weights)
-        axs, points = generateAxes(mission.occupancy)
+        axs, points = generateAxes(mission.occupancy.bounds, (25, 25))
         u = mapToImg(-sampleCost.(points))
 
         n = lpad(i, 2, '0')
-        writedlm(output_dir * dir * "packaged/" * base_name * "/avg_height_beliefs/$n.csv", m, ',')
-        writedlm(output_dir * dir * "packaged/" * base_name * "/avg_height_uncertainties/$n.csv", s, ',')
-        writedlm(output_dir * dir * "packaged/" * base_name * "/sample_utilities/$n.csv", u, ',')
+        writedlm(output_dir * dir * "packaged/" * base_name * "/avg_height_beliefs_25x25/$n.csv", m, ',')
+        writedlm(output_dir * dir * "packaged/" * base_name * "/avg_height_uncertainties_25x25/$n.csv", s, ',')
+        writedlm(output_dir * dir * "packaged/" * base_name * "/sample_utilities_25x25/$n.csv", u, ',')
     end
 
     ndvi_samples = filter(s->s.x[2]==2, samples)
     if !isempty(ndvi_samples)
         bm = BeliefModel(ndvi_samples, mission.occupancy.bounds)
 
-        belief_maps = produceMaps(bm, mission.occupancy; quantity=2)
+        belief_maps = produceMaps(bm, mission.occupancy.bounds, (25, 25); quantity=2)
         m, s = mapToImg.(belief_maps)
 
         writedlm(output_dir * dir * "packaged/" * base_name * "/avg_ndvi_belief.csv", m, ',')
@@ -132,13 +137,15 @@ ndvi_samples = filter(s->s.x[2]==2, samples)
 
 using .Maps
 
-m_grid = Map(zeros(25, 25), mission.occupancy.bounds)
+d = Int(sqrt(length(height_samples)))
+m_grid = Map(zeros(d,d), mission.bounds)
 for s in height_samples
     m_grid[pointToCell(s.x[1], m_grid)] = s.y
 end
 writedlm(base_name * "/avg_height.csv", mapToImg(m_grid), ',')
 
-m_grid = Map(zeros(25, 25), mission.occupancy.bounds)
+d = Int(sqrt(length(height_samples)))
+m_grid = Map(zeros(d,d), mission.bounds)
 for s in ndvi_samples
     m_grid[pointToCell(s.x[1], m_grid)] = s.y
 end
