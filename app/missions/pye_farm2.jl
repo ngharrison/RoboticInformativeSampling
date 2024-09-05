@@ -140,6 +140,8 @@ save(mission, samples, beliefs; sub_dir_name="pye_farm_trial2")
 
 using PyCall
 
+using .DataIO: mapToImg
+
 rospy = pyimport("rospy")
 std_msg = pyimport("std_msgs.msg")
 sen_msg = pyimport("sensor_msgs.msg")
@@ -173,7 +175,7 @@ for q in quantities
     for (i, data) in enumerate(bm_vals[q])
 
         # map to image
-        data_flipped = vec(reverse(permutedims(data, (2, 1)), dims=1))
+        data_flipped = vec(mapToImg(data))
 
         # publish as array
         array = std_msg.Float64MultiArray()

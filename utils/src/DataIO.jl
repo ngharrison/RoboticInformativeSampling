@@ -66,9 +66,9 @@ map = imgToMap(image, bounds)
 map = imgToMap(image) # or auto bounds
 ```
 """
-imgToMap(img, args...) = Map(permutedims(reverse(img, dims=1), (2,1)), args...)
+imgToMap(img, args...) = Map(rotr90(img), args...)
 
-mapToImg(map) = reverse(permutedims(map, (2,1)), dims=1)
+mapToImg(map) = rotl90(map)
 
 abstract type GroundTruth end
 
@@ -177,7 +177,7 @@ function saveBeliefMapToPng(beliefModel, occupancy,
     amount = (pred_map .- l) ./ (h - l)
 
     # map to image
-    amount = reverse(permutedims(amount, (2,1)), dims=1)
+    amount = mapToImg(amount)
 
     map_img = stack((0.8*amount,
                      0.3*amount,

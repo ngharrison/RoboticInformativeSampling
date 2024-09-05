@@ -57,7 +57,7 @@ global_logger(ConsoleLogger(stderr, Info))
 
 using InformativeSamplingUtils
 using .Visualization: vis
-using .DataIO: save
+using .DataIO: save, mapToImg
 
 ## initialize data for mission
 mission = rosMission(num_samples=10)
@@ -106,7 +106,7 @@ end
             data_scaled = (data .- l) ./ (h - l + eps())
 
             # map to image
-            amount = vec(reverse(permutedims(reshape(data_scaled, dims), (2, 1)), dims=1))
+            amount = vec(mapToImg(reshape(data_scaled, dims)))
 
             # convert to byte values and repeat each 4 times for rgba format
             byte_data = round.(UInt8, 255 .* amount)
