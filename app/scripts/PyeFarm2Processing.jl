@@ -70,6 +70,9 @@ for file_name in file_names
     new_samples = (s->((s.x...,), s.y)).(samples)
     writedlm(output_dir * dir * "packaged/" * base_name * "/samples.txt", [new_samples], "\n")
 
+    bm_params = (bm->bm.θ).(beliefs)
+    writedlm(output_dir * dir * "packaged/" * base_name * "/belief_params.txt", [bm_params], "\n")
+
     belief_maps = produceMaps(beliefs[end], mission.occupancy)
     m, s = mapToImg.(belief_maps)
 
