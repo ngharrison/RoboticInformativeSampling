@@ -1,3 +1,4 @@
+#* packages and functions
 
 using InformativeSampling
 using .Maps, .Missions, .BeliefModels, .Samples, .ROSInterface, .Kernels
@@ -6,7 +7,7 @@ using InformativeSamplingUtils
 using .DataIO
 
 using LinearAlgebra: norm
-using Statistics: mean, std, cor
+using Statistics: mean, std, cor, quantile
 using FileIO: load
 using Plots
 using Plots: mm
@@ -54,14 +55,14 @@ function group(f, a)
     return groups
 end
 
-mkpath(output_dir * "thesis/syn_000")
-
 num_samples = 30
 
 
 #* load mission
 dir = "new_syn/syn_multiKernel_zeromean_noises_fullpdf_nodrop_OnlyVar"
 file_name = output_dir * "$dir/data_000" * output_ext
+
+mkpath(output_dir * "thesis/syn_000")
 
 data = load(file_name)
 maes = data["metrics"][end-2].mae
@@ -85,10 +86,10 @@ pred_range = (Inf, -Inf)
 err_range = (Inf, -Inf)
 
 for bm in beliefs
-axs, points = generateAxes(occ)
-pred, err = bm(tuple.(vec(points), 1))
-global pred_range = (min(minimum(pred), pred_range[1]), max(maximum(pred), pred_range[2]))
-global err_range = (min(minimum(err), err_range[1]), max(maximum(err), err_range[2]))
+    axs, points = generateAxes(occ)
+    pred, err = bm(tuple.(vec(points), 1))
+    global pred_range = (min(minimum(pred), pred_range[1]), max(maximum(pred), pred_range[2]))
+    global err_range = (min(minimum(err), err_range[1]), max(maximum(err), err_range[2]))
 end
 
 err_range = (0.0, err_range[2])
@@ -356,11 +357,6 @@ global err_range = (min(minimum(err), err_range[1]), max(maximum(err), err_range
 end
 
 err_range = (0.0, err_range[2])
-
-pred_ticks = createColorbarTicks(pred_range)
-err_ticks = createColorbarTicks(err_range)
-
-#* objective function plots
 
 using .SampleCosts, .Samples, .Maps
 
@@ -728,7 +724,7 @@ end
 plot(plts..., layout=(3,6), size=(1200, 800)) |> display
 
 
-#* combine runs into single plots (this isn't currently used)
+#* combine runs into single plots (this isn't currently used, very little going on)
 
 #** load
 
@@ -1647,3 +1643,116 @@ p = plot(p01, p02, Iterators.flatten(plots)...,
     size=(700, 780))
 
 savefig(save_dir * "final_maps/combined.png")
+
+#* load mission
+
+region = "aus"
+priors = "000"
+dir = "new_$(region)2/$(region)_multiKernel_zeromean_noises_fullpdf_nodrop_OnlyVar"
+file_name = output_dir * "$dir/data_$(priors)" * output_ext
+
+mkpath(output_dir * "thesis/$(region)_$(priors)")
+
+data = load(file_name)
+maes = data["metrics"].mae
+mxaes = data["metrics"].mxae
+dists = cumsum(data["metrics"].dists)
+times = cumsum(data["metrics"].times)
+
+mission = data["mission"]
+samples = data["samples"]
+beliefs = data["beliefs"]
+
+occ = mission.occupancy
+quantities = eachindex(mission.sampler)
+num_quant = length(mission.sampler)
+
+xp = first.(getfield.(samples, :x))
+x1 = getindex.(xp, 1)
+x2 = getindex.(xp, 2)
+
+pred_range = (Inf, -Inf)
+err_range = (Inf, -Inf)
+
+for bm in @view beliefs[5:5:end]
+    axs, points = generateAxes(occ)
+    pred_map, err_map = bm(tuple.(vec(points), 1))
+    mask = vec(.! mission.occupancy)
+
+    global pred_range = (min(minimum(pred_map[mask]), pred_range[1]),
+                         max(maximum(pred_map[mask]), pred_range[2]))
+    global err_range = (min(minimum(err_map[mask]), err_range[1]),
+                        max(maximum(err_map[mask]), err_range[2]))
+end
+
+err_range = (0.0, err_range[2])
+
+pred_ticks = createColorbarTicks(pred_range)
+err_ticks = createColorbarTicks(err_range)
+
+#* full run comparison
+
+pyplot()
+
+axs, _ = generateAxes(mission.sampler[1])
+
+p01 = heatmap(axs..., mission.sampler[1]';
+    title="Ground Truth",
+    framestyle=:none,
+    titlefontsize=19,
+    colorbar_tickfontsize=17,
+)
+
+p0r = heatmap(axs..., mission.sampler[1]';
+    title="",
+    framestyle=:none,
+    titlefontsize=19,
+    colorbar_tickfontsize=17,
+)
+
+i=20
+plots = map(5:5:length(beliefs)) do i
+    bm = beliefs[i]
+
+    axs, points = generateAxes(occ)
+    pred_map, err_map = bm(tuple.(points, 1))
+
+    pred_map[occ] .= NaN
+    err_map[occ] .= NaN
+
+    pred_title = i==5 ? "Predicted Values" : ""
+    p1 = heatmap(axs..., pred_map';
+        title=pred_title,
+        framestyle=:none,
+        titlefontsize=19,
+        colorbar_tickfontsize=17,
+        clim=(0, 1),
+    )
+    scatter!(x1[1:i], x2[1:i];
+        label=false,
+        color=:green,
+        markersize=8)
+
+    err_title = i==5 ? "Uncertainties" : ""
+    p2 = heatmap(axs..., err_map';
+        title=err_title,
+        framestyle=:none,
+        titlefontsize=19,
+        colorbar_tickfontsize=17,
+        clim=err_range,
+        # colorbar_ticks=err_ticks,
+        right_margin=-5mm,
+    )
+    scatter!(x1[1:i], x2[1:i];
+        label=false,
+        color=:green,
+        markersize=8)
+
+    return (i==5 ? p01 : p0r), p1, p2
+end
+
+p = plot(Iterators.flatten(plots)...,
+    layout=(6, 3),
+    size=(1000, 1300))
+
+savefig(output_dir * "thesis/$(region)_$(priors)/full_run_comparison.png")
