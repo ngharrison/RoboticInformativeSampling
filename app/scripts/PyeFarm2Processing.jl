@@ -72,7 +72,6 @@ for file_name in file_names
     writedlm(output_dir * dir * "packaged/" * base_name * "/samples.txt", [new_samples], "\n")
 
     cors = [outputCorMat(bm)[:, 1] for bm in beliefs]
-
     writedlm(output_dir * dir * "packaged/" * base_name * "/correlations.txt", [cors], "\n")
 
     belief_maps = produceMaps(beliefs[end], mission.occupancy)
