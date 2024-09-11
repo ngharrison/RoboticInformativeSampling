@@ -89,7 +89,6 @@ for file_name in file_names
     writedlm(output_dir * dir * "packaged/" * base_name * "/samples.txt", [new_samples], "\n")
 
     cors = [outputCorMat(bm)[:, 1] for bm in beliefs]
-
     writedlm(output_dir * dir * "packaged/" * base_name * "/correlations.txt", [cors], "\n")
 
     belief_maps = produceMaps(beliefs[end], mission.occupancy)
@@ -98,23 +97,23 @@ for file_name in file_names
     writedlm(output_dir * dir * "packaged/" * base_name * "/avg_height_belief.csv", m, ',')
     writedlm(output_dir * dir * "packaged/" * base_name * "/avg_height_uncertainty.csv", s, ',')
 
-    # currently exporting maps to only 25x25 for comparison with dense sampling
-    mkpath(output_dir * dir * "packaged/" * base_name * "/avg_height_beliefs_25x25")
-    mkpath(output_dir * dir * "packaged/" * base_name * "/avg_height_uncertainties_25x25")
-    mkpath(output_dir * dir * "packaged/" * base_name * "/sample_utilities_25x25")
+    # currently exporting maps to only 10x10 for comparison with dense sampling
+    mkpath(output_dir * dir * "packaged/" * base_name * "/avg_height_beliefs_10x10")
+    mkpath(output_dir * dir * "packaged/" * base_name * "/avg_height_uncertainties_10x10")
+    mkpath(output_dir * dir * "packaged/" * base_name * "/sample_utilities_10x10")
 
     for (i, belief) in enumerate(beliefs)
-        belief_maps = produceMaps(belief, mission.occupancy.lb, mission.occupancy.ub, (25, 25))
+        belief_maps = produceMaps(belief, mission.occupancy.lb, mission.occupancy.ub, (10, 10))
         m, s = mapToImg.(belief_maps)
 
         sampleCost = mission.sampleCostType(mission, samples[1:i], belief, 1:1)
-        axs, points = generateAxes(mission.occupancy.lb, mission.occupancy.ub, (25, 25))
+        axs, points = generateAxes(mission.occupancy.lb, mission.occupancy.ub, (10, 10))
         u = mapToImg(-sampleCost.(points))
 
         n = lpad(i, 2, '0')
-        writedlm(output_dir * dir * "packaged/" * base_name * "/avg_height_beliefs_25x25/$n.csv", m, ',')
-        writedlm(output_dir * dir * "packaged/" * base_name * "/avg_height_uncertainties_25x25/$n.csv", s, ',')
-        writedlm(output_dir * dir * "packaged/" * base_name * "/sample_utilities_25x25/$n.csv", u, ',')
+        writedlm(output_dir * dir * "packaged/" * base_name * "/avg_height_beliefs_10x10/$n.csv", m, ',')
+        writedlm(output_dir * dir * "packaged/" * base_name * "/avg_height_uncertainties_10x10/$n.csv", s, ',')
+        writedlm(output_dir * dir * "packaged/" * base_name * "/sample_utilities_10x10/$n.csv", u, ',')
     end
 
 end
