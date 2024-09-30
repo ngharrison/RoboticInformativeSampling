@@ -20,20 +20,15 @@ export BeliefModel, outputCovMat, outputCorMat, meanDerivAndVar, fullCov
 """
 $(TYPEDEF)
 
-Abstract type. All subtypes of this will be callable with the same interface:
-`X -> μ, σ` (SampleInputs -> means, standard deviations)
-"""
-abstract type BeliefModel end
-
-"""
-$(TYPEDEF)
-
 Belief model struct and function for multiple outputs with 2D inputs.
 
 Designed on top of a Multi-output Gaussian Process, but can still be used with a
 single output.
+
+Its interface:
+`X -> μ, σ` (SampleInputs -> means, standard deviations)
 """
-struct BeliefModelSimple{T} <: BeliefModel
+struct BeliefModel{T}
     "posterior Gaussian Process used to do inference"
     gp
     "number of outputs of the GP"
@@ -44,77 +39,28 @@ struct BeliefModelSimple{T} <: BeliefModel
     θ
 end
 
-function Base.show(io::IO, bm::BeliefModelSimple)
-    print(io, "BeliefModelSimple")
+function Base.show(io::IO, bm::BeliefModel)
+    print(io, "BeliefModel")
 end
-function Base.show(io::IO, ::MIME"text/plain", bm::BeliefModelSimple)
-    print(io, "BeliefModelSimple:\n\tθ = $(bm.θ)")
-end
-
-"""
-$(TYPEDEF)
-
-A combination of two BeliefModelSimples. One is trained on current samples and
-the other is trained on current and previous samples. The main purpose for this
-is to use the current for mean estimates and the combined for variance
-estimates.
-
-This was used for a certain sample cost function and isn't used so much anymore.
-Still could be a valuable idea.
-"""
-struct BeliefModelSplit <: BeliefModel
-    current
-    combined
-end
-
-function Base.show(io::IO, bm::BeliefModelSplit)
-    print(io, "BeliefModelSplit")
-end
-function Base.show(io::IO, ::MIME"text/plain", bm::BeliefModelSplit)
-    println(io, "BeliefModelSplit")
-    println("\tcurrent::BeliefModelSimple")
-    println("\tcombined::BeliefModelSimple")
+function Base.show(io::IO, ::MIME"text/plain", bm::BeliefModel)
+    print(io, "BeliefModel:\n\tθ = $(bm.θ)")
 end
 
 """
 $(TYPEDSIGNATURES)
 
-Creates and returns a new BeliefModel. A BeliefModelSimple is returned if there
-are no prior samples, and it is trained and conditioned on the given samples.
-Otherwise a BeliefModelSplit is returned, trained and conditioned on both the
-samples and prior samples. Lower and upper bounds are used to initialize one of
-the hyperparameters.
+Creates and returns a BeliefModel with hyperparameters trained and conditioned
+on the samples given. Lower and upper bounds are used to initialize one of the
+hyperparameters.
 
 A noise standard deviation can optionally be passed in either as a single scalar
 value for all samples or a vector of values, one for each sample.
 
 # Examples
 ```julia
-# create a BeliefModelSplit
-beliefModel = BeliefModel(samples, M.prior_samples, bounds)
-
-# create a BeliefModelSimple
+# create a BeliefModel
 beliefModel = BeliefModel([M.prior_samples; samples], bounds)
 ```
-"""
-function BeliefModel(samples, prior_samples, bounds; kwargs...)
-    # create a simple belief model for the current samples
-    current = BeliefModel(samples, bounds; kwargs...)
-    isempty(prior_samples) && return current
-    # create a simple belief model for the prior current samples combined
-    combined = BeliefModel([prior_samples; samples], bounds; kwargs...)
-    # split is a combination of the two
-    return BeliefModelSplit(current, combined)
-end
-
-"""
-$(TYPEDSIGNATURES)
-
-Creates and returns a BeliefModelSimple with hyperparameters trained and
-conditioned on the samples given.
-
-A noise standard deviation can optionally be passed in either as a single scalar
-value for all samples or a vector of values, one for each sample.
 """
 function BeliefModel(samples, bounds::Bounds; N=maximum(s->s.x[2], samples),
                      kernel=multiKernel, means=(use=true, learned=true),
@@ -140,7 +86,7 @@ function BeliefModel(samples, bounds::Bounds; N=maximum(s->s.x[2], samples),
     fx = buildPriorGP(X, Y_errs, kernel, θ)
     f_post = posterior(fx, Y_vals) # gp conditioned on training samples
 
-    return BeliefModelSimple(f_post, N, kernel, θ)
+    return BeliefModel(f_post, N, kernel, θ)
 end
 
 # Produce a belief model with pre-chosen hyperparams
@@ -151,7 +97,7 @@ function BeliefModel(samples, θ; N=maximum(s->s.x[2], samples),
     fx = buildPriorGP(X, Y_errs, kernel, θ)
     f_post = posterior(fx, Y_vals) # gp conditioned on training samples
 
-    return BeliefModelSimple(f_post, N, kernel, θ)
+    return BeliefModel(f_post, N, kernel, θ)
 end
 
 function extractSampleVals(samples)
@@ -200,39 +146,17 @@ X = [([.1, .2], 1),
 μ, σ = beliefModel(X) # result: [μ1, μ2], [σ1, σ2]
 ```
 """
-function (beliefModel::BeliefModelSimple)(x::SampleInput; kwargs...)
+function (beliefModel::BeliefModel)(x::SampleInput; kwargs...)
     return only.(beliefModel([x]); kwargs...)
 end
 
-function (beliefModel::BeliefModelSimple)(X::AbstractArray{SampleInput})
+function (beliefModel::BeliefModel)(X::AbstractArray{SampleInput})
     μ, σ² = reshape.(mean_and_var(beliefModel.gp, vec(X)), Ref(size(X)))
     return μ, .√clamp!(σ², 0.0, Inf) # avoid negative variances
 end
 
-function fullCov(beliefModel::BeliefModelSimple, X::AbstractArray{SampleInput})
+function fullCov(beliefModel::BeliefModel, X::AbstractArray{SampleInput})
     return cov(beliefModel.gp, X) + I*√eps() # avoid negative eigenvalues
-end
-
-"""
-Inputs:
-- `X`: a single sample input or an array of multiple
-- `full_cov`: (optional) if this is true, returns the full covariance matrix
-  in place of the vector of standard deviations
-
-Outputs:
-- `μ, σ`: a pair of expected value(s) and uncertainty(s) for the given point(s)
-
-# Examples
-```julia
-X = [([.1, .2], 1),
-     ([.2, .1], 2)]
-μ, σ = beliefModel(X) # result: [μ1, μ2], [σ1, σ2]
-```
-"""
-function (beliefModel::BeliefModelSplit)(X::Union{SampleInput, AbstractArray{SampleInput}}; full_cov=false)
-    μ, _ = beliefModel.combined(X; full_cov)
-    _, σ = beliefModel.current(X; full_cov)
-    return μ, σ
 end
 
 """
@@ -313,11 +237,11 @@ function _logpdf(m, C_mat, Y::AbstractVecOrMat{<:Real})
 end
 
 
-function meanDerivAndVar(beliefModel::BeliefModelSimple, x::SampleInput)
+function meanDerivAndVar(beliefModel::BeliefModel, x::SampleInput)
     return only.(meanDerivAndVar(beliefModel, [x]))
 end
 
-function meanDerivAndVar(beliefModel::BeliefModelSimple, X::AbstractArray{SampleInput})
+function meanDerivAndVar(beliefModel::BeliefModel, X::AbstractArray{SampleInput})
     Xv = vec(X)
     dims = size(X)
     f = beliefModel.gp
@@ -336,12 +260,12 @@ function meanDerivNorm(X, Xm, C_xcond_x, ℓ, α)
     return sqrt.(sum(arr.^2 for arr in m_deriv_dims))
 end
 
-function outputCovMat(bm::BeliefModelSimple{typeof(multiKernel)})
+function outputCovMat(bm::BeliefModel{typeof(multiKernel)})
     σn = bm.θ.σn isa AbstractArray ? bm.θ.σn : fill(bm.θ.σn, bm.N)
     return fullyConnectedCovMat(bm.θ.σ) .+ Diagonal(σn.^2)
 end
 
-function outputCovMat(bm::BeliefModelSimple{typeof(mtoKernel)})
+function outputCovMat(bm::BeliefModel{typeof(mtoKernel)})
     σn = bm.θ.σn isa AbstractArray ? bm.θ.σn : fill(bm.θ.σn, bm.N)
     return manyToOneCovMat(bm.θ.σ) .+ Diagonal(σn.^2)
 end
@@ -353,7 +277,7 @@ outputCorMat(beliefModel::BeliefModel)
 
 Gives the correlation matrix between all outputs.
 """
-function outputCorMat(bm::BeliefModelSimple)
+function outputCorMat(bm::BeliefModel)
     cov_mat = outputCovMat(bm)
     vars = diag(cov_mat)
     R = @. cov_mat / √(vars * vars') # broadcast shorthand
@@ -361,10 +285,6 @@ function outputCorMat(bm::BeliefModelSimple)
     R[idxs,:] .= NaN
     R[:,idxs] .= NaN
     return R
-end
-
-function outputCorMat(bm::BeliefModelSplit)
-    return outputCorMat(bm.combined)
 end
 
 end
