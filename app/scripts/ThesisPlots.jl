@@ -1,7 +1,7 @@
 #* packages and functions
 
 using InformativeSampling
-using .Maps, .Missions, .BeliefModels, .Samples, .ROSInterface, .Kernels
+using .Maps, .Missions, .BeliefModels, .Samples, .ROSInterface, .Kernels, .SampleCosts
 
 using InformativeSamplingUtils
 using .DataIO
@@ -19,7 +19,7 @@ function createColorbarTicks((l, h))
     ticks = [ceil(l, sigdigits=3),
         round((h - l) / 2 + l, sigdigits=3),
         floor(h, sigdigits=3)]
-    return ticks, [@sprintf("%.1f", x) for x in ticks]
+    return ticks, [@sprintf("%.1g", x) for x in ticks]
 end
 
 """
@@ -57,6 +57,12 @@ end
 
 num_samples = 30
 
+# NOTE: crop of depth image went from 5% to 15% from each side
+# NOTE: ground depth tuning went from 1082 to 1012 on Apr 23 2024 (diff = 70)
+# NOTE: ground depth tuning went from 1012 to 962 for new bracket on Jun 7 2024
+
+depth_diff = 70 # remove this much from each height
+
 
 #* load mission
 dir = "new_syn/syn_multiKernel_zeromean_noises_fullpdf_nodrop_OnlyVar"
@@ -85,11 +91,15 @@ x2 = getindex.(xp, 2)
 pred_range = (Inf, -Inf)
 err_range = (Inf, -Inf)
 
-for bm in beliefs
+for bm in @view beliefs[5:5:end]
     axs, points = generateAxes(occ)
-    pred, err = bm(tuple.(vec(points), 1))
-    global pred_range = (min(minimum(pred), pred_range[1]), max(maximum(pred), pred_range[2]))
-    global err_range = (min(minimum(err), err_range[1]), max(maximum(err), err_range[2]))
+    pred_map, err_map = bm(tuple.(vec(points), 1))
+    mask = vec(.! mission.occupancy)
+
+    global pred_range = (min(minimum(pred_map[mask]), pred_range[1]),
+                         max(maximum(pred_map[mask]), pred_range[2]))
+    global err_range = (min(minimum(err_map[mask]), err_range[1]),
+                        max(maximum(err_map[mask]), err_range[2]))
 end
 
 err_range = (0.0, err_range[2])
@@ -210,24 +220,22 @@ end
 
 pyplot()
 
-axs, _ = generateAxes(mission.sampler[1])
-
-p01 = heatmap(axs..., mission.sampler[1]';
-    title="Ground Truth",
-    framestyle=:none,
-    titlefontsize=19,
-    colorbar_tickfontsize=17,
-)
-
-p0r = heatmap(axs..., mission.sampler[1]';
-    title="",
-    framestyle=:none,
-    titlefontsize=19,
-    colorbar_tickfontsize=17,
-)
-
 i=5
 plots = map(5:5:length(beliefs)) do i
+    axs, _ = generateAxes(mission.sampler[1])
+
+    gt_title = i == 5 ? "Ground Truth" : ""
+    p0 = heatmap(axs..., mission.sampler[1]';
+        title=gt_title,
+        ylabel="$i Samples",
+        framestyle=:none,
+        # aspect_ratio=:equal,
+        right_margin=-10mm,
+        titlefontsize=19,
+        colorbar_tickfontsize=17,
+        labelfontsize=17,
+    )
+
     bm = beliefs[i]
 
     axs, points = generateAxes(occ)
@@ -236,40 +244,106 @@ plots = map(5:5:length(beliefs)) do i
     pred_map[occ] .= NaN
     err_map[occ] .= NaN
 
-    pred_title = i==5 ? "Predicted Values" : ""
+    pred_title = i == 5 ? "Predicted Values" : ""
     p1 = heatmap(axs..., pred_map';
         title=pred_title,
         framestyle=:none,
+        # aspect_ratio=:equal,
+        right_margin=-10mm,
         titlefontsize=19,
         colorbar_tickfontsize=17,
         clim=(0, 1),
     )
-    scatter!(x1[1:i], x2[1:i];
+    scatter!(x1[1:i-1], x2[1:i-1];
         label=false,
         color=:green,
-        markersize=8)
+        markersize=6)
+    scatter!(x1[i:i], x2[i:i];
+        label=false,
+        color=:royalblue,
+        shape=:utriangle,
+        markersize=12)
+    if i < num_samples
+        scatter!(x1[i+1:i+1], x2[i+1:i+1],
+            label=false,
+            color=:red,
+            shape=:xcross,
+            markersize=10)
+    end
 
-    err_title = i==5 ? "Uncertainties" : ""
+    err_title = i == 5 ? "Uncertainties" : ""
     p2 = heatmap(axs..., err_map';
         title=err_title,
         framestyle=:none,
+        # aspect_ratio=:equal,
+        right_margin=-10mm,
         titlefontsize=19,
         colorbar_tickfontsize=17,
         clim=err_range,
         # colorbar_ticks=err_ticks,
-        right_margin=-5mm,
     )
-    scatter!(x1[1:i], x2[1:i];
+    scatter!(x1[1:i-1], x2[1:i-1];
         label=false,
         color=:green,
-        markersize=8)
+        markersize=6)
+    scatter!(x1[i:i], x2[i:i];
+        label=false,
+        color=:royalblue,
+        shape=:utriangle,
+        markersize=12)
+    if i < num_samples
+        scatter!(x1[i+1:i+1], x2[i+1:i+1],
+            label=false,
+            color=:red,
+            shape=:xcross,
+            markersize=10)
+    end
 
-    return (i==5 ? p01 : p0r), p1, p2
+    sampleCost = mission.sampleCostType(
+        occ, samples[1:i], bm, quantities, mission.weights
+    )
+    obj_map = -sampleCost.(points)
+
+    lessNotInf = x -> x === -Inf ? Inf : x
+    greaterNotInf = x -> x === Inf ? -Inf : x
+
+    obj_range = (0.0, maximum(greaterNotInf, obj_map))
+    obj_ticks = createColorbarTicks(obj_range)
+
+    obj_title = i == 5 ? "Sample Utility" : ""
+    p3 = heatmap(axs..., obj_map';
+        title=obj_title,
+        framestyle=:none,
+        # aspect_ratio=:equal,
+        right_margin=-10mm,
+        titlefontsize=19,
+        colorbar_tickfontsize=17,
+        clim=obj_range,
+        colorbar_ticks=obj_ticks,
+    )
+    scatter!(x1[1:i-1], x2[1:i-1];
+        label=false,
+        color=:green,
+        markersize=6)
+    scatter!(x1[i:i], x2[i:i];
+        label=false,
+        color=:royalblue,
+        shape=:utriangle,
+        markersize=12)
+    if i < num_samples
+        scatter!(x1[i+1:i+1], x2[i+1:i+1],
+            label=false,
+            color=:red,
+            shape=:xcross,
+            markersize=10)
+    end
+
+    return p0, p1, p2, p3
 end
 
 p = plot(Iterators.flatten(plots)...,
-    layout=(6, 3),
-    size=(1000, 1300))
+    layout=(6, 4),
+    size=(1100, 1300))
 
 savefig(output_dir * "thesis/syn_000/full_run_comparison.png")
 
@@ -291,7 +365,9 @@ plot(
     tickfontsize=13,
     labelfontsize=17,
     linewidth=3,
-    size=(1050,750),
+    color=2,
+    size=(700,500),
+    dpi=150
 )|>display
 
 savefig(output_dir * "thesis/sample_scaling.png")
@@ -304,11 +380,14 @@ plot(
     ylabel="Scaling Factor",
     framestyle=:box,
     legend=false,
+    ylim=(-0.03,1.03),
     titlefontsize=19,
     tickfontsize=13,
     labelfontsize=17,
     linewidth=3,
-    size=(1050,750),
+    color=2,
+    size=(700,500),
+    dpi=150
 )|>display
 
 savefig(output_dir * "thesis/distance_scaling.png")
@@ -323,6 +402,78 @@ surface(
     zlabel="Scaling",
     camera = (60, 20)
 )|>display
+
+#* distance to uncertainty
+
+gr()
+
+uncertainty = d -> σf^2*(1 - σf^2*exp(-(d/σl)^2)/(σf^2+σn^2))
+error = d -> (1 - σf^2*exp(-(d/σl)^2/2)/(σf^2+σn^2))^2*(y - μf)^2
+combined = d -> error(d) + α*uncertainty(d)
+d_scale = d -> 1/(1 + (d/d0)^2)
+utility = d -> combined(d)*d_scale(d)
+
+σf = √.5+.05; σn = 0; d0 = 3; σl = 1
+y = √.5-.05; μf = 0; α = 1
+plot(
+    [uncertainty, error, combined], 0, 2d0,
+    title="Uncertainty vs Distance",
+    xlabel="Distance/length-scale",
+    ylabel="Uncertainty",
+    labels=["GP posterior variance" "nearest-sample difference" "combined uncertainty"],
+    framestyle=:box,
+    titlefontsize=19,
+    tickfontsize=13,
+    labelfontsize=17,
+    legend=:bottomright,
+    legendfontsize=15,
+    linewidth=3,
+    color=[4 5 1],
+    size=(700,500),
+    dpi=150
+)|>display
+
+savefig(output_dir * "thesis/uncertainty_vs_distance.png")
+
+# uncertainty and change in uncertainty vs distance
+p = plot([d->(1-exp(-d^2)),
+          d->2d*exp(-d^2),
+          d->(1-exp(-d^2))/(1+(d/10)^2)], 0, 5)
+display(p)
+
+# # uncertainty and change in uncertainty vs distance for log
+# p = plot([d->log(1-exp(-d^2)),
+#           d->log(1-exp(-d^2))/(1+(d/10)^2)], 0, 5)
+# display(p)
+#
+# d->2d*exp(-d^2)/(1-exp(-d^2))
+
+σf = √.5+.05; σn = 0; d0 = 3; σl = 1
+y = √.5-.05; μf = 0; α = 1
+plot(
+    [combined, d_scale, utility], 0, 2d0,
+    title="Effect of Distance Scaling on Utility",
+    xlabel="Distance/length-scale",
+    ylabel="Sample Utility",
+    framestyle=:box,
+    labels=["usual utility" "distance scaling" "scaled utility"],
+    titlefontsize=19,
+    tickfontsize=13,
+    labelfontsize=17,
+    legend=(.66,.77),
+    legendfontsize=15,
+    linewidth=3,
+    size=(700,500),
+    dpi=150
+)
+vline!(
+    [d0],
+    color=:grey,
+    line=:dash,
+    label="region width"
+)|>display
+
+savefig(output_dir * "thesis/distance_scaled_utility.png")
 
 #* load mission
 dir = "new_syn/syn_multiKernel_zeromean_noises_fullpdf_nodrop_OnlyVar"
@@ -383,10 +534,15 @@ pred_plt = heatmap(axs..., pred_map',
     colorbar_tickfontsize=18,
     clim=(0, 1),
 )
-scatter!(x1[1:i], x2[1:i];
+scatter!(x1[1:i-1], x2[1:i-1];
     label=false,
     color=:green,
     markersize=8)
+scatter!(x1[i:i], x2[i:i];
+    label=false,
+    color=:royalblue,
+    shape=:utriangle,
+    markersize=14)
 
 err_plt = heatmap(axs..., err_map',
     title="GP Variance",
@@ -395,10 +551,15 @@ err_plt = heatmap(axs..., err_map',
     colorbar_tickfontsize=18,
     # clim=(0, 1),
 )
-scatter!(x1[1:i], x2[1:i];
+scatter!(x1[1:i-1], x2[1:i-1];
     label=false,
     color=:green,
     markersize=8)
+scatter!(x1[i:i], x2[i:i];
+    label=false,
+    color=:royalblue,
+    shape=:utriangle,
+    markersize=14)
 
 weights = (1, 1e1, 1, 1)
 
@@ -419,10 +580,15 @@ der_plt = heatmap(axs..., data',
     colorbar_tickfontsize=18,
     # clim=(0, 1),
 )
-scatter!(x1[1:i], x2[1:i];
+scatter!(x1[1:i-1], x2[1:i-1];
     label=false,
     color=:green,
     markersize=8)
+scatter!(x1[i:i], x2[i:i];
+    label=false,
+    color=:royalblue,
+    shape=:utriangle,
+    markersize=14)
 scatter!([new_loc[1]], [new_loc[2]],
     label=false,
     color=:red,
@@ -446,10 +612,15 @@ eigf_plt = heatmap(axs..., data',
     colorbar_tickfontsize=18,
     # clim=(0, 1),
 )
-scatter!(x1[1:i], x2[1:i];
+scatter!(x1[1:i-1], x2[1:i-1];
     label=false,
     color=:green,
     markersize=8)
+scatter!(x1[i:i], x2[i:i];
+    label=false,
+    color=:royalblue,
+    shape=:utriangle,
+    markersize=14)
 scatter!([new_loc[1]], [new_loc[2]],
     label=false,
     color=:red,
@@ -811,7 +982,7 @@ sat_img = load(maps_dir * "satellite_50x50.tif")
 x0, y0, w, h = 10 .* (20, 50-15, 15, 15)
 x, y = (x0 .+ [0,w,w,0,0], y0 .+ [0,0,h,h,0])
 
-file_name = output_dir * "pye_farm_trial2/packaged/50x50_dense_grid/avg_height_belief.csv"
+file_name = output_dir * "pye_farm_trial2/packaged/50x50_dense_grid/avg_height.csv"
 pred_map = imgToMap(readdlm(file_name, ','), bounds)
 
 dims = size(pred_map)
@@ -831,10 +1002,10 @@ p1 = plot(sat_img;
           aspect_ratio=:equal,
           # left_margin=-10mm
           )
-plot!(x, y,
-      legend=false,
-      linewidth=3
-      )
+# plot!(x, y,
+#       legend=false,
+#       linewidth=3
+#       )
 scatter!([], [];
          label=false,
          markersize=5)
@@ -844,15 +1015,15 @@ p2 = heatmap(elevMap';
              colorbar_tickfontsize=14,
              c=:oslo
              )
-plot!(x./10, 50 .- y./10,
-      legend=false,
-      linewidth=3
-      )
+# plot!(x./10, 50 .- y./10,
+#       legend=false,
+#       linewidth=3
+#       )
 scatter!([], [];
          label=false,
          markersize=5)
-p3 = heatmap(axs..., pred_map';
-             title="Average Height (mm)",
+p3 = heatmap(pred_map';
+             title="Height (mm)",
              aspect_ratio=:equal,
              colorbar_tickfontsize=14,
              right_margin=-5Plots.mm,
@@ -879,8 +1050,13 @@ gr()
 
 width, height = 1200, 800
 
+m = 10
+n = 25
+s = round.(Int, range(1, n, m))
 
-gt_dir = output_dir * "pye_farm_trial2/packaged/50x50_dense_grid/"
+dir_name = "pye_farm_trial2"
+
+gt_dir = output_dir * dir_name * "/packaged/50x50_dense_grid/"
 
 file_name = gt_dir * "avg_height.csv"
 gt_map = imgToMap(readdlm(file_name, ','))
@@ -891,8 +1067,9 @@ gt_pred = imgToMap(readdlm(file_name, ','))
 file_name = gt_dir * "avg_height_uncertainty.csv"
 gt_err = imgToMap(readdlm(file_name, ','))
 
+gt_mean = mean(gt_map)
 
-dir_name = "pye_farm_trial2"
+
 dir = output_dir * dir_name * "/packaged/"
 extent = "50x50"
 runs = dir * extent .* ["", "_prior", "_dist", "_prior_dist"]
@@ -925,14 +1102,14 @@ end
 
 p_errs = plot(
     maes,
-    title="Prediction Errors",
+    title="Mean Prediction Errors",
     xlabel="Sample Number",
-    ylabel="Mean Absolute Map Error",
-    labels=["Basic" "With Prior" "Distance Scaling" "Prior and Distance"],
+    ylabel="Mean Absolute Map Error (mm)",
+    labels=["No Prior or Scaling" "With Prior" "Distance Scaling" "Prior and Scaling"],
     seriescolors=[:black RGB(0.1,0.7,0.2) :black RGB(0.1,0.7,0.2)],
-    markers=[:utriangle :utriangle :square :square],
+    markers=[:circle :circle :square :square],
     framestyle=:box,
-    # ylim=(0,.4),
+    ylim=(27,40),
     titlefontsize=24,
     markersize=8,
     tickfontsize=15,
@@ -962,12 +1139,12 @@ p_max_errs = plot(
     mxaes,
     title="Max Prediction Errors",
     xlabel="Sample Number",
-    ylabel="Max Absolute Map Error",
-    labels=["Basic" "With Prior" "Distance Scaling" "Prior and Distance"],
+    ylabel="Max Absolute Map Error (mm)",
+    labels=["No Prior or Scaling" "With Prior" "Distance Scaling" "Prior and Scaling"],
     seriescolors=[:black RGB(0.1,0.7,0.2) :black RGB(0.1,0.7,0.2)],
-    markers=[:utriangle :utriangle :square :square],
+    markers=[:circle :circle :square :square],
     framestyle=:box,
-    # ylim=(0,.4),
+    ylim=(110,230),
     titlefontsize=24,
     markersize=8,
     tickfontsize=15,
@@ -1000,12 +1177,12 @@ p_dists = plot(
     dists,
     title="Distance Traveled",
     xlabel="Sample Number",
-    ylabel="Cumulative Distance",
-    labels=["Basic" "With Prior" "Distance Scaling" "Prior and Distance"],
+    ylabel="Cumulative Distance (m)",
+    labels=["No Prior or Scaling" "With Prior" "Distance Scaling" "Prior and Scaling"],
     seriescolors=[:black RGB(0.1,0.7,0.2) :black RGB(0.1,0.7,0.2)],
-    markers=[:utriangle :utriangle :square :square],
+    markers=[:circle :circle :square :square],
     framestyle=:box,
-    # ylim=(0,25),
+    # ylim=(-30,1150),
     titlefontsize=24,
     markersize=8,
     tickfontsize=15,
@@ -1034,7 +1211,7 @@ end
 atimes = stimes ./ num_samples
 
 p_comp = bar(
-    ["Basic", "With Prior", "Distance Scaling", "Prior and Distance"],
+    ["No Prior or Scaling", "With Prior", "Distance Scaling", "Prior and Scaling"],
     atimes,
     xlabel="Sample Number",
     ylabel="Average Time per Sample (s)",
@@ -1055,12 +1232,15 @@ savefig(save_dir * "sample_times.png")
 
 #*** correlation plot
 
-runs_with_prior = dir * extent .* ["_prior", "_prior_dist"]
+runs_with_prior = [
+    output_dir * "pye_farm_trial2/packaged/" * extent .* ["_prior", "_prior_dist"]...,
+    output_dir * "pye_farm_trial_orig/packaged/" * "30samples_" * extent .* ["_priors"]...
+]
 
 # correlations
 cors = zeros(num_samples, length(runs_with_prior))
 for (j, run) in pairs(runs_with_prior)
-    file_name = run * "/correlations.txt"
+    file_name = run * "/correlations_new.txt"
     for (i, line) in enumerate(eachline(file_name))
         cors[i,j] = only(eval(Meta.parse(line))[2:end])
     end
@@ -1069,7 +1249,7 @@ end
 # full dense correlation
 bounds = (lower=[0.0, 0.0], upper=[50.0, 50.0])
 elev_img = Float64.(gray.(load(maps_dir * "dem_$(extent).tif")))
-elevMap = imgToMap((elev_img.-minimum(elev_img)).*100, bounds)
+elevMap = imgToMap(elev_img, bounds)
 
 axs, points = generateAxes(bounds, (25, 25))
 elev_map = elevMap.(points)
@@ -1077,12 +1257,12 @@ gt_cor = cor(vec(elev_map), vec(gt_map))
 
 p_cors = plot(
     cors,
-    title="Estimated Correlation Between Plant Height and Elevation",
-    labels=["Without Distance Scaling" "With Distance Scaling"],
+    title="Correlation Between Pasture Height and Elevation",
+    labels=["Without Distance Scaling" "With Distance Scaling" "Using Zero Mean"],
     xlabel="Sample Number",
-    ylabel="Correlation",
-    seriescolors=[RGBA(0.4, 0.2, 0.1, 0.5) RGBA(0.4, 0.2, 0.1, 1.0)],
-    markers=[:utriangle :square],
+    ylabel="Estimated Correlation",
+    seriescolors=[RGB(0.1,0.7,0.2) RGB(0.1,0.7,0.2) :darkred],
+    markers=[:circle :square],
     framestyle=:box,
     ylim=(-1,1),
     titlefontsize=24,
@@ -1101,16 +1281,11 @@ hline!([gt_cor],
 )
 gui()
 
-savefig(save_dir * "correlations.png")
+savefig(save_dir * "correlations_new.png")
 
 #*** final height maps
 
 #**** set all ranges
-
-# NOTE: crop of depth image went from 5% to 15% from each side
-# NOTE: ground depth went from 1082 to 962 = 120 mm difference
-
-depth_diff = 120 # remove this much from each height
 
 t_extent = "50x50"
 
@@ -1122,14 +1297,11 @@ err_range = extrema(gt_err)
 
 all_runs = [
                output_dir * "pye_farm_trial2" * "/packaged/" * t_extent .* ["", "_prior", "_dist", "_prior_dist"],
-               output_dir * "pye_farm_trial_orig" * "/packaged/" * "30samples_" * t_extent .* ["", "_priors"]
+               # output_dir * "pye_farm_trial_adjust" * "/packaged/" * "30samples_" * t_extent .* ["", "_priors"]
            ] |> Iterators.flatten |> collect
 
-for run in all_runs
+for run in runs
     pred = imgToMap(readdlm(run * "/avg_height_belief.csv", ','), boundsn[t_extent])
-    if contains(run, "30samples")
-        pred .-= depth_diff
-    end
     err = imgToMap(readdlm(run * "/avg_height_uncertainty.csv", ','), boundsn[t_extent])
     global pred_range = (min(minimum(pred), pred_range[1]),
                          max(maximum(pred), pred_range[2]))
@@ -1247,7 +1419,7 @@ scatter!([], [];
          color=:green,
          markersize=6)
 
-ylabels = ["Basic", "With Prior", "Distance Scaling", "Prior and Distance"]
+ylabels = ["No Prior or Scaling", "With Prior", "Distance Scaling", "Prior and Scaling"]
 
 i = 1
 run = runs[i]
@@ -1293,6 +1465,75 @@ p = plot(p01, p02, Iterators.flatten(plots)...,
 
 savefig(save_dir * "final_maps/combined.png")
 
+#**** final example map
+
+pyplot()
+
+axs, _ = generateAxes(boundsn[extent], size(gt_pred))
+
+i = 1
+run = runs[i]
+run_data = full_data[i]
+
+pred_map, err_map = run_data[1]
+
+p1 = heatmap(axs..., pred_map';
+    title="",
+    labelfontsize=19,
+    aspect_ratio=:equal,
+    framestyle=:none,
+    color=:YlGn,
+    titlefontsize=19,
+    colorbar_tickfontsize=17,
+    colorbar=false,
+    margin=0mm,
+    size=(400, 400)
+)
+
+savefig(output_dir * "thesis/example_field_map$i.png")
+
+i = 2
+run = runs[i]
+run_data = full_data[i]
+
+pred_map, err_map = run_data[1]
+
+p1 = heatmap(axs..., reverse(-pred_map, dims=1)';
+    title="",
+    labelfontsize=19,
+    aspect_ratio=:equal,
+    framestyle=:none,
+    color=:Purples,
+    titlefontsize=19,
+    colorbar_tickfontsize=17,
+    colorbar=false,
+    margin=0mm,
+    size=(400, 400)
+)
+
+savefig(output_dir * "thesis/example_field_map$i.png")
+
+i = 3
+run = runs[i]
+run_data = full_data[i]
+
+pred_map, err_map = run_data[1]
+
+p1 = heatmap(axs..., -pred_map';
+    title="",
+    labelfontsize=19,
+    aspect_ratio=:equal,
+    framestyle=:none,
+    color=:Blues,
+    titlefontsize=19,
+    colorbar_tickfontsize=17,
+    colorbar=false,
+    margin=0mm,
+    size=(400, 400)
+)
+
+savefig(output_dir * "thesis/example_field_map$i.png")
+
 #** 1st
 
 gr()
@@ -1300,7 +1541,9 @@ gr()
 width, height = 1200, 800
 
 
-gt_dir = output_dir * "pye_farm_trial2/packaged/50x50_dense_grid/"
+dir_name = "pye_farm_trial_adjust"
+
+gt_dir = output_dir * dir_name * "/packaged/100samples_50x50_grid/"
 
 file_name = gt_dir * "avg_height.csv"
 gt_map = imgToMap(readdlm(file_name, ','))
@@ -1311,12 +1554,13 @@ gt_pred = imgToMap(readdlm(file_name, ','))
 file_name = gt_dir * "avg_height_uncertainty.csv"
 gt_err = imgToMap(readdlm(file_name, ','))
 
+gt_mean = mean(gt_map)
 
-dir_name = "pye_farm_trial_orig"
+
 dir = output_dir * dir_name * "/packaged/"
 extent = "50x50"
 runs = dir * "30samples_" * extent .* ["", "_priors"]
-save_dir = output_dir * "thesis/field_trial_1/$(extent)/"
+save_dir = output_dir * "thesis/field_trial_1_adjust/$(extent)/"
 mkpath(save_dir)
 
 boundsn = Dict()
@@ -1335,10 +1579,10 @@ boundsn["50x50"] = (; lower, upper)
 
 maes = zeros(num_samples, length(runs))
 for (j, run) in pairs(runs)
-    frames = readdir(run * "/avg_height_beliefs_25x25", join=true)
+    frames = readdir(run * "/avg_height_beliefs_10x10", join=true)
     for (i, frame) in pairs(frames)
         data_map = imgToMap(readdlm(frame, ','))
-        mean_err = mean(abs.(data_map .- depth_diff .- gt_map))
+        mean_err = mean(abs.(data_map .- gt_map))
         maes[i,j] = mean_err
     end
 end
@@ -1348,11 +1592,11 @@ p_errs = plot(
     title="Prediction Errors",
     xlabel="Sample Number",
     ylabel="Mean Absolute Map Error",
-    labels=["Without Prior 1" "With Prior" "Without Prior 2"],
+    labels=["Without Prior" "With Prior" "Without Prior 2"],
     seriescolors=[:black RGB(0.1,0.7,0.2) :black RGB(0.1,0.7,0.2)],
     markers=[:utriangle :utriangle :square :square],
     framestyle=:box,
-    # ylim=(0,.4),
+    ylim=(23,37),
     titlefontsize=24,
     markersize=8,
     tickfontsize=15,
@@ -1370,10 +1614,10 @@ savefig(save_dir * "mean_errors.png")
 
 mxaes = zeros(num_samples, length(runs))
 for (j, run) in pairs(runs)
-    frames = readdir(run * "/avg_height_beliefs_25x25", join=true)
+    frames = readdir(run * "/avg_height_beliefs_10x10", join=true)
     for (i, frame) in pairs(frames)
         data_map = imgToMap(readdlm(frame, ','))
-        max_err = maximum(abs.(data_map .- depth_diff .- gt_map))
+        max_err = maximum(abs.(data_map .- gt_map))
         mxaes[i,j] = max_err
     end
 end
@@ -1387,12 +1631,13 @@ p_max_errs = plot(
     seriescolors=[:black RGB(0.1,0.7,0.2) :black RGB(0.1,0.7,0.2)],
     markers=[:utriangle :utriangle :square :square],
     framestyle=:box,
-    # ylim=(0,.4),
+    # ylim=(110,230),
     titlefontsize=24,
     markersize=8,
     tickfontsize=15,
     labelfontsize=20,
     legendfontsize=16,
+    legend=:topright,
     margin=5mm,
     linewidth=4,
     size=(width, height)
@@ -1420,12 +1665,12 @@ p_dists = plot(
     dists,
     title="Distance Traveled",
     xlabel="Sample Number",
-    ylabel="Cumulative Distance",
+    ylabel="Cumulative Distance (m)",
     labels=["Without Prior" "With Prior" "Without Prior 2"],
     seriescolors=[:black RGB(0.1,0.7,0.2) :black RGB(0.1,0.7,0.2)],
     markers=[:utriangle :utriangle :square :square],
     framestyle=:box,
-    # ylim=(0,25),
+    ylim=(-30,1150),
     titlefontsize=24,
     markersize=8,
     tickfontsize=15,
@@ -1455,7 +1700,7 @@ end
 # full dense correlation
 bounds = (lower=[0.0, 0.0], upper=[50.0, 50.0])
 elev_img = Float64.(gray.(load(maps_dir * "dem_$(extent).tif")))
-elevMap = imgToMap((elev_img.-minimum(elev_img)).*100, bounds)
+elevMap = imgToMap(elev_img, bounds)
 
 axs, points = generateAxes(bounds, (25, 25))
 elev_map = elevMap.(points)
@@ -1494,7 +1739,7 @@ savefig(save_dir * "correlations.png")
 #**** load all data
 
 full_data = map(runs) do run
-    final_belief = imgToMap(readdlm(run * "/avg_height_belief.csv", ',') .- depth_diff, boundsn[extent])
+    final_belief = imgToMap(readdlm(run * "/avg_height_belief.csv", ','), boundsn[extent])
     final_uncertainty = imgToMap(readdlm(run * "/avg_height_uncertainty.csv", ','), boundsn[extent])
 
     samples = map(eachline(run * "/samples.txt")) do line
@@ -1644,11 +1889,226 @@ p = plot(p01, p02, Iterators.flatten(plots)...,
 
 savefig(save_dir * "final_maps/combined.png")
 
+#* full run comparison
+
+pyplot()
+
+j = 1
+run = runs[j]
+name = run[findlast('/', run)+1:end]
+
+samples = map(eachline(run * "/samples.txt")) do line
+    Sample(eval(Meta.parse(line))...)
+end
+filter!(s -> s.x[2] == 1, samples) # only looking at height
+xp = [s.x[1] for s in samples]
+x1 = getindex.(xp, 1)
+x2 = getindex.(xp, 2)
+
+pred_range = extrema(gt_pred)
+
+err_max = mapreduce(max, 5:5:num_samples) do i
+    si = lpad(i,2,'0')
+    err_map = imgToMap(readdlm(run * "/avg_height_uncertainties/$(si).csv", ','), boundsn[extent])
+    maximum(err_map)
+end
+err_range = (0.0, err_max)
+
+pred_ticks = createColorbarTicks(pred_range)
+err_ticks = createColorbarTicks(err_range)
+
+i=20
+plots = map(5:5:num_samples) do i
+
+    si = lpad(i,2,'0')
+    pred_map = imgToMap(readdlm(run * "/avg_height_beliefs/$(si).csv", ','), boundsn[extent])
+    err_map = imgToMap(readdlm(run * "/avg_height_uncertainties/$(si).csv", ','), boundsn[extent])
+    obj_map = imgToMap(readdlm(run * "/sample_utilities/$(si).csv", ','), boundsn[extent])
+
+    axs, _ = generateAxes(pred_map)
+
+    gt_title = i == 5 ? "Dense Sampling" : ""
+    p0 = heatmap(axs..., gt_pred';
+        title=gt_title,
+        ylabel="$i Samples",
+        framestyle=:none,
+        # aspect_ratio=:equal,
+        right_margin=-10mm,
+        titlefontsize=19,
+        colorbar_tickfontsize=17,
+        labelfontsize=17,
+        clim=pred_range,
+    )
+
+    pred_title = i == 5 ? "Predicted Values" : ""
+    p1 = heatmap(axs..., pred_map';
+        title=pred_title,
+        framestyle=:none,
+        # aspect_ratio=:equal,
+        right_margin=-10mm,
+        titlefontsize=19,
+        colorbar_tickfontsize=17,
+        clim=pred_range,
+    )
+    scatter!(x1[1:i-1], x2[1:i-1];
+        label=false,
+        color=:green,
+        markersize=7)
+    scatter!(x1[i:i], x2[i:i];
+        label=false,
+        color=:royalblue,
+        shape=:utriangle,
+        markersize=12)
+    if i < num_samples
+        scatter!(x1[i+1:i+1], x2[i+1:i+1],
+            label=false,
+            color=:red,
+            shape=:xcross,
+            markersize=10)
+    end
+
+    err_title = i == 5 ? "Uncertainties" : ""
+    p2 = heatmap(axs..., err_map';
+        title=err_title,
+        framestyle=:none,
+        # aspect_ratio=:equal,
+        right_margin=-10mm,
+        titlefontsize=19,
+        colorbar_tickfontsize=17,
+        clim=(0, 43),
+        # colorbar_ticks=err_ticks,
+    )
+    scatter!(x1[1:i-1], x2[1:i-1];
+        label=false,
+        color=:green,
+        markersize=7)
+    scatter!(x1[i:i], x2[i:i];
+        label=false,
+        color=:royalblue,
+        shape=:utriangle,
+        markersize=12)
+    if i < num_samples
+        scatter!(x1[i+1:i+1], x2[i+1:i+1],
+            label=false,
+            color=:red,
+            shape=:xcross,
+            markersize=10)
+    end
+
+    lessNotInf = x -> x === -Inf ? Inf : x
+    greaterNotInf = x -> x === Inf ? -Inf : x
+
+    obj_range = (0.0, maximum(greaterNotInf, obj_map))
+    obj_ticks = createColorbarTicks(obj_range)
+
+    obj_title = i == 5 ? "Sample Utility" : ""
+    p3 = heatmap(axs..., obj_map';
+        title=obj_title,
+        framestyle=:none,
+        # aspect_ratio=:equal,
+        right_margin=-10mm,
+        titlefontsize=19,
+        colorbar_tickfontsize=17,
+        clim=obj_range,
+        colorbar_ticks=obj_ticks,
+    )
+    scatter!(x1[1:i-1], x2[1:i-1];
+        label=false,
+        color=:green,
+        markersize=7)
+    scatter!(x1[i:i], x2[i:i];
+        label=false,
+        color=:royalblue,
+        shape=:utriangle,
+        markersize=12)
+    if i < num_samples
+        scatter!(x1[i+1:i+1], x2[i+1:i+1],
+            label=false,
+            color=:red,
+            shape=:xcross,
+            markersize=10)
+    end
+
+    return p0, p1, p2, p3
+end
+
+p = plot(Iterators.flatten(plots)...,
+    layout=(6, 4),
+    size=(1100, 1300))
+
+mkpath(save_dir * "full_runs")
+savefig(save_dir * "full_runs/$(name).png")
+
+#* scatter comparison
+
+m = 10
+n = 25
+s = round.(Int, range(1, n, m))
+
+50/24*(1/3)*√2 # farthest away the points will be from each other, ~1 meter
+
+p = plot()
+
+axs, points = generateAxes((0,1), (n,n))
+x1, x2 = getindex.(points[s,s], 1), getindex.(points[s,s], 2)
+scatter!(x1, x2,
+    color=:red,
+    legend=false
+)
+
+axs, points = generateAxes((0,1), (m,m))
+x1, x2 = getindex.(points, 1), getindex.(points, 2)
+scatter!(x1, x2,
+    color=:blue,
+    legend=false
+)
+
+display(p)
+
+#* scatter comparison
+
+dir_name = "pye_farm_trial2"
+
+gt_dir = output_dir * dir_name * "/packaged/50x50_dense_grid/"
+
+file_name = gt_dir * "avg_height.csv"
+gt_map_2 = imgToMap(readdlm(file_name, ','))[s,s]
+
+gt_mean_2 = mean(gt_map_2)
+
+dir_name = "pye_farm_trial_adjust"
+
+gt_dir = output_dir * dir_name * "/packaged/100sample_50x50_grid/"
+
+file_name = gt_dir * "avg_height.csv"
+gt_map_1 = imgToMap(readdlm(file_name, ','))
+
+gt_mean_1 = mean(gt_map_1)
+
+mean(abs.(gt_map_2 .- gt_map_1))
+
+clim = extrema(hcat(gt_map_1, gt_map_2, abs.(gt_map_2 .- gt_map_1)))
+extrema(gt_map_1), extrema(gt_map_2)
+mean(gt_map_1), mean(gt_map_2)
+
+plot(
+    heatmap(gt_map_1; clim),
+    heatmap(gt_map_2; clim),
+    heatmap(abs.(gt_map_2 .- gt_map_1)),
+    layout=(3,1),
+    # aspect_ratio=:equal,
+    framestyle=:none,
+    size=(500,1200),
+)|>display
+
+cor(vec(gt_map_1), vec(gt_map_2))
+mean(abs.(gt_map_1 .- gt_map_2))/mean((gt_map_1 .+ gt_map_2)/2)
+
 #* load mission
 
 region = "aus"
 priors = "000"
-dir = "new_$(region)2/$(region)_multiKernel_zeromean_noises_fullpdf_nodrop_OnlyVar"
+dir = "new_$(region)/$(region)_multiKernel_zeromean_noises_fullpdf_nodrop_OnlyVar"
 file_name = output_dir * "$dir/data_$(priors)" * output_ext
 
 mkpath(output_dir * "thesis/$(region)_$(priors)")
@@ -1694,24 +2154,22 @@ err_ticks = createColorbarTicks(err_range)
 
 pyplot()
 
-axs, _ = generateAxes(mission.sampler[1])
-
-p01 = heatmap(axs..., mission.sampler[1]';
-    title="Ground Truth",
-    framestyle=:none,
-    titlefontsize=19,
-    colorbar_tickfontsize=17,
-)
-
-p0r = heatmap(axs..., mission.sampler[1]';
-    title="",
-    framestyle=:none,
-    titlefontsize=19,
-    colorbar_tickfontsize=17,
-)
-
-i=20
+i=5
 plots = map(5:5:length(beliefs)) do i
+    axs, _ = generateAxes(mission.sampler[1])
+
+    gt_title = i == 5 ? "Ground Truth" : ""
+    p0 = heatmap(axs..., mission.sampler[1]';
+        title=gt_title,
+        ylabel="$i Samples",
+        framestyle=:none,
+        # aspect_ratio=:equal,
+        right_margin=-10mm,
+        titlefontsize=19,
+        colorbar_tickfontsize=17,
+        labelfontsize=17,
+    )
+
     bm = beliefs[i]
 
     axs, points = generateAxes(occ)
@@ -1720,10 +2178,12 @@ plots = map(5:5:length(beliefs)) do i
     pred_map[occ] .= NaN
     err_map[occ] .= NaN
 
-    pred_title = i==5 ? "Predicted Values" : ""
+    pred_title = i == 5 ? "Predicted Values" : ""
     p1 = heatmap(axs..., pred_map';
         title=pred_title,
         framestyle=:none,
+        # aspect_ratio=:equal,
+        right_margin=-10mm,
         titlefontsize=19,
         colorbar_tickfontsize=17,
         clim=(0, 1),
@@ -1731,28 +2191,255 @@ plots = map(5:5:length(beliefs)) do i
     scatter!(x1[1:i], x2[1:i];
         label=false,
         color=:green,
-        markersize=8)
+        markersize=7)
 
-    err_title = i==5 ? "Uncertainties" : ""
+    err_title = i == 5 ? "Uncertainties" : ""
     p2 = heatmap(axs..., err_map';
         title=err_title,
         framestyle=:none,
+        # aspect_ratio=:equal,
+        right_margin=-10mm,
         titlefontsize=19,
         colorbar_tickfontsize=17,
         clim=err_range,
         # colorbar_ticks=err_ticks,
-        right_margin=-5mm,
     )
     scatter!(x1[1:i], x2[1:i];
         label=false,
         color=:green,
-        markersize=8)
+        markersize=7)
 
-    return (i==5 ? p01 : p0r), p1, p2
+    sampleCost = mission.sampleCostType(
+        occ, samples[1:i], bm, quantities, mission.weights
+    )
+    obj_map = -sampleCost.(points)
+
+    obj_title = i == 5 ? "Sample Utility" : ""
+    p3 = heatmap(axs..., obj_map';
+        title=obj_title,
+        framestyle=:none,
+        # aspect_ratio=:equal,
+        right_margin=-10mm,
+        titlefontsize=19,
+        colorbar_tickfontsize=17,
+        # clim=obj_range,
+        # colorbar_ticks=obj_ticks,
+    )
+    scatter!(x1[1:i], x2[1:i];
+        label=false,
+        color=:green,
+        markersize=7)
+
+    return p0, p1, p2, p3
 end
 
 p = plot(Iterators.flatten(plots)...,
-    layout=(6, 3),
-    size=(1000, 1300))
+    layout=(6, 4),
+    size=(1100, 1300))
 
 savefig(output_dir * "thesis/$(region)_$(priors)/full_run_comparison.png")
+
+
+#* combined data maps
+
+samples = Iterators.flatmap([gt_dir]) do run
+    Iterators.filter(s -> s.x[2] == 1,
+        Iterators.map(eachline(run * "/samples.txt")) do line
+            Sample(eval(Meta.parse(line))...)
+        end)
+end |> collect
+
+argmax(s->s.y, samples)
+
+bm = BeliefModel(samples, boundsn[extent];
+            means=(use=true, learned=true),
+            noise=(value=0.0, learned=true))
+
+axs, _ = generateAxes(boundsn[extent], (100, 100))
+pred_map, err_map = produceMaps(bm, boundsn[extent], (100, 100))
+
+p = plot(
+    heatmap(axs..., pred_map';
+            clim=(0,240),
+            framestyle=:none,
+            aspect_ratio=:equal),
+    heatmap(axs..., err_map';
+            clim=(0,40),
+            framestyle=:none,
+            aspect_ratio=:equal),
+)
+xp = first.(getfield.(samples, :x))
+x1 = getindex.(xp, 1)
+x2 = getindex.(xp, 2)
+display(p)
+
+bm
+
+# xp = first.(getfield.(samples, :x))
+# x1 = getindex.(xp, 1)
+# x2 = getindex.(xp, 2)
+# scatter(x1, x2;
+#          legend=false)|>display
+
+#* length scales
+
+#** synthetic
+
+dir = "new_syn/syn_multiKernel_means_noises_fullpdf_nodrop_DistScaledEIGF"
+
+file_name = output_dir * "$dir/data_000" * output_ext
+data = load(file_name)
+
+ls = mean(data["missions"]) do mission
+    [belief.θ.ℓ for belief in mission.beliefs]
+end
+
+# ls = [belief.θ.ℓ for belief in data["missions"][1].beliefs]
+
+plot(ls)|>display
+
+ls[end]
+
+#** satellite
+
+# dir = "new_aus/aus_multiKernel_means_noises_fullpdf_nodrop_DistScaledEIGF"
+dir = "new_nsw/nsw_multiKernel_means_noises_fullpdf_nodrop_DistScaledEIGF"
+
+file_name = output_dir * "$dir/data_111" * output_ext
+data = load(file_name)
+
+occ = data["mission"].occupancy
+ll = (occ |> count)/(occ |> size |> prod) |> sqrt
+
+ls = [belief.θ.ℓ for belief in data["beliefs"]]
+
+plot(ls)|>display
+
+ls[end-1]
+
+#** field
+
+run = runs[1]
+
+ls = map(eachline(run * "/belief_params.txt")) do line
+    eval(Meta.parse(line)).σn[1]
+end
+
+plot(abs.(ls))|>display
+
+abs(ls[end])
+
+#** dense field
+
+samples = Iterators.flatmap([gt_dir]) do run
+    Iterators.filter(s -> s.x[2] == 1,
+        Iterators.map(eachline(run * "/samples.txt")) do line
+            Sample(eval(Meta.parse(line))...)
+        end)
+end |> collect
+
+bm = BeliefModel(samples, boundsn[extent]; noise=(value=0.0, learned=true))
+bm.θ.σn
+
+ls = map(eachline(run * "/belief_params.txt")) do line
+    eval(Meta.parse(line)).σn[1]
+end
+
+plot(abs.(ls))|>display
+
+abs(ls[end])
+
+#* recalculate correlations
+
+using DelimitedFiles
+
+for run in filter(contains("prior"), runs)
+    N = 2
+    beliefs = map(enumerate(eachline(run * "/belief_params.txt"))) do (i, line)
+        params = (; eval(Meta.parse(line))..., μ = [0, 0])
+        BeliefModel([Sample(([0.0,0.0],1),0.0)], params; N)
+    end
+    cors = [outputCorMat(bm)[:, 1] for bm in beliefs]
+    writedlm(run * "/correlations_new.txt", [cors], "\n")
+end
+
+#*** aus distance plot
+
+save_dir = output_dir * "thesis/satellite/"
+mkpath(save_dir)
+
+width, height = 1200, 800
+
+region = "nsw"
+priors = ["000", "111"]
+types = ["no", "hyp"]
+
+file_names = [
+    output_dir * "new_$(region)/$(region)_multiKernel_means_noises_fullpdf_nodrop_EIGF/data_000" * output_ext,
+    output_dir * "new_$(region)/$(region)_multiKernel_means_noises_fullpdf_nodrop_EIGF/data_111" * output_ext,
+    output_dir * "new_$(region)/$(region)_multiKernel_means_noises_fullpdf_nodrop_DistScaledEIGF/data_000" * output_ext,
+    output_dir * "new_$(region)/$(region)_multiKernel_means_noises_fullpdf_nodrop_DistScaledEIGF/data_111" * output_ext,
+]
+
+dists = map(file_names) do file_name
+    data = load(file_name)
+    cumsum(data["metrics"].dists)
+end |> vec |> stack
+
+p = plot(
+    dists,
+    title="Distance Traveled",
+    xlabel="Sample Number",
+    ylabel="Cumulative Distance (m)",
+    labels=["Without Distance Scaling" "Without Distance Scaling" "With Distance Scaling" "With Distance Scaling"],
+    seriescolors=[:black RGB(0.1,0.7,0.2) :black RGB(0.1,0.7,0.2)],
+    markers=[:circle :circle :square :square],
+    framestyle=:box,
+    # ylim=(-30,1150),
+    titlefontsize=24,
+    markersize=8,
+    tickfontsize=15,
+    labelfontsize=20,
+    legendfontsize=16,
+    margin=5mm,
+    linewidth=4,
+    size=(width, height)
+)
+# display(p)
+
+savefig(save_dir * "$(region)_distances.png")
+
+
+file_names = [
+    output_dir * "new_$(region)/$(region)_multiKernel_means_noises_fullpdf_nodrop_DistScaledEIGF/data_000" * output_ext,
+    output_dir * "new_$(region)/$(region)_multiKernel_means_noises_fullpdf_nodrop_DistScaledEIGF/data_111" * output_ext,
+    output_dir * "new_$(region)/$(region)_multiKernel_means_noises_fullpdf_hypdrop_DistScaledEIGF/data_111" * output_ext,
+]
+
+times = map(file_names) do file_name
+    data = load(file_name)
+    cumsum(data["metrics"].times)
+end |> vec |> stack
+
+p = plot(
+    times,
+    title="Computation Time",
+    xlabel="Sample Number",
+    ylabel="Cumulative Computation Time (s)",
+    labels=["No Priors" "All Priors" "With Hypothesis Dropout"],
+    seriescolors=[:black RGB(0.1,0.7,0.2) RGB(0.1,0.7,0.2)],
+    markers=[:circle :circle :dtriangle],
+    framestyle=:box,
+    # ylim=(-30,1150),
+    titlefontsize=24,
+    markersize=[8 8 10],
+    tickfontsize=15,
+    labelfontsize=20,
+    legendfontsize=16,
+    margin=5mm,
+    linewidth=4,
+    size=(width, height)
+)
+
+savefig(save_dir * "$(region)_computation_times.png")
+
