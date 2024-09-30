@@ -111,7 +111,7 @@ MapsSampler(maps::Map...) = MapsSampler(maps)
 MapsSampler(maps::AbstractVector{<:Map}) = MapsSampler(Tuple(maps))
 
 (ss::MapsSampler)(loc::Location) = [map(loc) for map in ss]
-(ss::MapsSampler)((q, loc)::SampleInput) = ss[q](loc)
+(ss::MapsSampler)((loc, q)::SampleInput) = ss[q](loc)
 
 # make it behave like a tuple
 Base.keys(m::MapsSampler) = keys(m.maps)
