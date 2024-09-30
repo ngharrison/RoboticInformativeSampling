@@ -80,7 +80,10 @@ p_cors = plot(
     xlabel="Sample Number",
     ylabel="Correlation",
     seriescolors=[RGB(0.4, 0.2, 0.1) RGB(0.9, 0.4, 0.0) RGB(0.1,0.3,1)],
-    legend=(0.73,0.42),
+    legend=(0.74,0.15),
+    # legend=(0.74,0.45),
+    # legend=(0.74,0.75),
+    # legend=(0.11,0.15),
     framestyle=:box,
     marker=true,
     ylim=(-1,1),
@@ -99,14 +102,14 @@ savefig("$dir/correlations.png")
 
 p_errs = plot(
     maes[1:30,:],
-    title="Prediction Errors",
+    title="Mean Prediction Errors",
     xlabel="Sample Number",
     ylabel="Mean Absolute Map Error",
-    labels=["No Priors" "Priors"],
+    labels=["No Priors" "All Priors"],
     seriescolors=[:black RGB(0.1,0.7,0.2)],
     framestyle=:box,
     marker=true,
-    ylim=(0,.4),
+    ylim=(0,.3),
     titlefontsize=24,
     markersize=8,
     tickfontsize=15,
@@ -125,7 +128,7 @@ p_max_errs = plot(
     title="Max Prediction Errors",
     xlabel="Sample Number",
     ylabel="Max Absolute Map Error",
-    labels=["No Priors" "Priors"],
+    labels=["No Priors" "All Priors"],
     seriescolors=[:black RGB(0.1,0.7,0.2)],
     framestyle=:box,
     marker=true,
@@ -148,7 +151,7 @@ p_dists = plot(
     title="Distance Traveled",
     xlabel="Sample Number",
     ylabel="Cumulative Distance",
-    labels=["No Priors" "Priors"],
+    labels=["No Priors" "All Priors"],
     seriescolors=[:black RGB(0.1,0.7,0.2)],
     framestyle=:box,
     marker=true,
@@ -168,12 +171,12 @@ savefig("$dir/distances.png")
 
 times_per_sample = times[end,:]/size(times,1)
 p_comp = bar(
-    ["No Priors", "Priors"],
+    ["No Priors", "All Priors"],
     times_per_sample,
     xlabel="Sample Number",
     ylabel="Average Computation Time (s)",
     title="Computation Time per Sample",
-    ylim=(0,1.5),
+    ylim=(0,3),
     seriescolors=[:black, RGB(0.1,0.7,0.2)],
     framestyle=:box,
     markers=true,
@@ -194,7 +197,7 @@ plot(
     title="Average Computation Time",
     xlabel="Sample Number",
     ylabel="Average Computation Time (s)",
-    labels=["No Priors" "Priors"],
+    labels=["No Priors" "All Priors"],
     seriescolors=[:black RGB(0.1,0.7,0.2)],
     framestyle=:box,
     marker=true,
@@ -215,8 +218,8 @@ savefig("$dir/computation_times_full_run.png")
 # end
 
 #* Batch
-# for dir in readdir(output_dir * "new_syn", join=true)
-dir = output_dir * "new_syn/syn_multiKernel_means_noises_fullpdf_nodrop_DistLogEIGF"
+for dir in readdir(output_dir * "new_syn", join=true)
+# dir = output_dir * "new_syn/syn_multiKernel_means_noises_fullpdf_nodrop_DistLogEIGF"
 
 p_err = Vector{Any}(undef, 8)
 p_cor = Vector{Any}(undef, 8)
@@ -325,7 +328,7 @@ plot(
     # ribbon=err_stds,
     xlabel="Sample Number",
     ylabel="Mean Absolute Map Error",
-    title="Prediction Errors",
+    title="Mean Prediction Errors",
     ylim=(0,.4),
     seriescolors=[(RGB((p.*0.8)...) for p in priors)...;;],
     labels=[replace([join(c for (p, c) in zip(p, chars) if p==1) for p in priors], ""=>"none")...;;],
