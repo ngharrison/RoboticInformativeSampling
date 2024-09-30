@@ -3,7 +3,7 @@ module Maps
 using DocStringExtensions: TYPEDSIGNATURES, TYPEDFIELDS
 
 export Map, randomPoint, res, pointToCell, cellToPoint,
-       generateAxes, ConstantRegion, Bounds, getBounds
+       generateAxes, Bounds, getBounds
 
 const Bounds = @NamedTuple begin
     lower::Vector{Float64}
@@ -178,28 +178,6 @@ function generateAxes(bounds, dims)
     axes = range.(bounds..., dims)
     points = collect.(Iterators.product(axes...))
     return axes, points
-end
-
-
-"""
-$(TYPEDSIGNATURES)
-
-Type that can be called to return one value when within its bounds and another
-when without. Pass it a multi-dimensional point, like a location in space.
-"""
-struct ConstantRegion{T1, T2}
-    "single value that this type returns when within bounds"
-    in_bounds_value::T1
-    "single value that this type returns when out of bounds"
-    out_of_bounds_value::T1
-    "vectors of lower and upper bounds, defaults to zeros and ones"
-    bounds::Bounds
-end
-
-function (cr::ConstantRegion)(x)
-    all(cr.bounds.lower .<= x .<= cr.bounds.upper) ?
-        cr.in_bounds_value :
-        cr.out_of_bounds_value
 end
 
 end
