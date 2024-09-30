@@ -271,7 +271,7 @@ c = (options.use_cond_pdf ? "condpdf" : "fullpdf")
 h = (options.use_hyp_drop ? "hypdrop" : "nodrop")
 s = options.sampleCostType
 
-dir = "new_aus2/aus_$(k)_$(m)_$(n)_$(c)_$(h)_$(s)"
+dir = "new_aus/aus_$(k)_$(m)_$(n)_$(c)_$(h)_$(s)"
 
 all_metrics = Array{Any}(undef, 2)
 

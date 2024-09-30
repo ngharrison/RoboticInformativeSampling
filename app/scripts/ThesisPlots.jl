@@ -730,15 +730,15 @@ plot(plts..., layout=(3,6), size=(1200, 800)) |> display
 
 gr()
 
-comp_dir = output_dir * "new_aus2/aus_multiKernel_zeromean_noises_fullpdf_nodrop_OnlyVar"
+comp_dir = output_dir * "new_aus/aus_multiKernel_zeromean_noises_fullpdf_nodrop_OnlyVar"
 
 temp = [
-    "new_aus2/aus_multiKernel_means_noises_fullpdf_nodrop_OnlyVar",
-    "new_aus2/aus_multiKernel_means_noises_fullpdf_nodrop_EIGF",
-    "new_aus2/aus_multiKernel_means_noises_fullpdf_nodrop_DistScaledEIGF",
-    # "new_aus2/aus_multiKernel_means_noises_condpdf_nodrop_DistScaledEIGF",
-    # "new_aus2/aus_mtoKernel_means_noises_fullpdf_nodrop_DistScaledEIGF",
-    "new_aus2/aus_multiKernel_means_noises_fullpdf_hypdrop_DistScaledEIGF",
+    "new_aus/aus_multiKernel_means_noises_fullpdf_nodrop_OnlyVar",
+    "new_aus/aus_multiKernel_means_noises_fullpdf_nodrop_EIGF",
+    "new_aus/aus_multiKernel_means_noises_fullpdf_nodrop_DistScaledEIGF",
+    # "new_aus/aus_multiKernel_means_noises_condpdf_nodrop_DistScaledEIGF",
+    # "new_aus/aus_mtoKernel_means_noises_fullpdf_nodrop_DistScaledEIGF",
+    "new_aus/aus_multiKernel_means_noises_fullpdf_hypdrop_DistScaledEIGF",
 ]
 dirs =  output_dir .* temp
 
