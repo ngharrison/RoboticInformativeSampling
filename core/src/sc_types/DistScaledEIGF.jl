@@ -1,4 +1,7 @@
 
+"""
+$(TYPEDEF)
+"""
 struct DistScaledEIGF <: SampleCost
     occupancy
     samples

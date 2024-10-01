@@ -1,4 +1,7 @@
 
+"""
+$(TYPEDEF)
+"""
 struct LogLikelihood <: SampleCost
     occupancy
     samples

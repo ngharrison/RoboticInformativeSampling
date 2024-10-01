@@ -1,8 +1,17 @@
+"""
+This module contains functions for initializing mission data and the function
+for running the entire search mission. The entry-point to the actual informative
+sampling. This contains the main loop and most of the usage of Samples and
+BeliefModels.
+
+Main public types and functions:
+$(EXPORTS)
+"""
 module Missions
 
 using Random: seed!
 using Statistics: median
-using DocStringExtensions: TYPEDSIGNATURES, TYPEDFIELDS
+using DocStringExtensions: TYPEDSIGNATURES, TYPEDFIELDS, EXPORTS
 
 using ..Maps: randomPoint, getBounds
 using ..Samples: Sample, selectSampleLocation, takeSamples
@@ -189,6 +198,20 @@ function (M::Mission)(func=Returns(nothing);
     return [samples; other_samples], beliefs, cors, times
 end
 
+"""
+$(TYPEDSIGNATURES)
+
+Replays a mission that has already taken place. Mainly for visualization
+purposes.
+
+Inputs:
+- `func`: any function to be run at the end of the update loop, useful for
+visualization or saving data (default does nothing)
+- `full_samples`: a vector of samples
+- `beliefs`: a vector of beliefs
+- `sleep_time`: the amount of time to wait after each iteration, useful for
+visualizations (default 0)
+"""
 function replay(func, M::Mission, full_samples, beliefs; sleep_time=0.0)
     quantities = eachindex(M.sampler) # all current available quantities
 

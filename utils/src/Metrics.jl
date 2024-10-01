@@ -1,7 +1,14 @@
+"""
+A module to calculate the metrics from a mission and belief model.
+
+Main public types and functions:
+$(EXPORTS)
+"""
 module Metrics
 
 using Statistics: mean
 using LinearAlgebra: norm
+using DocStringExtensions: METHODLIST, EXPORTS
 
 using InformativeSampling
 using .Maps: generateAxes
@@ -9,6 +16,13 @@ using .BeliefModels: BeliefModel, outputCorMat
 using .Samples: MapsSampler
 
 export calcMetrics
+
+"""
+$(METHODLIST)
+
+A collection of methods that calculates metrics from sampling missions.
+"""
+function calcMetrics end
 
 function calcMetrics(mission, samples, beliefs)
     mission.sampler isa MapsSampler ||

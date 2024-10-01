@@ -1,4 +1,7 @@
 
+"""
+$(TYPEDEF)
+"""
 struct EIGF <: SampleCost
     occupancy
     samples

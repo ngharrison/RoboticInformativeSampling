@@ -1,4 +1,7 @@
 
+"""
+$(TYPEDEF)
+"""
 struct MIPT <: SampleCost
     occupancy
     samples

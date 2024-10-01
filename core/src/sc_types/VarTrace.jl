@@ -5,6 +5,9 @@ using ..Maps: generateAxes
 using ..Samples: Sample
 using ..BeliefModels: BeliefModel
 
+"""
+$(TYPEDEF)
+"""
 struct VarTrace <: SampleCost
     occupancy
     samples

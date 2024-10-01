@@ -1,3 +1,9 @@
+"""
+A module for handling data in and out.
+
+Main public types and functions:
+$(EXPORTS)
+"""
 module DataIO
 
 using Distributions: MvNormal, pdf
@@ -5,7 +11,7 @@ using JLD2: jldsave
 using Dates: now, year, month, day, hour, minute, second
 using Images: save as saveImg, colorview, RGBA
 using Plots
-using DocStringExtensions: TYPEDSIGNATURES
+using DocStringExtensions: METHODLIST, TYPEDSIGNATURES, EXPORTS
 
 using InformativeSampling
 using .Maps: generateAxes, Map, getBounds
@@ -17,8 +23,18 @@ export normalize, spatialAve, imgToMap, save, maps_dir,
        output_dir, output_ext, saveBeliefMapToPng,
        produceMap, produceMaps
 
+"""
+The default directory containing the maps that can be used as data during
+simulated sampling.
+"""
 const maps_dir = dirname(Base.active_project()) * "/maps/"
+"""
+The default output directory where files can be saved.
+"""
 const output_dir = dirname(Base.active_project()) * "/output/"
+"""
+The default extension for saved output files.
+"""
 const output_ext = ".jld2"
 
 """
@@ -125,6 +141,12 @@ function dateTimeString(dt=now())
     return join(lpad.(dt .|> parts, 2, '0'), "-")
 end
 
+"""
+$(METHODLIST)
+
+A collection of methods for saving data from missions, metrics, and general
+julia objects.
+"""
 function save(mission, samples, beliefs, times;
               animation=false,
               sub_dir_name="",
@@ -165,8 +187,12 @@ function save(; sub_dir_name="", file_name=dateTimeString() * "_data", kwargs...
     jldsave(full_path_name; kwargs...)
 end
 
-# This is really just to give something out to munch,
-# so it needs to be an rgba png with the last channel as the amount
+"""
+$(TYPEDSIGNATURES)
+
+This is really just to give something out to munch, so it needs to be an rgba
+png with the last channel as the amount.
+"""
 function saveBeliefMapToPng(beliefModel, occupancy,
                             file_name=dateTimeString() * "_belief_map")
     mkpath(output_dir)
@@ -193,7 +219,7 @@ end
 $(TYPEDSIGNATURES)
 
 Generates belief and uncertainty Maps from a belief model for chosen bounds and
-dimensions.
+dimensions. Can also pass in another Map in place of bounds and dims.
 """
 function produceMaps(beliefModel::BeliefModel, map::Map; quantity=1)
     return produceMaps(beliefModel, getBounds(map), size(map); quantity)
@@ -207,6 +233,12 @@ function produceMaps(beliefModel::BeliefModel, bounds, dims; quantity=1)
     return pred_map, err_map
 end
 
+"""
+$(TYPEDSIGNATURES)
+
+Generates a Map from a function for chosen bounds and dimensions. Can also pass
+in another Map in place of bounds and dims.
+"""
 produceMap(func, map::Map) = produceMap(func, getBounds(map), size(map))
 
 function produceMap(func, bounds, dims)

@@ -1,8 +1,15 @@
+"""
+This module holds a variety of SampleCost functions used by [Samples.jl](@ref) in
+selecting a new sample location.
+
+Main public types and functions:
+$(EXPORTS)
+"""
 module SampleCosts
 
 using LinearAlgebra: norm
 using Statistics: mean
-using DocStringExtensions: TYPEDSIGNATURES
+using DocStringExtensions: TYPEDEF, TYPEDSIGNATURES, EXPORTS
 
 using ..Maps: pointToCell, cellToPoint, res, getBounds
 using ..Paths: PathCost

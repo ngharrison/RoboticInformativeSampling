@@ -2,7 +2,9 @@
 
 A repository for robotic exploration in natural environments.
 
-Main focus on information gathering on a 2D surface.
+Main focus on robotic information gathering on a 2D surface.
+
+This code was written for PhD research in field robotics.
 
 Written in Julia for speed and code flexibility.
 

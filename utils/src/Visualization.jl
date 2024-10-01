@@ -1,7 +1,14 @@
+"""
+A module with methods to visualize mission data. The form displayed is
+determined by what data types are passed in.
+
+Main public types and functions:
+$(EXPORTS)
+"""
 module Visualization
 
 using Plots: plot, heatmap, scatter!, @layout, mm, grid
-using DocStringExtensions: TYPEDSIGNATURES, TYPEDEF
+using DocStringExtensions: TYPEDSIGNATURES, TYPEDEF, EXPORTS
 
 using InformativeSampling
 using .Maps: Map, res, generateAxes, getBounds
@@ -228,6 +235,7 @@ end
 
 """
 $(TYPEDEF)
+
 Simple convenience function that also displays the output of any visualize
 function. See those.
 """

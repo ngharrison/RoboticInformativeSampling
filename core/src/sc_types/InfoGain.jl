@@ -5,6 +5,9 @@ using ..Maps: generateAxes
 using ..Samples: Sample
 using ..BeliefModels: BeliefModel, fullCov
 
+"""
+$(TYPEDEF)
+"""
 struct InfoGain <: SampleCost
     occupancy
     samples

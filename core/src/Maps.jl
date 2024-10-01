@@ -1,10 +1,23 @@
+"""
+This module contains types for holding and handling real and simulated data.
+Mainly used by, but foundational for the other parts too.
+
+Main public types and functions:
+$(EXPORTS)
+"""
 module Maps
 
-using DocStringExtensions: TYPEDSIGNATURES, TYPEDFIELDS
+using DocStringExtensions: TYPEDSIGNATURES, TYPEDFIELDS, TYPEDEF, EXPORTS
 
 export Map, randomPoint, res, pointToCell, cellToPoint,
        generateAxes, Bounds, getBounds
 
+"""
+$(TYPEDEF)
+
+The bounds of the region. Consists of the lower and upper bounds, each a list of
+floating-point values.
+"""
 const Bounds = @NamedTuple begin
     lower::Vector{Float64}
     upper::Vector{Float64}
@@ -19,7 +32,8 @@ the second (y-axis), and so on.
 
 Its typical use is to act as a 2D map of some value that can be sampled. A Map
 will return the value of the grid cell that a given point falls within. In other
-words, the map value is constant within each cell.
+words, the map value is constant within each cell. One can also think of this as
+a nearest-neighbor approximation.
 
 Each cell index is treated as the center of its cell. Thus the map's lower bound
 is at the center of the first cell and the map's upper bound is at the center of
@@ -108,6 +122,11 @@ function Base.rand(map::Map)
     return x, map(x)
 end
 
+"""
+$(TYPEDSIGNATURES)
+
+Generates a random point in the map. Returns the location.
+"""
 function randomPoint(map::Map)
     dif = (map.bounds.upper .- map.bounds.lower)
     return map.bounds.lower .+ rand(ndims(map)) .* dif

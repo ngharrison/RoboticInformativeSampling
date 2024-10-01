@@ -1,6 +1,9 @@
 
 using ..BeliefModels: meanDerivAndVar
 
+"""
+$(TYPEDEF)
+"""
 struct DerivVar <: SampleCost
     occupancy
     samples

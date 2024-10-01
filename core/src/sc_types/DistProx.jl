@@ -1,5 +1,7 @@
 
 """
+$(TYPEDEF)
+
 A basic cost function used for choosing a new sample location.
 """
 struct DistProx <: SampleCost

@@ -1,7 +1,15 @@
+"""
+This module contains the interface for passing data to and from other ROS nodes.
+It sets up an `informative_sampling` node and provides methods to handle the data.
+This is designed specifically for communication with Swagbot.
+
+Main public types and functions:
+$(EXPORTS)
+"""
 module ROSInterface
 
 using PyCall: pyimport, PyNULL
-using DocStringExtensions: TYPEDSIGNATURES, TYPEDFIELDS, FUNCTIONNAME
+using DocStringExtensions: TYPEDSIGNATURES, TYPEDFIELDS, FUNCTIONNAME, EXPORTS
 
 using ..Samples: Location, SampleInput
 

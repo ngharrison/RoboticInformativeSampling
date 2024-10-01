@@ -1,11 +1,20 @@
+"""
+This module contains everything to do with sampling values in the environment.
+Its alias types `Location` and `SampleInput` are fundamental pieces for BeliefModels
+as well.
+
+Main public types and functions:
+$(EXPORTS)
+"""
 module Samples
 
 using Optim: optimize, ParticleSwarm
-using DocStringExtensions: TYPEDSIGNATURES, TYPEDFIELDS, TYPEDEF
+using DocStringExtensions: TYPEDSIGNATURES, TYPEDFIELDS, TYPEDEF, EXPORTS
 
 using ..Maps: Map
 
-export Sample, selectSampleLocation, takeSamples, MapsSampler, UserSampler
+export Sample, selectSampleLocation, takeSamples, MapsSampler, UserSampler,
+       Location, SampleInput
 
 """
 $(TYPEDEF)

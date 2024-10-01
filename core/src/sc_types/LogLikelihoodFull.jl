@@ -1,6 +1,9 @@
 
 # using AbstractGPs: cov
 
+"""
+$(TYPEDEF)
+"""
 struct LogLikelihoodFull <: SampleCost
     occupancy
     samples

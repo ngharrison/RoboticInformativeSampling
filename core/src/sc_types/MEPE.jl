@@ -1,6 +1,9 @@
 
 ## This isn't finished, don't work
 
+"""
+$(TYPEDEF)
+"""
 struct MEPE <: SampleCost
     occupancy
     samples

@@ -1,4 +1,7 @@
 
+"""
+$(TYPEDEF)
+"""
 struct OnlyVar <: SampleCost
     occupancy
     samples

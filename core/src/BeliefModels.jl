@@ -1,3 +1,11 @@
+"""
+This module contains everything to do with what is inferred about values in the
+environment. In practical terms: means, variances, and correlations. This is all
+built on Gaussian Processes.
+
+Main public types and functions:
+$(EXPORTS)
+"""
 module BeliefModels
 
 using LinearAlgebra: diag, PosDefException, norm, Diagonal, I
@@ -7,7 +15,7 @@ using AbstractGPs: GP, posterior, mean_and_var, mean_and_cov,
 using IrrationalConstants: log2π
 using Optim: optimize, Options, NelderMead, LBFGS
 using ParameterHandling: value_flatten, fixed, value
-using DocStringExtensions: TYPEDSIGNATURES, TYPEDEF
+using DocStringExtensions: TYPEDSIGNATURES, TYPEDEF, EXPORTS
 
 using ..Samples: SampleInput
 using ..Kernels: multiMean, singleKernel, multiKernel, fullyConnectedCovNum,
@@ -155,6 +163,11 @@ function (beliefModel::BeliefModel)(X::AbstractArray{SampleInput})
     return μ, .√clamp!(σ², 0.0, Inf) # avoid negative variances
 end
 
+"""
+$(TYPEDSIGNATURES)
+
+Returns the full covariance matrix for the belief model.
+"""
 function fullCov(beliefModel::BeliefModel, X::AbstractArray{SampleInput})
     return cov(beliefModel.gp, X) + I*√eps() # avoid negative eigenvalues
 end
@@ -237,6 +250,11 @@ function _logpdf(m, C_mat, Y::AbstractVecOrMat{<:Real})
 end
 
 
+"""
+$(TYPEDSIGNATURES)
+
+Returns the normed gradient of the mean of the belief model and its variance.
+"""
 function meanDerivAndVar(beliefModel::BeliefModel, x::SampleInput)
     return only.(meanDerivAndVar(beliefModel, [x]))
 end
@@ -260,6 +278,11 @@ function meanDerivNorm(X, Xm, C_xcond_x, ℓ, α)
     return sqrt.(sum(arr.^2 for arr in m_deriv_dims))
 end
 
+"""
+$(TYPEDSIGNATURES)
+
+Gives the covariance matrix between all outputs from the hyperparameters.
+"""
 function outputCovMat(bm::BeliefModel{typeof(multiKernel)})
     σn = bm.θ.σn isa AbstractArray ? bm.θ.σn : fill(bm.θ.σn, bm.N)
     return fullyConnectedCovMat(bm.θ.σ) .+ Diagonal(σn.^2)
@@ -275,7 +298,7 @@ end
 outputCorMat(beliefModel::BeliefModel)
 ```
 
-Gives the correlation matrix between all outputs.
+Gives the correlation matrix between all outputs from the hyperparameters.
 """
 function outputCorMat(bm::BeliefModel)
     cov_mat = outputCovMat(bm)

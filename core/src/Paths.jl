@@ -1,8 +1,16 @@
+"""
+This module contains types and functions for searching for paths on a 2D grid
+using A*. Its main use is to get the path cost (distance), but it can return the
+full path as well.
+
+Main public types and functions:
+$(EXPORTS)
+"""
 module Paths
 
 using LinearAlgebra: norm
 using DataStructures: PriorityQueue, dequeue!
-using DocStringExtensions: TYPEDSIGNATURES, TYPEDFIELDS
+using DocStringExtensions: TYPEDSIGNATURES, TYPEDFIELDS, EXPORTS
 
 export PathCost, getPath, finalOrientation
 
