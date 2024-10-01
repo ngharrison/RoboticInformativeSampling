@@ -11,9 +11,9 @@ makedocs(
     remotes=nothing,
     pages = [
         "index.md",
+        "application.md",
         "core.md",
         "utilities.md",
-        "application.md",
         "code_patterns.md",
         "julia_tips.md",
     ],

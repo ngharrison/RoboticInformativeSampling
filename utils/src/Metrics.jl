@@ -8,7 +8,7 @@ module Metrics
 
 using Statistics: mean
 using LinearAlgebra: norm
-using DocStringExtensions: METHODLIST, EXPORTS
+using DocStringExtensions: TYPEDSIGNATURES, EXPORTS
 
 using InformativeSampling
 using .Maps: generateAxes
@@ -18,7 +18,7 @@ using .Samples: MapsSampler
 export calcMetrics
 
 """
-$(METHODLIST)
+$(TYPEDSIGNATURES)
 
 A collection of methods that calculates metrics from sampling missions.
 """

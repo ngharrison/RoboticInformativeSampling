@@ -11,7 +11,7 @@ using JLD2: jldsave
 using Dates: now, year, month, day, hour, minute, second
 using Images: save as saveImg, colorview, RGBA
 using Plots
-using DocStringExtensions: METHODLIST, TYPEDSIGNATURES, EXPORTS
+using DocStringExtensions: TYPEDSIGNATURES, EXPORTS
 
 using InformativeSampling
 using .Maps: generateAxes, Map, getBounds
@@ -142,7 +142,7 @@ function dateTimeString(dt=now())
 end
 
 """
-$(METHODLIST)
+$(TYPEDSIGNATURES)
 
 A collection of methods for saving data from missions, metrics, and general
 julia objects.

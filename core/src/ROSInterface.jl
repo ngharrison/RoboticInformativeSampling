@@ -53,7 +53,7 @@ $(TYPEDSIGNATURES)
 Creating a $(FUNCTIONNAME) object requires a vector of topics to subscribe to
 for measurement data, essentially the list of sensors onboard the robot to
 listen to. Each element of this list should be a 2-tuple of topics that will
-transmit the value and error for each sensor. This constructor initializes a ros
+transmit the value and error for each sensor. This constructor initializes a ROS
 node and sets up a publisher to pub_topic.
 """
 function ROSSampler(data_topics, done_topic, pub_topic)

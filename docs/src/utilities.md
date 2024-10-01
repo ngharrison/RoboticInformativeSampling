@@ -1,6 +1,6 @@
 # Utilities --- Parts and Usage Overview
 
-Modules to help run the informative sampling.
+Modules for auxiliary functions used with the core informative sampling.
 
 ## DataIO.jl
 

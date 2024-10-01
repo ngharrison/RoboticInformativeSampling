@@ -1,6 +1,6 @@
 # Application --- Parts and Usage Overview
 
-Scripts that run the informative sampling code.
+Scripts that run the informative sampling code. This is the starting place for use of the repository and it uses the other parts: core and utils.
 
 ## missions
 
@@ -14,6 +14,16 @@ The `example.jl` script can be run to see the full code in action.
 
 The place where code to analyze saved data is located.
 
-## ros_sims
+## ros
 
-A few julia and python files used to test simple usage with ros.
+A python files used to test simple usage with ROS.
+
+Also contains the `server.jl` script which handles ROS service requests.
+
+## maps
+
+The place where maps used as data are stored.
+
+## output
+
+The place that files are saved from the code by default.
