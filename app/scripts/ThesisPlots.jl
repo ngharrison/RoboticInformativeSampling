@@ -2390,7 +2390,7 @@ p = plot(
     dists,
     title="Distance Traveled",
     xlabel="Sample Number",
-    ylabel="Cumulative Distance (m)",
+    ylabel="Cumulative Distance",
     labels=["Without Distance Scaling" "Without Distance Scaling" "With Distance Scaling" "With Distance Scaling"],
     seriescolors=[:black RGB(0.1,0.7,0.2) :black RGB(0.1,0.7,0.2)],
     markers=[:circle :circle :square :square],
