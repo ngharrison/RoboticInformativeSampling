@@ -157,6 +157,92 @@ p = plot(
 # p |> display
 savefig(output_dir * "thesis/syn_000/distances.png")
 
+#* hyperparameters
+
+ls[[15,20]]
+
+gr()
+
+width, height = 1200, 800
+
+ls = map(beliefs) do bm
+    abs(bm.θ.ℓ)
+end
+
+ss = map(beliefs) do bm
+    abs(only(bm.θ.σ))
+end
+
+ns = map(beliefs) do bm
+    abs(only(bm.θ.σn))
+end
+
+p = plot(
+    ls,
+    title="Length Scales",
+    xlabel="Sample Number",
+    ylabel="Length Scale",
+    labels=false,
+    # seriescolors=[:black RGB(0.1,0.7,0.2)],
+    framestyle=:box,
+    marker=true,
+    ylim=(0, 2),
+    titlefontsize=24,
+    markersize=8,
+    tickfontsize=15,
+    labelfontsize=20,
+    legendfontsize=16,
+    margin=5mm,
+    linewidth=4,
+    size=(width, height)
+)
+# p |> display
+savefig(output_dir * "thesis/syn_000/length_scales.png")
+
+p = plot(
+    ss,
+    title="Signal Standard Deviations",
+    xlabel="Sample Number",
+    ylabel="Signal Standard Deviation",
+    labels=false,
+    # seriescolors=[:black RGB(0.1,0.7,0.2)],
+    framestyle=:box,
+    marker=true,
+    # ylim=(0, 1.2),
+    titlefontsize=24,
+    markersize=8,
+    tickfontsize=15,
+    labelfontsize=20,
+    legendfontsize=16,
+    margin=5mm,
+    linewidth=4,
+    size=(width, height)
+)
+# p |> display
+savefig(output_dir * "thesis/syn_000/signal_std.png")
+
+p = plot(
+    ns,
+    title="Noise Standard Deviations",
+    xlabel="Sample Number",
+    ylabel="Noise Standard Deviation",
+    labels=false,
+    # seriescolors=[:black RGB(0.1,0.7,0.2)],
+    framestyle=:box,
+    marker=true,
+    # ylim=(0, 1.2),
+    titlefontsize=24,
+    markersize=8,
+    tickfontsize=15,
+    labelfontsize=20,
+    legendfontsize=16,
+    margin=5mm,
+    linewidth=4,
+    size=(width, height)
+)
+# p |> display
+savefig(output_dir * "thesis/syn_000/noise_std.png")
+
 
 #* ground truth
 
@@ -2328,6 +2414,32 @@ end
 plot(abs.(ls))|>display
 
 abs(ls[end])
+
+#* other
+
+ll = 1 # length of region
+b = count(.!occupancy)/length(occupancy) # fractional free area
+ln = ll*sqrt(b) # new length of region
+
+ls = 0.47 # original aus length-scale
+ls/ln # new aus length-scale
+
+#* other
+
+a = [
+    [0.45, 0.21, 0.0025],
+    [0.61, 0.24, 0.02],
+    [0.44, 0.16, 0.00],
+    [1.14/50, 38/41, 1.45/41],
+    [2.63/50, 36/41, 0.1/41],
+    [2.37/50, 27/41, 0.1/41],
+    [2.49/50, 45/41, 0.1/41],
+    [1.65/50, 41/41, 0.1/41]
+]
+
+b = map(a) do x
+    (x[2] - x[3])/x[1]
+end
 
 #** dense field
 
