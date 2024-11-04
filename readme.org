@@ -13,18 +13,20 @@ Created by Nicholas Harrison.
 See a video of an example run [[file:docs/res/ICRA_2024_run.mp4][here]].
 
 * Installation and Setup
+
 Download Julia and run installer: [[https://julialang.org/downloads/]]
 
 Recommended to add julia to your path.
 
 Use git to clone the repository to a local directory:
 #+begin_src shell
-git clone https://gitlab.acfr.usyd.edu.au/nhar0989/InformativeSampling.git
+git clone https://github.com/ngharrison/InformativeSampling.git
 #+end_src
 
 This will create a directory called =InformativeSampling=. Next run =julia InformativeSampling/setup.jl=. After that finishes, you should be good to go.
 
 * Quick Start
+
 To see an example run of the project in its current state, after following the steps in [[*Installation and Setup][Installation and Setup]],
 
 1. Navigate into the =InformativeSampling= directory on the command line
@@ -47,10 +49,13 @@ The easiest way to start using the code for your own purposes is to copy the =ex
 An interesting and flexible mission is found in =user.jl=. This script does all the normal mapping and automatic sample location selection, but it asks for user input for every sample measurement.
 
 ** Extra notes
+
 *** Activating a project
+
 The =--project=<path>= flag automatically activates a project environment after starting the REPL. You can run this manually by =]activate <path>= within the julia REPL. Both of these forms accept the path to the directory that contains the =Project.toml= file, e.g. the app directory of this repository. If you are already within a project directory, you can simply run it without a value (=julia --project=) with the same effect.
 
 *** rospy error
+
 If you get: =Error: Unable to load the 'rospy' python package!=
 
 1. Run ~ENV["PYTHON"] = "/usr/bin/python"~ (or whatever the path is to the python executable that has the rospy package installed)
@@ -61,6 +66,7 @@ If you get: =Error: Unable to load the 'rospy' python package!=
 If you get: =ERROR: LoadError: PyError ... ROSInterruptException('rospy shutdown',)= from within the Julia REPL, this indicates that you interrupted a previous running ROS node (using =ctrl-c=) and a new node can't be created because that flag sticks around inside the same Julia process. You will need to close and reopen the REPL to run new nodes again.
 
 *** Code reloading
+
 When developing the code, you'll want to install Revise.jl in order to reload code you've changed while using an open REPL. Follow these steps and you won't have to worry about it again.
 
 1. Start the julia REPL in the default environment (=julia=)
@@ -72,6 +78,7 @@ When developing the code, you'll want to install Revise.jl in order to reload co
 You can read a bit more about this in the docs.
 
 * Using as a ROS Package
+
 The project includes code to communicate with other nodes in the Robot Operating System (ROS). This code is designed to work with ROS1 and has been tested on Melodic and Noetic. These features will work just by running the code as normal from the command line or within the Julia REPL.
 
 In addition, this project can be used as a ROS package itself by simply putting it inside your workspace source directory (e.g. =catkin_ws/src=). It works similar to using a ROS python package because it uses rospy behind the scenes. To test your ROS+Julia setup, run the following:
@@ -140,14 +147,14 @@ Note that just the same as when running Julia code normally, if the interpreter 
 
 * Documentation
 
-To generate the docs, run the following command from the project root:
+If you want to view the docs locally, first generate them by running the following command(s) from the project root:
 
 #+begin_src shell
 julia --project=docs -e "using Pkg; Pkg.instantiate()" # only needed first time
 julia --project=docs docs/make.jl
 #+end_src
 
-To view them, open [[file:docs/build/index.html]] in a web browser. It's normally nice to build and host them on-line, but the acfr gitlab doesn't allow that.
+Then open [[file:docs/build/index.html]] in a web browser.
 
 * Tests
 
