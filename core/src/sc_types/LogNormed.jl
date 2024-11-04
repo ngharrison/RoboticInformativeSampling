@@ -1,6 +1,12 @@
 
-"""
-$(TYPEDEF)
+@doc raw"""
+Combines the average belief value and the log of the average uncertainty value
+of all quantities. All belief and uncertainty values are first normalized by
+the maximum belief value of that quantity.
+It has the form:
+```math
+C(x) = - w_1 \, μ_{\textrm{norm-ave}}(x) - w_2 \, \log (σ_{\textrm{norm-ave}}(x))
+```
 """
 struct LogNormed <: SampleCost
     occupancy

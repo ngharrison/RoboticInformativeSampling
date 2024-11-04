@@ -2,7 +2,9 @@
 ## This isn't finished, don't work
 
 """
-$(TYPEDEF)
+This was a cost function being considered but wasn't finished. Taken from [^Liu].
+
+[^Liu]: Liu H, Cai J, Ong Y (2017) An adaptive sampling approach for kriging metamodeling by maximizing expected prediction error. Comput Chem Eng 106:171–182
 """
 struct MEPE <: SampleCost
     occupancy

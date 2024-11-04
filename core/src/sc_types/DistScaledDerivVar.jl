@@ -1,8 +1,15 @@
 
 using ..BeliefModels: meanDerivAndVar
 
-"""
-$(TYPEDEF)
+@doc raw"""
+Uses the norm of the derivative of the belief model mean and the belief model
+variance, then scales it all by a normalized travel distance:
+```math
+C(x) = \frac{- w_1 \, {\left\lVert \frac{\partial μ}{\partial x}(x) \right\rVert}^2 - w_2 \, σ^2(x)}
+       {1 + β \, \frac{τ(x)}{\left\lVert \boldsymbol{\ell}_d \right\rVert_1}}
+```
+where ``β`` is a parameter to delay the distance effect until a few samples have
+been taken.
 """
 struct DistScaledDerivVar <: SampleCost
     occupancy

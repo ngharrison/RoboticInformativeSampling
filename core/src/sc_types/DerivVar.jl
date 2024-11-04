@@ -1,8 +1,12 @@
 
 using ..BeliefModels: meanDerivAndVar
 
-"""
-$(TYPEDEF)
+@doc raw"""
+Uses the norm of the derivative of the belief model mean and the belief model
+variance:
+```math
+C(x) = - w_1 \, {\left\lVert \frac{\partial μ}{\partial x}(x) \right\rVert}^2 - w_2 \, σ^2(x)
+```
 """
 struct DerivVar <: SampleCost
     occupancy

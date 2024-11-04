@@ -1,6 +1,9 @@
 
-"""
-$(TYPEDEF)
+@doc raw"""
+Returns the negated variance of the belief model at the query location:
+```math
+C(x) = - σ^2
+```
 """
 struct OnlyVar <: SampleCost
     occupancy

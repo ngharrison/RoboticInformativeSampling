@@ -1,6 +1,16 @@
 
-"""
-$(TYPEDEF)
+@doc raw"""
+Idea derived from the log likelihood of query location. Similar to [EIGF](@ref),
+the measured value from the nearest sample is used:
+```math
+C(x) = - w_1 \, \left( \frac{μ(x) - y(x_c)}{σ_n} \right)^2 - w_2 \, \log (σ^2(x))
+```
+where ``x_c`` is the nearest collected sample location, and ``σ_n`` is the
+noise.
+
+This function was seen to work well but hasn't undergone extensive tests. There
+is still some question about the theory and the use of noise parameter vs signal
+amplitude parameter.
 """
 struct LogLikelihood <: SampleCost
     occupancy

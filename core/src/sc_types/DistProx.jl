@@ -1,8 +1,13 @@
 
-"""
-$(TYPEDEF)
-
-A basic cost function used for choosing a new sample location.
+@doc raw"""
+Combines the average mean value, average standard deviation, travel distance,
+and proximity as terms:
+```math
+C(x) = - w_1 \, μ_{\mathrm{ave}}(x) - w_2 \, σ_{\mathrm{ave}}(x) +
+       w_3 \, τ(x) + w_4 \, P(x)
+```
+where ``P(x) = \sum_i(\frac{\min(\boldsymbol{\ell}_d)}{4 \, \mathrm{dist}_i})^3``.
+Averages are performed over all quantities.
 """
 struct DistProx <: SampleCost
     occupancy
@@ -13,14 +18,6 @@ struct DistProx <: SampleCost
     pathCost
 end
 
-"""
-$(TYPEDSIGNATURES)
-
-A pathCost is constructed automatically from the other arguments.
-
-This object can then be called to get the cost of sampling at a location:
-sampleCost(x)
-"""
 function DistProx(occupancy, samples, beliefModel, quantities, weights)
     start = pointToCell(samples[end].x[1], occupancy) # just looking at location
     pathCost = PathCost(start, occupancy, res(occupancy))
@@ -28,12 +25,6 @@ function DistProx(occupancy, samples, beliefModel, quantities, weights)
                     quantities, weights, pathCost)
 end
 
-"""
-$(TYPEDSIGNATURES)
-
-Returns the values to be used to calculate the sample cost (belief mean,
-standard deviation, travel distance, sample proximity).
-"""
 function values(sc::DistProx, loc)
     beliefs = sc.beliefModel([(loc, q) for q in sc.quantities]) # means and standard deviations
     μ_ave, σ_ave = mean.(beliefs)

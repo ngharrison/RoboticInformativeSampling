@@ -1,6 +1,11 @@
 
-"""
-$(TYPEDEF)
+@doc raw"""
+A simple cost function that doesn't use a belief model but works purely on
+distances. It returns the negated distance to the nearest sample:
+```math
+C(x) = - \min_i \left\lVert x - x_i \right\rVert
+```
+Useful when maximizing distance between samples.
 """
 struct MIPT <: SampleCost
     occupancy

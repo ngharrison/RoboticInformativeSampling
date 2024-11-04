@@ -1,6 +1,13 @@
 
-"""
-$(TYPEDEF)
+@doc raw"""
+A variation on [EIGF](@ref) that takes the logarithm of the variance and adds a
+distance cost term that is normalized by the average of the region dimensions:
+```math
+C(x) = - w_1 \, (μ(x) - y(x_c))^2 - w_2 \, \log(σ^2(x)) +
+       w_3 \, β \, \frac{τ(x)}{\left\lVert \boldsymbol{\ell}_d \right\rVert_1}
+```
+where ``β`` is a parameter to delay the distance effect until a few samples have
+been taken.
 """
 struct DistLogEIGF <: SampleCost
     occupancy

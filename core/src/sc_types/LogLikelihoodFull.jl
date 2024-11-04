@@ -1,8 +1,16 @@
 
 # using AbstractGPs: cov
 
-"""
-$(TYPEDEF)
+@doc raw"""
+A test of the log likelihood idea but using a weighted sum of all measured
+sample values, not just the nearest one:
+```math
+C(x) = - w_1 \, \frac{1}{\sum_i k(x, x_i)} \sum_i k(x, x_i) *
+       \left( \frac{μ(x) - y(x_i)}{σ_n} \right)^2 - w_2 \, \log (σ^2(x))
+```
+where ``x_i`` is each collected sample location, and ``σ_n`` is the noise.
+
+This function's performance wasn't satisfactory.
 """
 struct LogLikelihoodFull <: SampleCost
     occupancy

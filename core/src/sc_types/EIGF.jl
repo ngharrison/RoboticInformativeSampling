@@ -1,6 +1,15 @@
 
-"""
-$(TYPEDEF)
+@doc raw"""
+Expected Informativeness for Global Fit (EIGF). This function is adapted from
+[^Lam] through added weights to choose the balance between exploration and
+exploitation.
+It has the form:
+```math
+C(x) = - w_1 \, (μ(x) - y(x_c))^2 - w_2 \, σ^2(x)
+```
+where ``x_c`` is the nearest collected sample location.
+
+[^Lam]: Lam, C Q (2008) Sequential adaptive designs in computer experiments for response surface model fit (Doctoral dissertation). The Ohio State University.
 """
 struct EIGF <: SampleCost
     occupancy

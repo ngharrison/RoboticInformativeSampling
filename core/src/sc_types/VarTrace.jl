@@ -5,8 +5,16 @@ using ..Maps: generateAxes
 using ..Samples: Sample
 using ..BeliefModels: BeliefModel
 
-"""
-$(TYPEDEF)
+@doc raw"""
+Similar to [InfoGain](@ref) but uses only variances rather than the full
+covariance matrix, which is the same as the trace instead of the log
+determinant. This reduces computation but is still more costly than a single
+point estimate. This uses a 20x20 grid of test points.
+
+It has the form:
+```math
+C(x) = \textrm{tr}(Σ)
+```
 """
 struct VarTrace <: SampleCost
     occupancy

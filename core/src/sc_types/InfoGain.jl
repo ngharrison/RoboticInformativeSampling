@@ -5,8 +5,19 @@ using ..Maps: generateAxes
 using ..Samples: Sample
 using ..BeliefModels: BeliefModel, fullCov
 
-"""
-$(TYPEDEF)
+@doc raw"""
+Derived from the idea of information gain across the region. Returns the entropy
+of a set of points (10x10 grid) given the new sample location. Minimizing this
+entropy is equivalent to maximizing information gain since the entropy before
+the sample is always the same.
+
+This function is very computationally expensive, which is why the test grid is
+set at 10x10.
+
+It has the form:
+```math
+C(x) = \log |Σ|
+```
 """
 struct InfoGain <: SampleCost
     occupancy
