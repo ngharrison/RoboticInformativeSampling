@@ -11,7 +11,7 @@ using .Missions: Mission
 using InformativeSamplingUtils
 using .DataIO: maps_dir
 
-function conradMission()
+function drawnMission()
 
     file_names = [
         "weightMap1.csv",
@@ -72,7 +72,7 @@ global_logger(ConsoleLogger(stderr, Info))
 using .Visualization: vis
 
 ## initialize data for mission
-mission = conradMission()
+mission = drawnMission()
 
 ## run search alg
 @time samples, beliefs = mission(
