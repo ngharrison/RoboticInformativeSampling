@@ -1,6 +1,6 @@
 name = "InformativeSamplingUtils"
 uuid = "1d6b69be-e25c-46ac-b1c5-442f720809e4"
-authors = ["Nicholas Harrison <nicholas.harrison@sydney.edu.au>"]
+authors = ["Nicholas Harrison <nicholasharrison222@gmail.com>"]
 version = "0.1.0"
 
 [deps]
