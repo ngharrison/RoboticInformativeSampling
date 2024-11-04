@@ -69,7 +69,6 @@ p = plot(p1, p2,
          legendfontsize=14,
          aspect_ratio=:equal
          )
-# savefig("/home/nicholash/Projects/sampling_system_paper/figures/30samples_50x50.png")
 display(p)
 
 # p = plot(p1, p2,
@@ -82,5 +81,4 @@ display(p)
 #          legendfontsize=14,
 #          aspect_ratio=:equal
 #          )
-# savefig("/home/nicholash/Projects/sampling_system_paper/figures/30samples_50x50_stacked.png")
 # display(p)
