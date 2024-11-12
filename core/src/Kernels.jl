@@ -95,8 +95,8 @@ function manyToOneCovMat(a)
     L = zeros(N,N) # will be lower triangular
     L[1,1] = a[1]
     for t=2:N
-        L[t,1] = a[1 + t-1]
-        L[t,t] = a[1 + 2*(t-1)]
+        L[t,1] = a[2*(t-1)]
+        L[t,t] = a[2*(t-1)+1]
     end
     A = L'*L + √eps()*I # upper triangular times lower
 
