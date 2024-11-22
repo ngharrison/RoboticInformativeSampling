@@ -3,7 +3,7 @@ using LinearAlgebra: logdet
 
 using ..Maps: generateAxes
 using ..Samples: Sample
-using ..MultiQuantityGPs: MQGP
+using MultiQuantityGPs: MQGP
 
 @doc raw"""
 Similar to [InfoGain](@ref) but uses only variances rather than the full

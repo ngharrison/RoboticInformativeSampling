@@ -3,7 +3,7 @@ using LinearAlgebra: logdet
 
 using ..Maps: generateAxes
 using ..Samples: Sample
-using ..MultiQuantityGPs: MQGP, fullCov
+using MultiQuantityGPs: MQGP, fullCov
 
 @doc raw"""
 Derived from the idea of information gain across the region. Returns the entropy

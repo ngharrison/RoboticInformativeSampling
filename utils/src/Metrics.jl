@@ -10,9 +10,10 @@ using Statistics: mean
 using LinearAlgebra: norm
 using DocStringExtensions: TYPEDSIGNATURES, EXPORTS
 
+using MultiQuantityGPs: MQGP, quantityCorMat
+
 using InformativeSampling
 using .Maps: generateAxes
-using .MultiQuantityGPs: MQGP, quantityCorMat
 using .Samples: MapsSampler
 
 export calcMetrics

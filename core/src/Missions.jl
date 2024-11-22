@@ -13,10 +13,11 @@ using Random: seed!
 using Statistics: median
 using DocStringExtensions: TYPEDSIGNATURES, TYPEDFIELDS, EXPORTS
 
+using MultiQuantityGPs: MQGP, quantityCorMat
+using MultiQuantityGPs.Kernels: multiKernel
+
 using ..Maps: randomPoint, getBounds
 using ..Samples: Sample, selectSampleLocation, takeSamples
-using ..MultiQuantityGPs: MQGP, quantityCorMat
-using ..Kernels: multiKernel
 using ..SampleCosts: values, DistScaledEIGF
 
 export Mission, replay
