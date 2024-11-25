@@ -14,12 +14,6 @@ Modules = [Maps]
 Modules = [Missions]
 ```
 
-## MultiQuantityGPs.jl
-
-```@autodocs
-Modules = [MultiQuantityGPs]
-```
-
 ## Samples.jl
 
 ```@autodocs

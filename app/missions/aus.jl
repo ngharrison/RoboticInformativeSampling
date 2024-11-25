@@ -10,7 +10,7 @@ using .Maps: Map, getBounds
 using .Samples: Sample, MapsSampler, selectSampleLocation
 using .SampleCosts: MIPT, EIGF, DistScaledEIGF, OnlyVar, DerivVar, DistScaledDerivVar, LogLikelihood
 using .Missions: Mission
-using .Kernels: multiKernel, mtoKernel
+using MultiQuantityGPs.Kernels: multiKernel, mtoKernel
 
 using InformativeSamplingUtils
 using .Visualization: vis
@@ -247,7 +247,7 @@ for options in runs
 # set the logging level: Info or Debug
 global_logger(ConsoleLogger(stderr, Info))
 
-using .MultiQuantityGPs: quantityCorMat
+using MultiQuantityGPs: quantityCorMat
 
 using .Metrics: calcMetrics
 using .DataIO: save

@@ -1,7 +1,9 @@
 #* starter stuff
 
+using MultiQuantityGPs
+
 using InformativeSampling
-using .Maps, .Missions, .MultiQuantityGPs, .Samples
+using .Maps, .Missions, .Samples
 
 using InformativeSamplingUtils
 using .DataIO, .Visualization

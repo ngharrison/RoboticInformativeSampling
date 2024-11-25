@@ -3,7 +3,7 @@ using InformativeSampling
 
 using .Maps: res, generateAxes
 using .Missions: Mission
-using .MultiQuantityGPs: MQGP, quantityCovMat, LinearModel, rSquared
+using MultiQuantityGPs: MQGP, quantityCovMat, LinearModel, rSquared
 using .Samples: Sample
 
 using InformativeSamplingUtils

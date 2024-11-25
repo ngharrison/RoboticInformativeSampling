@@ -53,7 +53,7 @@ end
 
 using DelimitedFiles
 
-using .MultiQuantityGPs: MQGP
+using MultiQuantityGPs: MQGP
 
 dir = "pye_farm_trial2/"
 file_names = filter(n->!any(contains.(n, ("strange", "grid"))),

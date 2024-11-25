@@ -3,7 +3,7 @@ using InformativeSampling
 
 using .Maps: generateAxes
 using .Missions: Mission
-using .MultiQuantityGPs: MQGP
+using MultiQuantityGPs: MQGP
 using .Samples: Sample
 
 using InformativeSamplingUtils

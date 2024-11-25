@@ -6,7 +6,9 @@ from julia import Pkg, Main
 
 Pkg.activate('app')
 
-from julia.InformativeSampling import Samples, MultiQuantityGPs, Maps, SampleCosts, Missions
+import julia.MultiQuantityGPs
+
+from julia.InformativeSampling import Samples, GridMaps, SampleCosts, Missions
 
 # from julia.InformativeSamplingUtils import DataIO, Visualization
 

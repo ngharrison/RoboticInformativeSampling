@@ -16,8 +16,10 @@ using .informative_sampling.srv
 using .informative_sampling.msg: BeliefModelParameters
 using .std_msgs.msg: Float64MultiArray, MultiArrayLayout, MultiArrayDimension
 
+using MultiQuantityGPs
+
 using InformativeSampling
-using .Samples, .MultiQuantityGPs, .Maps, .SampleCosts
+using .Samples, .Maps, .SampleCosts
 
 using Random: seed!
 

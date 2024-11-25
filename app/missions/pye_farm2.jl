@@ -8,7 +8,7 @@ using .Maps: Map, generateAxes, getBounds
 using .SampleCosts: EIGF, DistScaledEIGF
 using .Samples: Sample, MapsSampler
 using .Missions: Mission
-using .MultiQuantityGPs: MQGP
+using MultiQuantityGPs: MQGP
 
 # this requires a working rospy installation
 using .ROSInterface: ROSSampler

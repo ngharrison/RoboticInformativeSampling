@@ -11,8 +11,8 @@ using .SampleCosts: MIPT, EIGF, DistScaledEIGF, OnlyVar,
                     DerivVar, DistScaledDerivVar, LogLikelihood,
                     LogLikelihoodFull, DistLogEIGF
 using .Missions: Mission
-using .Kernels: multiKernel, mtoKernel
-using .MultiQuantityGPs: quantityCorMat
+using MultiQuantityGPs.Kernels: multiKernel, mtoKernel
+using MultiQuantityGPs: quantityCorMat
 
 using InformativeSamplingUtils
 using .DataIO: GaussGroundTruth, Peak

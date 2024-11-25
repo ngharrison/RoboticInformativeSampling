@@ -1,7 +1,10 @@
 #* packages and functions
 
+using MultiQuantityGPs
+using MultiQuantityGPs.Kernels
+
 using InformativeSampling
-using .Maps, .Missions, .MultiQuantityGPs, .Samples, .ROSInterface, .Kernels, .SampleCosts
+using .Maps, .Missions, .Samples, .ROSInterface, .SampleCosts
 
 using InformativeSamplingUtils
 using .DataIO

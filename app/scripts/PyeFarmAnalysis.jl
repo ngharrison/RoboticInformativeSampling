@@ -1,6 +1,8 @@
+using MultiQuantityGPs
+using MultiQuantityGPs.Kernels
 
 using InformativeSampling
-using .Maps, .Missions, .MultiQuantityGPs, .Samples, .ROSInterface, .Kernels
+using .Maps, .Missions, .Samples, .ROSInterface
 
 using InformativeSamplingUtils
 using .DataIO, .Visualization
