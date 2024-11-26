@@ -26,12 +26,6 @@ Modules = [Samples]
 Modules = [SampleCosts]
 ```
 
-## Paths.jl
-
-```@autodocs
-Modules = [Paths]
-```
-
 ## ROSInterface.jl
 
 ```@autodocs

@@ -4,6 +4,7 @@ authors = ["Nicholas Harrison <nicholasharrison222@gmail.com>"]
 version = "0.1.0"
 
 [deps]
+AStarGridSearch = "892abc44-b326-442a-ba8e-5eb8be33ac6f"
 AbstractGPs = "99985d1d-32ba-4be9-9821-2ec096f28918"
 DataStructures = "864edb3b-99cc-5e75-8d2d-829cb0a9cfe8"
 DocStringExtensions = "ffbed154-4ef7-542d-bbb7-c09d3a79fcae"

@@ -2,7 +2,15 @@
 
 julia_version = "1.10.2"
 manifest_format = "2.0"
-project_hash = "06b566eee1f78093c37ee9ad482e7c68fcfc1485"
+project_hash = "175eff5065b8274a89c8fe1e1dd32eb619951049"
+
+[[deps.AStarGridSearch]]
+deps = ["DataStructures", "DocStringExtensions", "LinearAlgebra"]
+git-tree-sha1 = "d3d90b838f5b89b6031a5cb8cb7bca9ef5a91fd6"
+repo-rev = "main"
+repo-url = "https://github.com/ngharrison/AStarGridSearch.jl.git"
+uuid = "892abc44-b326-442a-ba8e-5eb8be33ac6f"
+version = "0.1.0"
 
 [[deps.AbstractFFTs]]
 deps = ["LinearAlgebra"]
@@ -704,13 +712,13 @@ uuid = "d25df0c9-e2be-5dd7-82c8-3ad0b3e990b9"
 version = "0.1.5"
 
 [[deps.InformativeSampling]]
-deps = ["AbstractGPs", "DataStructures", "DocStringExtensions", "IrrationalConstants", "LinearAlgebra", "MultiQuantityGPs", "Optim", "ParameterHandling", "Pkg", "PyCall", "Random", "Rotations", "Statistics"]
+deps = ["AStarGridSearch", "AbstractGPs", "DataStructures", "DocStringExtensions", "IrrationalConstants", "LinearAlgebra", "MultiQuantityGPs", "Optim", "ParameterHandling", "Pkg", "PyCall", "Random", "Rotations", "Statistics"]
 path = "../core"
 uuid = "bfd01cc8-db36-4de5-b056-8ab04eef9441"
 version = "0.1.0"
 
 [[deps.InformativeSamplingUtils]]
-deps = ["Dates", "Distributions", "DocStringExtensions", "Images", "InformativeSampling", "JLD2", "LinearAlgebra", "MultiQuantityGPs", "Plots", "Statistics"]
+deps = ["AStarGridSearch", "Dates", "Distributions", "DocStringExtensions", "Images", "InformativeSampling", "JLD2", "LinearAlgebra", "MultiQuantityGPs", "Plots", "Statistics"]
 path = "../utils"
 uuid = "1d6b69be-e25c-46ac-b1c5-442f720809e4"
 version = "0.1.0"

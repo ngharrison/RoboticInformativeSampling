@@ -2,7 +2,15 @@
 
 julia_version = "1.10.2"
 manifest_format = "2.0"
-project_hash = "0c32e9a413ba06100bbaa084119bfe126109aefc"
+project_hash = "e518cddcbb9cb128988523fca674e5f4483d71a2"
+
+[[deps.AStarGridSearch]]
+deps = ["DataStructures", "DocStringExtensions", "LinearAlgebra"]
+git-tree-sha1 = "d3d90b838f5b89b6031a5cb8cb7bca9ef5a91fd6"
+repo-rev = "main"
+repo-url = "https://github.com/ngharrison/AStarGridSearch.jl.git"
+uuid = "892abc44-b326-442a-ba8e-5eb8be33ac6f"
+version = "0.1.0"
 
 [[deps.AbstractGPs]]
 deps = ["ChainRulesCore", "Distributions", "FillArrays", "IrrationalConstants", "KernelFunctions", "LinearAlgebra", "PDMats", "Random", "RecipesBase", "Reexport", "Statistics", "StatsBase", "Test"]

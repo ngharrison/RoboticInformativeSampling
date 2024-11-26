@@ -36,8 +36,9 @@ using LinearAlgebra: norm
 using Statistics: mean
 using DocStringExtensions: TYPEDEF, TYPEDSIGNATURES, EXPORTS
 
+using AStarGridSearch: PathCost
+
 using ..Maps: pointToCell, cellToPoint, res, getBounds
-using ..Paths: PathCost
 
 export SampleCost, values, DistProx,
        LogNormed, MIPT, EIGF, OnlyVar,
