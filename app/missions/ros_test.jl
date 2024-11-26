@@ -5,8 +5,9 @@ Pkg.activate(Base.source_dir() * "/..")
 
 using Logging: global_logger, ConsoleLogger, Info, Debug
 
+using GridMaps: GridMap
+
 using InformativeSampling
-using .Maps: Map
 using .SampleCosts: EIGF
 using .Missions: Mission
 
@@ -27,7 +28,7 @@ function rosMission(; num_samples=4)
 
     bounds = (lower = [1.0, 1.0], upper = [9.0, 9.0])
 
-    occupancy = Map(zeros(Bool, 100, 100), bounds)
+    occupancy = GridMap(zeros(Bool, 100, 100), bounds)
 
     sampleCostType = EIGF
 

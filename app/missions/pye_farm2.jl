@@ -3,12 +3,13 @@ using Logging: global_logger, ConsoleLogger, Info, Debug
 using FileIO: load
 using Images: gray
 
-using InformativeSampling
-using .Maps: Map, generateAxes, getBounds
-using .SampleCosts: EIGF, DistScaledEIGF
-using .Samples: Sample, MapsSampler
-using .Missions: Mission
 using MultiQuantityGPs: MQGP
+using GridMaps: GridMap, generateAxes, getBounds
+
+using InformativeSampling
+using .SampleCosts: EIGF, DistScaledEIGF
+using .Samples: Sample, GridMapsSampler
+using .Missions: Mission
 
 # this requires a working rospy installation
 using .ROSInterface: ROSSampler
@@ -53,7 +54,7 @@ function pyeFarmMission(; num_samples=4,
         elevMap = imgToMap(gray.(elev_img), bounds)
     end
 
-    occupancy = Map(zeros(Bool, 100, 100), bounds)
+    occupancy = GridMap(zeros(Bool, 100, 100), bounds)
 
     # # to test
     # h, n = let
@@ -72,7 +73,7 @@ function pyeFarmMission(; num_samples=4,
     #     h, n
     # end
     #
-    # sampler = MapsSampler(h, n)
+    # sampler = GridMapsSampler(h, n)
 
     prior_maps = [elevMap]
 

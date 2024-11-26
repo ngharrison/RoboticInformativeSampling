@@ -4,10 +4,10 @@ using LinearAlgebra: I
 using Statistics: cor
 using Plots
 
-using InformativeSampling
+using GridMaps: GridMap, generateAxes
 
-using .Maps: Map, generateAxes
-using .Samples: Sample, MapsSampler
+using InformativeSampling
+using .Samples: Sample, GridMapsSampler
 
 using InformativeSamplingUtils
 using .DataIO: output_dir, GaussGroundTruth, Peak
@@ -19,7 +19,7 @@ seed!(seed_val) # make random values deterministic
 
 bounds = (lower = [0.0, 0.0], upper = [1.0, 1.0])
 
-occupancy = Map(zeros(Bool, 100, 100), bounds)
+occupancy = GridMap(zeros(Bool, 100, 100), bounds)
 
 #* initialize ground truth
 
@@ -29,7 +29,7 @@ peaks = [Peak(rand(2).*(bounds.upper-bounds.lower) .+ bounds.lower, 0.02*(rand()
 ggt = GaussGroundTruth(peaks)
 axs, points = generateAxes(occupancy)
 mat = ggt(points)
-map0 = Map(mat./maximum(mat), bounds)
+map0 = GridMap(mat./maximum(mat), bounds)
 
 #* Create prior prior_samples
 
@@ -37,11 +37,11 @@ map0 = Map(mat./maximum(mat), bounds)
 prior_maps = []
 
 # multiplicative
-m = Map(abs.(map0 .* randn()), bounds)
+m = GridMap(abs.(map0 .* randn()), bounds)
 push!(prior_maps, m)
 
 # additive
-m = Map(abs.(map0 .+ 0.2 .* randn(size(map0))), bounds)
+m = GridMap(abs.(map0 .+ 0.2 .* randn(size(map0))), bounds)
 push!(prior_maps, m)
 
 # random peaks
@@ -49,10 +49,10 @@ peaks = [Peak(rand(2).*(bounds.upper-bounds.lower) .+ bounds.lower, 0.02*(rand()
          for i in 1:num_peaks]
 tggt = GaussGroundTruth(peaks)
 tmat = tggt(points)
-m = Map(tmat./maximum(tmat), bounds)
+m = GridMap(tmat./maximum(tmat), bounds)
 push!(prior_maps, m)
 
-sampler = MapsSampler(map0)
+sampler = GridMapsSampler(map0)
 
 # sample sparsely from the prior maps
 # currently all data have the same sample numbers and locations

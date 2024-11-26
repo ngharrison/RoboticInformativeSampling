@@ -4,15 +4,16 @@ using LinearAlgebra: I, norm
 using Statistics: mean, cor
 using Random: seed!
 
+using MultiQuantityGPs.Kernels: multiKernel, mtoKernel
+using MultiQuantityGPs: quantityCorMat
+using GridMaps: GridMap, generateAxes
+
 using InformativeSampling
-using .Maps: Map, generateAxes
-using .Samples: Sample, MapsSampler
+using .Samples: Sample, GridMapsSampler
 using .SampleCosts: MIPT, EIGF, DistScaledEIGF, OnlyVar,
                     DerivVar, DistScaledDerivVar, LogLikelihood,
                     LogLikelihoodFull, DistLogEIGF
 using .Missions: Mission
-using MultiQuantityGPs.Kernels: multiKernel, mtoKernel
-using MultiQuantityGPs: quantityCorMat
 
 using InformativeSamplingUtils
 using .DataIO: GaussGroundTruth, Peak
@@ -28,7 +29,7 @@ function synMission(; seed_val=0, num_samples=30,
 
     bounds = (lower = [0.0, 0.0], upper = [1.0, 1.0])
 
-    occupancy = Map(zeros(Bool, 100, 100), bounds)
+    occupancy = GridMap(zeros(Bool, 100, 100), bounds)
 
     ## initialize ground truth
 
@@ -42,7 +43,7 @@ function synMission(; seed_val=0, num_samples=30,
     ggt = GaussGroundTruth(peaks)
     _, points = generateAxes(occupancy)
     mat = ggt(points)
-    map0 = Map(mat./maximum(mat), bounds)
+    map0 = GridMap(mat./maximum(mat), bounds)
 
     ## Create prior prior_samples
 
@@ -50,15 +51,15 @@ function synMission(; seed_val=0, num_samples=30,
     prior_maps = []
 
     # multiplicative
-    m = Map(map0 .* 2*(2*rand() - 1) .+ 2*(2*rand() - 1), bounds)
+    m = GridMap(map0 .* 2*(2*rand() - 1) .+ 2*(2*rand() - 1), bounds)
     push!(prior_maps, m)
 
     # additive
-    m = Map(map0 .+ 0.2 .* randn(size(map0)), bounds)
+    m = GridMap(map0 .+ 0.2 .* randn(size(map0)), bounds)
     push!(prior_maps, m)
 
     # # both
-    # push!(prior_maps, Map(abs.(map0 .* randn() + 0.1 .* randn(size(map0))), bounds))
+    # push!(prior_maps, GridMap(abs.(map0 .* randn() + 0.1 .* randn(size(map0))), bounds))
 
     # # spatial shift
     # t = rand(1:7)
@@ -73,14 +74,14 @@ function synMission(; seed_val=0, num_samples=30,
     end
     tggt = GaussGroundTruth(peaks)
     tmat = tggt(points)
-    m = Map(tmat./maximum(tmat), bounds)
+    m = GridMap(tmat./maximum(tmat), bounds)
     push!(prior_maps, m)
 
     # # purely random values
-    # m = Map(rand(size(map0)...), bounds)
+    # m = GridMap(rand(size(map0)...), bounds)
     # push!(prior_maps, m)
 
-    sampler = MapsSampler(map0)
+    sampler = GridMapsSampler(map0)
 
     ## initialize alg values
     # weights = (; μ=17, σ=1.5, τ=7)

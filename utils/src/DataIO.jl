@@ -14,9 +14,7 @@ using Plots
 using DocStringExtensions: TYPEDSIGNATURES, EXPORTS
 
 using MultiQuantityGPs: MQGP
-
-using InformativeSampling
-using .Maps: generateAxes, Map, getBounds
+using GridMaps: generateAxes, GridMap, getBounds
 
 using ..Visualization: visualize
 
@@ -70,7 +68,7 @@ end
 
 """
 Takes a matrix in the format created from an image, re-formats it, and returns a
-Map. Images view a matrix with its indexing top-down and left-right. Maps view a
+GridMap. Images view a matrix with its indexing top-down and left-right. GridMaps view a
 matrix with its indexing left-right and bottom-up.
 
 # Examples
@@ -83,7 +81,7 @@ map = imgToMap(image, bounds)
 map = imgToMap(image) # or auto bounds
 ```
 """
-imgToMap(img, args...) = Map(rotr90(img), args...)
+imgToMap(img, args...) = GridMap(rotr90(img), args...)
 
 mapToImg(map) = rotl90(map)
 
@@ -219,17 +217,17 @@ end
 """
 $(TYPEDSIGNATURES)
 
-Generates belief and uncertainty Maps from a belief model for chosen bounds and
-dimensions. Can also pass in another Map in place of bounds and dims.
+Generates belief and uncertainty GridMaps from a belief model for chosen bounds and
+dimensions. Can also pass in another GridMap in place of bounds and dims.
 """
-function produceMaps(beliefModel::MQGP, map::Map; quantity=1)
+function produceMaps(beliefModel::MQGP, map::GridMap; quantity=1)
     return produceMaps(beliefModel, getBounds(map), size(map); quantity)
 end
 
 function produceMaps(beliefModel::MQGP, bounds, dims; quantity=1)
     axs, points = generateAxes(bounds, dims)
     μ, σ = beliefModel(tuple.(points, quantity))
-    pred_map, err_map = (Map(v, bounds) for v in (μ, σ))
+    pred_map, err_map = (GridMap(v, bounds) for v in (μ, σ))
 
     return pred_map, err_map
 end
@@ -237,14 +235,14 @@ end
 """
 $(TYPEDSIGNATURES)
 
-Generates a Map from a function for chosen bounds and dimensions. Can also pass
-in another Map in place of bounds and dims.
+Generates a GridMap from a function for chosen bounds and dimensions. Can also pass
+in another GridMap in place of bounds and dims.
 """
-produceMap(func, map::Map) = produceMap(func, getBounds(map), size(map))
+produceMap(func, map::GridMap) = produceMap(func, getBounds(map), size(map))
 
 function produceMap(func, bounds, dims)
     axs, points = generateAxes(bounds, dims)
-    return Map(func.(points), bounds)
+    return GridMap(func.(points), bounds)
 end
 
 end

@@ -5,12 +5,13 @@ using DelimitedFiles: readdlm
 using Statistics: cor
 using Random: seed!
 
+using MultiQuantityGPs.Kernels: multiKernel, mtoKernel
+using GridMaps: GridMap, getBounds
+
 using InformativeSampling
-using .Maps: Map, getBounds
-using .Samples: Sample, MapsSampler, selectSampleLocation
+using .Samples: Sample, GridMapsSampler, selectSampleLocation
 using .SampleCosts: MIPT, EIGF, DistScaledEIGF, OnlyVar, DerivVar, DistScaledDerivVar, LogLikelihood
 using .Missions: Mission
-using MultiQuantityGPs.Kernels: multiKernel, mtoKernel
 
 using InformativeSamplingUtils
 using .Visualization: vis
@@ -38,7 +39,7 @@ function ausMission(; seed_val=0, num_samples=30,
     bounds = (lower = [0.0, 0.0], upper = [1.0, 1.0])
 
     map0 = imgToMap(normalize(images[1]), bounds)
-    sampler = MapsSampler(map0)
+    sampler = GridMapsSampler(map0)
 
     prior_maps = [imgToMap(normalize(img), bounds) for img in images[2:end]]
 

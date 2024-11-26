@@ -2,9 +2,10 @@
 
 using MultiQuantityGPs
 using MultiQuantityGPs.Kernels
+using GridMaps
 
 using InformativeSampling
-using .Maps, .Missions, .Samples, .ROSInterface, .SampleCosts
+using .Missions, .Samples, .ROSInterface, .SampleCosts
 
 using InformativeSamplingUtils
 using .DataIO
@@ -598,7 +599,9 @@ end
 
 err_range = (0.0, err_range[2])
 
-using .SampleCosts, .Samples, .Maps
+using GridMaps
+
+using .SampleCosts, .Samples,
 
 pyplot()
 
@@ -730,7 +733,9 @@ savefig(output_dir * "thesis/obj_func_comp.png")
 
 # eigf, dist-scaled
 
-using .SampleCosts, .Samples, .Maps
+using GridMaps
+
+using .SampleCosts, .Samples,
 
 pyplot()
 

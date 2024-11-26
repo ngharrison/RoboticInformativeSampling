@@ -7,8 +7,9 @@ from julia import Pkg, Main
 Pkg.activate('app')
 
 import julia.MultiQuantityGPs
+import julia.GridMaps
 
-from julia.InformativeSampling import Samples, GridMaps, SampleCosts, Missions
+from julia.InformativeSampling import Samples, SampleCosts, Missions
 
 # from julia.InformativeSamplingUtils import DataIO, Visualization
 

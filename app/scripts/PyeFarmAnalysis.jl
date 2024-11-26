@@ -1,8 +1,9 @@
 using MultiQuantityGPs
 using MultiQuantityGPs.Kernels
+using GridMaps
 
 using InformativeSampling
-using .Maps, .Missions, .Samples, .ROSInterface
+using .Missions, .Samples, .ROSInterface
 
 using InformativeSamplingUtils
 using .DataIO, .Visualization
@@ -183,7 +184,7 @@ bounds = getBounds(occupancy)
 
 axes, points = generateAxes(occupancy)
 μ, σ = gt_belief(tuple.(points, 1))
-gt_pred_map = Map(μ, bounds)
+gt_pred_map = GridMap(μ, bounds)
 
 name = "30samples_50x50_priors"
 file_name = output_dir * "pye_farm_trial_named/" * name * output_ext
@@ -192,7 +193,7 @@ beliefs = data["beliefs"]
 
 for i in 1:30
     μ, σ = beliefs[i](tuple.(points, 1))
-    pred_map = Map(μ, bounds)
+    pred_map = GridMap(μ, bounds)
     err_map = abs.(pred_map .- gt_pred_map)
     vis(gt_pred_map, pred_map; titles=["gt", "belief"])
     println(mean(err_map))
@@ -224,7 +225,7 @@ occupancy = mission.occupancy
 bounds = getBounds(occupancy)
 axes, points = generateAxes(occupancy)
 μ, σ = beliefs[15](tuple.(vec(points), 1))
-pred_map = Map(μ, bounds)
+pred_map = GridMap(μ, bounds)
 
 fig, ax, hm = heatmap(pred_map')
 Colorbar(fig[1, 2], hm, width=20)
@@ -303,7 +304,7 @@ display(p)
 axs, points = generateAxes(elevMap)
 ss = vec(Sample.(tuple.(points, 1), elevMap))
 bm = MQGP(ss, bounds)
-vis(bm, [], Map(zeros(Bool,size(elev_img)), bounds))
+vis(bm, [], GridMap(zeros(Bool,size(elev_img)), bounds))
 
 name = "pye_farm_trial_named/100samples_50x50_grid"
 file_name = output_dir * "$(name)" * output_ext
@@ -312,7 +313,7 @@ samples = data["samples"]
 ss = vec(Sample.(tuple.(points, 2), elevMap))
 bm = MQGP([ss; samples], bounds)
 quantityCorMat(bm)
-vis(bm, [], Map(zeros(Bool,size(elev_img)), bounds); quantity=1)
+vis(bm, [], GridMap(zeros(Bool,size(elev_img)), bounds); quantity=1)
 
 # still not getting consistent or expected results
 
@@ -668,7 +669,7 @@ axs, points = generateAxes(mission.occupancy)
 pred, _ = bm(tuple.(vec(points), 1))
 mean(s.y for s in samples), mean(pred)
 
-# saveBeliefMapToPng(bm, Map(zeros(200, 200), bounds), "food_for_munch")
+# saveBeliefMapToPng(bm, GridMap(zeros(200, 200), bounds), "food_for_munch")
 
 quantityCorMat(bm)
 

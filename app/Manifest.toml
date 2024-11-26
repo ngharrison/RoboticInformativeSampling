@@ -2,7 +2,7 @@
 
 julia_version = "1.10.2"
 manifest_format = "2.0"
-project_hash = "175eff5065b8274a89c8fe1e1dd32eb619951049"
+project_hash = "b81aa0b9a2609707f2e568db91462c0f4e0c5613"
 
 [[deps.AStarGridSearch]]
 deps = ["DataStructures", "DocStringExtensions", "LinearAlgebra"]
@@ -547,6 +547,14 @@ git-tree-sha1 = "1dc470db8b1131cfc7fb4c115de89fe391b9e780"
 uuid = "86223c79-3864-5bf0-83f7-82e725a168b6"
 version = "1.12.0"
 
+[[deps.GridMaps]]
+deps = ["DocStringExtensions"]
+git-tree-sha1 = "20e49d7e9698be413d726c74befac28560b8edb8"
+repo-rev = "main"
+repo-url = "https://github.com/ngharrison/GridMaps.jl.git"
+uuid = "889a5e0f-cea4-48d1-aea6-4a3fe9168d86"
+version = "0.1.0"
+
 [[deps.Grisu]]
 git-tree-sha1 = "53bb909d1151e57e2484c3d1b53e19552b887fb2"
 uuid = "42e2da0e-8278-4e71-bc24-59509adca0fe"
@@ -712,13 +720,13 @@ uuid = "d25df0c9-e2be-5dd7-82c8-3ad0b3e990b9"
 version = "0.1.5"
 
 [[deps.InformativeSampling]]
-deps = ["AStarGridSearch", "AbstractGPs", "DataStructures", "DocStringExtensions", "IrrationalConstants", "LinearAlgebra", "MultiQuantityGPs", "Optim", "ParameterHandling", "Pkg", "PyCall", "Random", "Rotations", "Statistics"]
+deps = ["AStarGridSearch", "AbstractGPs", "DataStructures", "DocStringExtensions", "GridMaps", "IrrationalConstants", "LinearAlgebra", "MultiQuantityGPs", "Optim", "ParameterHandling", "Pkg", "PyCall", "Random", "Rotations", "Statistics"]
 path = "../core"
 uuid = "bfd01cc8-db36-4de5-b056-8ab04eef9441"
 version = "0.1.0"
 
 [[deps.InformativeSamplingUtils]]
-deps = ["AStarGridSearch", "Dates", "Distributions", "DocStringExtensions", "Images", "InformativeSampling", "JLD2", "LinearAlgebra", "MultiQuantityGPs", "Plots", "Statistics"]
+deps = ["AStarGridSearch", "Dates", "Distributions", "DocStringExtensions", "GridMaps", "Images", "InformativeSampling", "JLD2", "LinearAlgebra", "MultiQuantityGPs", "Plots", "Statistics"]
 path = "../utils"
 uuid = "1d6b69be-e25c-46ac-b1c5-442f720809e4"
 version = "0.1.0"

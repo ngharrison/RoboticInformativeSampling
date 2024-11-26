@@ -2,9 +2,7 @@
 using Plots
 using Plots: mm
 
-using InformativeSampling
-
-using .Maps: res, generateAxes
+using GridMaps: res, generateAxes
 
 using InformativeSamplingUtils
 using .DataIO: output_dir, output_ext

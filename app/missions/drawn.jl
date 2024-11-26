@@ -2,9 +2,10 @@
 using Logging: global_logger, ConsoleLogger, Info, Debug
 using DelimitedFiles: readdlm
 
+using GridMaps: GridMap, pointToCell
+
 using InformativeSampling
-using .Maps: Map, pointToCell
-using .Samples: MapsSampler
+using .Samples: GridMapsSampler
 using .SampleCosts: LogNormed
 using .Missions: Mission
 
@@ -31,7 +32,7 @@ function drawnMission()
 
     n = floor(Int, sqrt(maximum(size.(data, 1))))
 
-    maps = [Map(zeros(n, n), bounds) for _ in 1:2]
+    maps = [GridMap(zeros(n, n), bounds) for _ in 1:2]
 
     for (x,y,z) in eachrow(data[1])
         maps[1][pointToCell([x,y], maps[1])] = z
@@ -40,7 +41,7 @@ function drawnMission()
         maps[2][pointToCell([x,y], maps[2])] = z
     end
 
-    sampler = MapsSampler(maps)
+    sampler = GridMapsSampler(maps)
 
     sampleCostType = LogNormed
 
@@ -49,7 +50,7 @@ function drawnMission()
     start_locs = [[0.8, 0.6]] # starting locations
     num_samples = 20
 
-    occupancy = Map(zeros(Bool, n, n), bounds)
+    occupancy = GridMap(zeros(Bool, n, n), bounds)
 
     mission = Mission(;
         occupancy,

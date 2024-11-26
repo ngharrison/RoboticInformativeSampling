@@ -1,9 +1,9 @@
 
-using InformativeSampling
-
-using .Maps: generateAxes
-using .Missions: Mission
 using MultiQuantityGPs: MQGP
+using GridMaps: generateAxes
+
+using InformativeSampling
+using .Missions: Mission
 using .Samples: Sample
 
 using InformativeSamplingUtils

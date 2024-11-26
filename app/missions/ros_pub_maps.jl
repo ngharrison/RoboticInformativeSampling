@@ -5,11 +5,12 @@ Pkg.activate(Base.source_dir() * "/..")
 
 using Logging: global_logger, ConsoleLogger, Info, Debug
 
+using MultiQuantityGPs: MQGP
+using GridMaps: GridMap, generateAxes, getBounds
+
 using InformativeSampling
-using .Maps: Map, generateAxes, getBounds
 using .SampleCosts: EIGF
 using .Missions: Mission
-using MultiQuantityGPs: MQGP
 
 # this requires a working rospy installation
 using .ROSInterface: ROSSampler
@@ -30,7 +31,7 @@ function rosMission(; num_samples=4)
 
     bounds = (lower = [1.0, 1.0], upper = [9.0, 9.0])
 
-    occupancy = Map(zeros(Bool, 100, 100), bounds)
+    occupancy = GridMap(zeros(Bool, 100, 100), bounds)
 
     sampleCostType = EIGF
 

@@ -17,9 +17,10 @@ using .informative_sampling.msg: BeliefModelParameters
 using .std_msgs.msg: Float64MultiArray, MultiArrayLayout, MultiArrayDimension
 
 using MultiQuantityGPs
+using GridMaps
 
 using InformativeSampling
-using .Samples, .Maps, .SampleCosts
+using .Samples, .SampleCosts
 
 using Random: seed!
 
@@ -132,7 +133,7 @@ function handleNextSampleLocation(req)
     beliefModel = MQGP(samples, bounds; noise)
 
     dims = Tuple(d.size for d in req.occupancy.layout.dim)
-    occupancy = Map(reshape(Bool.(req.occupancy.data), dims), bounds)
+    occupancy = GridMap(reshape(Bool.(req.occupancy.data), dims), bounds)
 
     sampleCost = DistScaledEIGF(
         occupancy, samples, beliefModel, req.quantities, req.weights
@@ -170,7 +171,7 @@ function handleBeliefMapsAndNextSampleLocation(req)
         for data in (μ, σ)
     )
 
-    occupancy = Map(reshape(Bool.(req.occupancy.data), dims), bounds)
+    occupancy = GridMap(reshape(Bool.(req.occupancy.data), dims), bounds)
 
     sampleCost = DistScaledEIGF(
         occupancy, samples, beliefModel, req.quantities, req.weights

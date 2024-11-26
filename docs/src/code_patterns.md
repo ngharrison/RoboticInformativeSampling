@@ -16,19 +16,19 @@ A consistent pattern is followed for most data and functions in this repo using 
 3. zero to many method definitions -- what it does when it is called (possibly with arguments)
 
 
-As an example, here is a simplified version of the Map type:
+As an example, here is a simplified version of the GridMap type:
 ```julia
 # struct definition
-struct Map
+struct GridMap
     data
     bounds
 end
 
 # constructor definition
-Map(data) = Map(data, (lower=[0.0, 0.0], upper=[1.0, 1.0]))
+GridMap(data) = GridMap(data, (lower=[0.0, 0.0], upper=[1.0, 1.0]))
 
 # method definition, returns the value at that location
-function (map::Map)(x::Location)
+function (map::GridMap)(x::Location)
     checkBounds(x, map)
     map.data[pointToCell(x, map)]
 end
@@ -37,7 +37,7 @@ end
 It can then be used like:
 ```julia
 data = reshape(1:25, 5, 5)
-m = Map(data) # initialize through constructor
+m = GridMap(data) # initialize through constructor
 
 x = [.2, .75]
 val = m(x) # call method to perform its function and get result

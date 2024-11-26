@@ -1,9 +1,9 @@
 
-using InformativeSampling
-
-using .Maps: res, generateAxes
-using .Missions: Mission
 using MultiQuantityGPs: MQGP, quantityCovMat, LinearModel, rSquared
+using GridMaps: res, generateAxes
+
+using InformativeSampling
+using .Missions: Mission
 using .Samples: Sample
 
 using InformativeSamplingUtils

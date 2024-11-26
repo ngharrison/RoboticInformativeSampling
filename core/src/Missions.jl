@@ -15,8 +15,8 @@ using DocStringExtensions: TYPEDSIGNATURES, TYPEDFIELDS, EXPORTS
 
 using MultiQuantityGPs: MQGP, quantityCorMat
 using MultiQuantityGPs.Kernels: multiKernel
+using GridMaps: randomPoint, getBounds
 
-using ..Maps: randomPoint, getBounds
 using ..Samples: Sample, selectSampleLocation, takeSamples
 using ..SampleCosts: values, DistScaledEIGF
 

@@ -110,15 +110,15 @@ writedlm(base_name * "/samples.txt", [new_samples], "\n")
 height_samples = filter(s->s.x[2]==1, samples)
 ndvi_samples = filter(s->s.x[2]==2, samples)
 
-using .Maps
+using GridMaps
 
-m_grid = Map(zeros(25, 25), mission.occupancy.bounds)
+m_grid = GridMap(zeros(25, 25), mission.occupancy.bounds)
 for s in height_samples
     m_grid[pointToCell(s.x[1], m_grid)] = s.y
 end
 writedlm(base_name * "/avg_height.csv", mapToImg(m_grid), ',')
 
-m_grid = Map(zeros(25, 25), mission.occupancy.bounds)
+m_grid = GridMap(zeros(25, 25), mission.occupancy.bounds)
 for s in ndvi_samples
     m_grid[pointToCell(s.x[1], m_grid)] = s.y
 end

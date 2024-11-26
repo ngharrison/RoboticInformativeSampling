@@ -1,8 +1,9 @@
 
 using MultiQuantityGPs
+using GridMaps
 
 using InformativeSampling
-using .Maps, .Missions, .Samples, .ROSInterface
+using .Missions, .Samples, .ROSInterface
 
 using InformativeSamplingUtils
 using .DataIO

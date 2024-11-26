@@ -1,7 +1,7 @@
 
 using Documenter
 
-using InformativeSampling: Maps, Missions,
+using InformativeSampling: Missions,
       Samples, SampleCosts, ROSInterface
 
 using InformativeSamplingUtils: DataIO, Visualization, Metrics

@@ -3,9 +3,10 @@ using LinearAlgebra: I, norm
 using Statistics: mean, cor
 using Random: seed!
 
+using GridMaps: GridMap, generateAxes
+
 using InformativeSampling
-using .Maps: Map, generateAxes
-using .Samples: Sample, MapsSampler
+using .Samples: Sample, GridMapsSampler
 using .SampleCosts: EIGF
 using .Missions: Mission
 
@@ -18,7 +19,7 @@ function synMission(; seed_val=0, num_samples=30, num_peaks=3, priors=Bool[1,1,1
 
     bounds = (lower = [0.0, 0.0], upper = [1.0, 1.0])
 
-    occupancy = Map(zeros(Bool, 100, 100), bounds)
+    occupancy = GridMap(zeros(Bool, 100, 100), bounds)
 
     ## initialize ground truth
 
@@ -32,7 +33,7 @@ function synMission(; seed_val=0, num_samples=30, num_peaks=3, priors=Bool[1,1,1
     ggt = GaussGroundTruth(peaks)
     _, points = generateAxes(occupancy)
     mat = ggt(points)
-    map0 = Map(mat./maximum(mat), bounds)
+    map0 = GridMap(mat./maximum(mat), bounds)
 
     ## Create prior prior_samples
 
@@ -40,15 +41,15 @@ function synMission(; seed_val=0, num_samples=30, num_peaks=3, priors=Bool[1,1,1
     prior_maps = []
 
     # multiplicative
-    m = Map(abs.(map0 .* randn()), bounds)
+    m = GridMap(abs.(map0 .* randn()), bounds)
     push!(prior_maps, m)
 
     # additive
-    m = Map(abs.(map0 .+ 0.2 .* randn(size(map0))), bounds)
+    m = GridMap(abs.(map0 .+ 0.2 .* randn(size(map0))), bounds)
     push!(prior_maps, m)
 
     # # both
-    # push!(prior_maps, Map(abs.(map0 .* randn() + 0.1 .* randn(size(map0))), bounds))
+    # push!(prior_maps, GridMap(abs.(map0 .* randn() + 0.1 .* randn(size(map0))), bounds))
 
     # # spatial shift
     # t = rand(1:7)
@@ -63,14 +64,14 @@ function synMission(; seed_val=0, num_samples=30, num_peaks=3, priors=Bool[1,1,1
     end
     tggt = GaussGroundTruth(peaks)
     tmat = tggt(points)
-    m = Map(tmat./maximum(tmat), bounds)
+    m = GridMap(tmat./maximum(tmat), bounds)
     push!(prior_maps, m)
 
     # # purely random values
-    # m = Map(rand(size(map0)...), bounds)
+    # m = GridMap(rand(size(map0)...), bounds)
     # push!(prior_maps, m)
 
-    sampler = MapsSampler(map0)
+    sampler = GridMapsSampler(map0)
 
     sampleCostType = EIGF
 

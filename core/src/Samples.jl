@@ -11,9 +11,9 @@ module Samples
 using Optim: optimize, ParticleSwarm
 using DocStringExtensions: TYPEDSIGNATURES, TYPEDFIELDS, TYPEDEF, EXPORTS
 
-using ..Maps: Map
+using GridMaps: GridMap
 
-export Sample, selectSampleLocation, takeSamples, MapsSampler, UserSampler,
+export Sample, selectSampleLocation, takeSamples, GridMapsSampler, UserSampler,
        Location, SampleInput
 
 """
@@ -98,42 +98,42 @@ end
 
 """
 Handles samples of the form (location, quantity) to give the value from the
-right map. Internally a tuple of Maps.
+right map. Internally a tuple of GridMaps.
 
-Constructor can take in a tuple or vector of Maps or each Map as a separate
+Constructor can take in a tuple or vector of GridMaps or each GridMap as a separate
 argument.
 
 # Examples
 ```julia
-ss = MapsSampler(Map(zeros(5, 5)), Map(ones(5, 5)))
+ss = GridMapsSampler(GridMap(zeros(5, 5)), GridMap(ones(5, 5)))
 
 loc = [.2, .75]
 ss(loc) # result: [0, 1]
 ss((loc, 2)) # result: 1
 ```
 """
-struct MapsSampler{T1<:Real}
-    maps::Tuple{Vararg{Map{T1}}}
+struct GridMapsSampler{T1<:Real}
+    maps::Tuple{Vararg{GridMap{T1}}}
 end
 
-MapsSampler(maps::Map...) = MapsSampler(maps)
-MapsSampler(maps::AbstractVector{<:Map}) = MapsSampler(Tuple(maps))
+GridMapsSampler(maps::GridMap...) = GridMapsSampler(maps)
+GridMapsSampler(maps::AbstractVector{<:GridMap}) = GridMapsSampler(Tuple(maps))
 
-(ss::MapsSampler)(loc::Location) = [map(loc) for map in ss]
-(ss::MapsSampler)((loc, q)::SampleInput) = ss[q](loc)
+(ss::GridMapsSampler)(loc::Location) = [map(loc) for map in ss]
+(ss::GridMapsSampler)((loc, q)::SampleInput) = ss[q](loc)
 
 # make it behave like a tuple
-Base.keys(m::MapsSampler) = keys(m.maps)
-Base.length(m::MapsSampler) = length(m.maps)
-Base.iterate(m::MapsSampler) = iterate(m.maps)
-Base.iterate(m::MapsSampler, i::Integer) = iterate(m.maps, i)
-Base.Broadcast.broadcastable(m::MapsSampler) = Ref(m) # don't broadcast
-Base.IndexStyle(::Type{<:MapsSampler}) = IndexLinear()
-Base.getindex(m::MapsSampler, i::Integer) = m.maps[i]
+Base.keys(m::GridMapsSampler) = keys(m.maps)
+Base.length(m::GridMapsSampler) = length(m.maps)
+Base.iterate(m::GridMapsSampler) = iterate(m.maps)
+Base.iterate(m::GridMapsSampler, i::Integer) = iterate(m.maps, i)
+Base.Broadcast.broadcastable(m::GridMapsSampler) = Ref(m) # don't broadcast
+Base.IndexStyle(::Type{<:GridMapsSampler}) = IndexLinear()
+Base.getindex(m::GridMapsSampler, i::Integer) = m.maps[i]
 
 # change display
-function Base.show(io::IO, ss::MapsSampler{T1}) where T1
-    print(io, "MapsSampler{$T1}:")
+function Base.show(io::IO, ss::GridMapsSampler{T1}) where T1
+    print(io, "GridMapsSampler{$T1}:")
     for map in ss
         print("\n\t", map)
     end

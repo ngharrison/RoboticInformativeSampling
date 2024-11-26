@@ -11,9 +11,9 @@ using Plots: plot, heatmap, scatter!, @layout, mm, grid
 using DocStringExtensions: TYPEDSIGNATURES, TYPEDEF, EXPORTS
 
 using MultiQuantityGPs: MQGP
+using GridMaps: GridMap, res, generateAxes, getBounds
 
 using InformativeSampling
-using .Maps: Map, res, generateAxes, getBounds
 using .SampleCosts: SampleCost
 
 export visualize, vis
@@ -80,7 +80,7 @@ $(TYPEDSIGNATURES)
 Method to show a ground truth map and up to three other prior data maps.
 Pass each map in as its own argument.
 """
-function visualize(maps::Map...;
+function visualize(maps::GridMap...;
                    titles=["Quantity of Interest"; ["Prior $i" for i in 1:length(maps)-1]],
                    points=[])
     plot(
@@ -97,9 +97,9 @@ end
 """
 $(TYPEDSIGNATURES)
 
-Method to show any Map data.
+Method to show any GridMap data.
 """
-function visualize(map::Map, title="Map"; points=[], clim=nothing)
+function visualize(map::GridMap, title="Map"; points=[], clim=nothing)
     axes = range.(getBounds(map)..., size(map))
     plt = heatmap(axes..., map';
                   xlabel="x1",

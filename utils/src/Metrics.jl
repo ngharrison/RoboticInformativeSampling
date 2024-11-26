@@ -11,10 +11,10 @@ using LinearAlgebra: norm
 using DocStringExtensions: TYPEDSIGNATURES, EXPORTS
 
 using MultiQuantityGPs: MQGP, quantityCorMat
+using GridMaps: generateAxes
 
 using InformativeSampling
-using .Maps: generateAxes
-using .Samples: MapsSampler
+using .Samples: GridMapsSampler
 
 export calcMetrics
 
@@ -26,7 +26,7 @@ A collection of methods that calculates metrics from sampling missions.
 function calcMetrics end
 
 function calcMetrics(mission, samples, beliefs)
-    mission.sampler isa MapsSampler ||
+    mission.sampler isa GridMapsSampler ||
         error("don't know how to get a ground truth from that type of sampler")
 
     M = mission
@@ -52,7 +52,7 @@ function calcMetrics(mission, samples, beliefs)
 end
 
 function calcMetrics(mission, samples, beliefs, times, q)
-    mission.sampler isa MapsSampler ||
+    mission.sampler isa GridMapsSampler ||
         error("don't know how to get a ground truth from that type of sampler")
 
     M = mission

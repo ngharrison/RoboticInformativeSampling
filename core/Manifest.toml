@@ -2,7 +2,7 @@
 
 julia_version = "1.10.2"
 manifest_format = "2.0"
-project_hash = "e518cddcbb9cb128988523fca674e5f4483d71a2"
+project_hash = "e567ffdc05ca233514a5ad50d46d53fcd9caeacf"
 
 [[deps.AStarGridSearch]]
 deps = ["DataStructures", "DocStringExtensions", "LinearAlgebra"]
@@ -258,6 +258,14 @@ version = "0.4.12"
 [[deps.Future]]
 deps = ["Random"]
 uuid = "9fa8497b-333b-5362-9e8d-4d0656e87820"
+
+[[deps.GridMaps]]
+deps = ["DocStringExtensions"]
+git-tree-sha1 = "20e49d7e9698be413d726c74befac28560b8edb8"
+repo-rev = "main"
+repo-url = "https://github.com/ngharrison/GridMaps.jl.git"
+uuid = "889a5e0f-cea4-48d1-aea6-4a3fe9168d86"
+version = "0.1.0"
 
 [[deps.HypergeometricFunctions]]
 deps = ["LinearAlgebra", "OpenLibm_jll", "SpecialFunctions"]

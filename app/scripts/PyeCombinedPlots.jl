@@ -1,9 +1,10 @@
 #* starter stuff
 
 using MultiQuantityGPs
+using GridMaps
 
 using InformativeSampling
-using .Maps, .Missions, .Samples
+using .Missions, .Samples
 
 using InformativeSamplingUtils
 using .DataIO, .Visualization

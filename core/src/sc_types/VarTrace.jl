@@ -1,9 +1,10 @@
 
 using LinearAlgebra: logdet
 
-using ..Maps: generateAxes
-using ..Samples: Sample
 using MultiQuantityGPs: MQGP
+using GridMaps: generateAxes
+
+using ..Samples: Sample
 
 @doc raw"""
 Similar to [InfoGain](@ref) but uses only variances rather than the full

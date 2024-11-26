@@ -5,10 +5,10 @@ using Statistics: cor
 using DelimitedFiles: readdlm
 using Plots
 
-using InformativeSampling
+using GridMaps: GridMap, getBounds
 
-using .Maps: Map, getBounds
-using .Samples: Sample, MapsSampler, selectSampleLocation
+using InformativeSampling
+using .Samples: Sample, GridMapsSampler, selectSampleLocation
 
 using InformativeSamplingUtils
 using .Visualization: visualize
@@ -40,7 +40,7 @@ map0 = imgToMap(normalize(ims_sm[1]), bounds)
 # savefig("temp.png")
 
 # scatter!([3211, 3211, 3310, 3310], 1800 .- [1141, 1240, 1141, 1240])
-sampler = MapsSampler(map0)
+sampler = GridMapsSampler(map0)
 
 prior_maps = [imgToMap(normalize(img), bounds) for img in ims_sm[2:end]]
 

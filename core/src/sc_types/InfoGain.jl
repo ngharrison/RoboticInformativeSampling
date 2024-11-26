@@ -1,9 +1,10 @@
 
 using LinearAlgebra: logdet
 
-using ..Maps: generateAxes
-using ..Samples: Sample
 using MultiQuantityGPs: MQGP, fullCov
+using GridMaps: generateAxes
+
+using ..Samples: Sample
 
 @doc raw"""
 Derived from the idea of information gain across the region. Returns the entropy

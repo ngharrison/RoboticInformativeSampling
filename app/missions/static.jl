@@ -1,6 +1,7 @@
 
+using GridMaps: GridMap, generateAxes
+
 using InformativeSampling
-using .Maps: Map, generateAxes
 using .Samples: Sample, takeSamples
 using .ROSInterface: ROSSampler
 

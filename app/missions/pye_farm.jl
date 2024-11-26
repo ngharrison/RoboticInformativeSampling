@@ -3,8 +3,9 @@ using Logging: global_logger, ConsoleLogger, Info, Debug
 using FileIO: load
 using Images: gray
 
+using GridMaps: GridMap
+
 using InformativeSampling
-using .Maps: Map
 using .SampleCosts: EIGF
 using .Samples: Sample
 using .Missions: Mission
@@ -63,7 +64,7 @@ function pyeFarmMission(; num_samples=4)
 
     prior_maps = [elevMap]
 
-    occupancy = Map(zeros(Bool, 100, 100), bounds)
+    occupancy = GridMap(zeros(Bool, 100, 100), bounds)
 
     # sample sparsely from the prior maps
     # currently all data have the same sample numbers and locations

@@ -1,6 +1,7 @@
 
+using GridMaps: GridMap
+
 using InformativeSampling
-using .Maps: Map
 using .Samples: UserSampler
 using .SampleCosts: EIGF
 using .Missions: Mission
@@ -12,7 +13,7 @@ function pickMission(; num_samples=30)
 
     bounds = (lower = [0.0, 0.0], upper = [1.0, 1.0])
 
-    occupancy = Map(zeros(Bool, 100, 100), bounds)
+    occupancy = GridMap(zeros(Bool, 100, 100), bounds)
 
     ## initialize ground truth
 

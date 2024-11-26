@@ -1,9 +1,10 @@
 
 using MultiQuantityGPs
 using MultiQuantityGPs.Kernels
+using GridMaps
 
 using InformativeSampling
-using .Maps, .Missions, .Samples
+using .Missions, .Samples
 
 using InformativeSamplingUtils
 using .DataIO, .Visualization
