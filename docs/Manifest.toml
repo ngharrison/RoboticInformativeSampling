@@ -2,7 +2,7 @@
 
 julia_version = "1.10.2"
 manifest_format = "2.0"
-project_hash = "37ed5736b303784d92374bd83b481a4ff12fa3c6"
+project_hash = "65cef548f0a1c1066941567d090acdef86ebb914"
 
 [[deps.ANSIColoredPrinters]]
 git-tree-sha1 = "574baf8110975760d391c710b6341da1afa48d8c"
@@ -770,7 +770,7 @@ uuid = "bfd01cc8-db36-4de5-b056-8ab04eef9441"
 version = "0.1.0"
 
 [[deps.InformativeSamplingUtils]]
-deps = ["AStarGridSearch", "Dates", "Distributions", "DocStringExtensions", "GridMaps", "Images", "InformativeSampling", "JLD2", "LinearAlgebra", "MultiQuantityGPs", "Plots", "Statistics"]
+deps = ["Dates", "Distributions", "DocStringExtensions", "GridMaps", "Images", "InformativeSampling", "JLD2", "LinearAlgebra", "MultiQuantityGPs", "Plots", "Statistics"]
 path = "../utils"
 uuid = "1d6b69be-e25c-46ac-b1c5-442f720809e4"
 version = "0.1.0"

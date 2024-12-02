@@ -4,7 +4,6 @@ authors = ["Nicholas Harrison <nicholasharrison222@gmail.com>"]
 version = "0.1.0"
 
 [deps]
-AStarGridSearch = "892abc44-b326-442a-ba8e-5eb8be33ac6f"
 Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
 DocStringExtensions = "ffbed154-4ef7-542d-bbb7-c09d3a79fcae"
