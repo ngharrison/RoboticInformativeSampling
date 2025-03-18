@@ -20,10 +20,10 @@ seed_val=0; priors=Bool[1,1,1];
 seed!(seed_val)
 
 file_names = [
-    "vege_ave_aus.csv",
-    "topo_ave_aus.csv",
-    "temp_ave_aus.csv",
-    "rain_ave_aus.csv"
+    "vege_ave_nsw.csv",
+    "topo_ave_nsw.csv",
+    "temp_ave_nsw.csv",
+    "rain_ave_nsw.csv"
 ]
 
 images = readdlm.(maps_dir .* file_names, ',')
@@ -84,26 +84,26 @@ prior_samples = [Sample((x, i+length(sampler)), d(x))
 axs = range.(bounds..., size(occupancy))
 p1 = heatmap(axs..., map0', title="Vegetation (QOI)", ticks=false, framestyle=:none)
 p2 = heatmap(axs..., prior_maps[1]', title="Elevation", ticks=false)
-scatter!(first.(points_sp), last.(points_sp);
-         framestyle=:none,
-         label="Samples",
-         color=:green,
-         legend=(0.15, 0.87),
-         markersize=6)
+# scatter!(first.(points_sp), last.(points_sp);
+#          framestyle=:none,
+#          label="Samples",
+#          color=:green,
+#          legend=(0.15, 0.87),
+#          markersize=6)
 p3 = heatmap(axs..., prior_maps[2]', title="Ground Temperature", ticks=false)
-scatter!(first.(points_sp), last.(points_sp);
-         framestyle=:none,
-         label="Samples",
-         color=:green,
-         legend=(0.15, 0.87),
-         markersize=6)
+# scatter!(first.(points_sp), last.(points_sp);
+#          framestyle=:none,
+#          label="Samples",
+#          color=:green,
+#          legend=(0.15, 0.87),
+#          markersize=6)
 p4 = heatmap(axs..., prior_maps[3]', title="Rainfall", ticks=false)
-scatter!(first.(points_sp), last.(points_sp);
-         framestyle=:none,
-         label="Samples",
-         color=:green,
-         legend=(0.15, 0.87),
-         markersize=6)
+# scatter!(first.(points_sp), last.(points_sp);
+#          framestyle=:none,
+#          label="Samples",
+#          color=:green,
+#          legend=(0.15, 0.87),
+#          markersize=6)
 cy = 0:.001:1
 cbar = heatmap([0], cy, reshape(cy, :, 1),
                # aspect_ratio=1/100,
@@ -122,4 +122,4 @@ plot(p1, p2, p3, p4, cbar,
      margin=4Plots.mm
 )
 
-savefig(output_dir * "paper/aus_ave_data_maps.png")
+savefig(output_dir * "paper/aus_patch_data_maps_no_samples.png")
