@@ -18,7 +18,7 @@ The place where code to analyze saved data is located.
 
 A python files used to test simple usage with ROS.
 
-Also contains the `server.jl` script which handles ROS service requests.
+Also contains the `server.jl` script which handles ROS service requests and the `ROSInterface.jl` module file that implements a sampler that uses ROS communication to handle sampling within a mission.
 
 ## maps
 

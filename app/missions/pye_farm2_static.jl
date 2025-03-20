@@ -3,6 +3,8 @@ using Logging: global_logger, ConsoleLogger, Info, Debug
 
 using InformativeSampling
 using .Samples: takeSamples
+
+include(dirname(Base.active_project()) * "/ros/ROSInterface.jl")
 using .ROSInterface: ROSSampler
 
 using InformativeSamplingUtils

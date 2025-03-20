@@ -12,6 +12,7 @@ using .SampleCosts: EIGF
 using .Missions: Mission
 
 # this requires a working rospy installation
+include(dirname(Base.active_project()) * "/ros/ROSInterface.jl")
 using .ROSInterface: ROSSampler
 
 function rosMission(; num_samples=4)

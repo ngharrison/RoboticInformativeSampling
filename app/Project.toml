@@ -2,6 +2,7 @@
 AbstractGPs = "99985d1d-32ba-4be9-9821-2ec096f28918"
 DelimitedFiles = "8bb1440f-4735-579b-a4ab-409b98df4dab"
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
+DocStringExtensions = "ffbed154-4ef7-542d-bbb7-c09d3a79fcae"
 FileIO = "5789e2e9-d7fb-5bc7-8068-2c6fae9b9549"
 GridMaps = "889a5e0f-cea4-48d1-aea6-4a3fe9168d86"
 Images = "916415d5-f1e6-5110-898d-aaa5f9f070e0"

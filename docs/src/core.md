@@ -19,9 +19,3 @@ Modules = [Samples]
 ```@autodocs
 Modules = [SampleCosts]
 ```
-
-## ROSInterface.jl
-
-```@autodocs
-Modules = [ROSInterface]
-```

@@ -12,6 +12,7 @@ using .Samples: Sample, GridMapsSampler
 using .Missions: Mission
 
 # this requires a working rospy installation
+include(dirname(Base.active_project()) * "/ros/ROSInterface.jl")
 using .ROSInterface: ROSSampler
 
 using InformativeSamplingUtils

@@ -3,6 +3,8 @@ using GridMaps: GridMap, generateAxes
 
 using InformativeSampling
 using .Samples: Sample, takeSamples
+
+include(dirname(Base.active_project()) * "/ros/ROSInterface.jl")
 using .ROSInterface: ROSSampler
 
 # the topics that will be listened to for measurements

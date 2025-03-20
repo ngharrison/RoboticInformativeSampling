@@ -3,7 +3,10 @@ using MultiQuantityGPs
 using GridMaps
 
 using InformativeSampling
-using .Missions, .Samples, .ROSInterface
+using .Missions, .Samples
+
+include(dirname(Base.active_project()) * "/ros/ROSInterface.jl")
+using .ROSInterface
 
 using InformativeSamplingUtils
 using .DataIO
