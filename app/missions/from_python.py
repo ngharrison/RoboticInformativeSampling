@@ -27,9 +27,10 @@ samples = [
 
 bounds = Main.eval('(lower=[0.0, 0.0], upper=[1.0, 1.0])')
 
-noise = Main.eval('(value=0.0, learned=false)')
+noise_value = 0.0
+noise_learn = False
 
-beliefModel = MultiQuantityGPs.MQGP(samples, bounds, noise=noise)
+beliefModel = MultiQuantityGPs.MQGP(samples, bounds=bounds, noise_value=noise_value, noise_learn=noise_learn)
 
 print(beliefModel.θ)
 

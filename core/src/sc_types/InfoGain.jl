@@ -47,7 +47,7 @@ function values(sc::InfoGain, loc)
     # add new sample with filler y-value since mean isn't used
     samples_c = [sc.samples; Sample((loc, 1), 0.0)]
 
-    belief_model_c = MQGP(samples_c, sc.beliefModel.θ, sc.beliefModel.N; sc.beliefModel.kernel)
+    belief_model_c = MQGP(samples_c, sc.beliefModel.θ; sc.beliefModel.N, sc.beliefModel.kernel)
 
     Σ = fullCov(belief_model_c, tuple.(vec(sc.test_points), 1)) # get full covariance matrix
 

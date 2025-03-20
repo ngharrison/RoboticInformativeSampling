@@ -64,10 +64,10 @@ function pyeFarmMission(; num_samples=4,
     #     height_samples = filter(s->s.x[2]==1, data["samples"])
     #     ndvi_samples = filter(s->s.x[2]==2, data["samples"])
     #
-    #     bm = MQGP(height_samples, bounds)
+    #     bm = MQGP(height_samples; bounds)
     #     h, _ = produceMaps(bm, occupancy)
     #     # vis(h)
-    #     bm = MQGP(ndvi_samples, bounds)
+    #     bm = MQGP(ndvi_samples; bounds)
     #     n, _ = produceMaps(bm, occupancy; quantity=2)
     #     # vis(n)
     #     h, n
@@ -166,8 +166,8 @@ end
 rospy.sleep(.1)
 
 M = mission
-other_bm = MQGP(filter(s->s.x[2]==2, samples), getBounds(M.occupancy);
-                       M.noise, M.kernel)
+other_bm = MQGP(filter(s->s.x[2]==2, samples); bounds=getBounds(M.occupancy),
+                       M.noise_value, M.noise_learn, M.kernel)
 bm_vals = map(enumerate((beliefs[end], other_bm))) do (i, bm)
     bm(tuple.(points, i))
 end

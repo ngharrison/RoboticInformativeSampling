@@ -56,10 +56,14 @@ mission = Mission(; occupancy,
     prior_samples = Sample[]
     "the kernel to be used in the belief model (default multiKernel)"
     kernel = multiKernel
-    "whether or not to use a non-zero mean for each quantity and to learn means (default (true, false))"
-    means = (use=true, learned=false)
-    "a named tuple of noise value(s) and if learned further (default (0.0, false))"
-    noise = (value=0.0, learned=false)
+    "whether or not to use a non-zero mean for each quantity (default true)"
+    means_use = true
+    "whether or not to learn means (default false)"
+    means_learn = false
+    "a named tuple of noise value(s) (default [0.0, 0.0, ...])"
+    noise_value = zeros(maximum(s->s.x[2], prior_samples, init=length(sampler)))
+    "whether or not to learn noise further (default false)"
+    noise_learn=false
     "whether or not to use the conditional distribution of the data to train the belief model (default false)"
     use_cond_pdf = false
     "whether or not to drop hypotheses and settings for it (default (false, 10, 5, 0.4))"
@@ -132,8 +136,11 @@ function (M::Mission)(func=Returns(nothing);
 
         t = @elapsed begin # computation time
             # new belief
-            beliefModel = MQGP([prior_samples; samples], bounds;
-                                      N, M.kernel, M.means, M.noise, M.use_cond_pdf)
+            beliefModel = MQGP(
+                [prior_samples; samples];
+                bounds, N, M.kernel,
+                M.means_use, M.means_learn, M.noise_value, M.noise_learn, M.use_cond_pdf
+            )
             push!(beliefs, beliefModel)
 
             # calculate correlations to first
@@ -256,8 +263,8 @@ function replay(func, M::Mission, full_samples; sleep_time=0.0)
     num_q = length(quantities) # number of quantities being sampled
     N = maximum(s->s.x[2], M.prior_samples, init=num_q) # defaults to num_q
     beliefs = map(1:length(full_samples)) do i
-        MQGP([M.prior_samples; full_samples[1:i]], getBounds(M.occupancy);
-                    N, M.kernel, M.means, M.noise, M.use_cond_pdf)
+        MQGP([M.prior_samples; full_samples[1:i]]; bounds=getBounds(M.occupancy),
+             N, M.kernel, M.means_use, M.means_learn, M.noise_value, M.noise_learn, M.use_cond_pdf)
     end
     replay(func, M, full_samples, beliefs; sleep_time)
 end

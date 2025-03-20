@@ -2345,9 +2345,9 @@ end |> collect
 
 argmax(s->s.y, samples)
 
-bm = MQGP(samples, boundsn[extent];
-            means=(use=true, learned=true),
-            noise=(value=0.0, learned=true))
+bm = MQGP(samples; bounds=boundsn[extent],
+            means_use=true, means_learn=true,
+            noise_value=0.0, nosie_learn=true)
 
 axs, _ = generateAxes(boundsn[extent], (100, 100))
 pred_map, err_map = produceMaps(bm, boundsn[extent], (100, 100))
@@ -2458,7 +2458,7 @@ samples = Iterators.flatmap([gt_dir]) do run
         end)
 end |> collect
 
-bm = MQGP(samples, boundsn[extent]; noise=(value=0.0, learned=true))
+bm = MQGP(samples; bounds=boundsn[extent], noise_value=0.0, noise_learn=true)
 bm.θ.σn
 
 ls = map(eachline(run * "/belief_params.txt")) do line

@@ -47,9 +47,10 @@ function handleGenerateBeliefModel(req)
     end
     bounds = (; req.bounds.lower, req.bounds.upper)
     # default values will be (0.0, false)
-    noise = (; req.noise.value, req.noise.learned)
+    noise_value = req.noise.value
+    noise_learn = req.noise.learn
 
-    beliefModel = MQGP(samples, bounds; noise)
+    beliefModel = MQGP(samples; bounds, noise_value, noise_learn)
 
     params = BeliefModelParameters(beliefModel.θ...)
     return GenerateBeliefModelResponse(params)
@@ -65,9 +66,10 @@ function handleGenerateBeliefMaps(req)
     end
     bounds = (; req.bounds.lower, req.bounds.upper)
     # default values will be (0.0, false)
-    noise = (; req.noise.value, req.noise.learned)
+    noise_value = req.noise.value
+    noise_learn = req.noise.learn
 
-    beliefModel = MQGP(samples, bounds; noise)
+    beliefModel = MQGP(samples; bounds, noise_value, noise_learn)
 
     dims = Tuple(req.dims)
     quantity = req.quantity_index
@@ -128,9 +130,10 @@ function handleNextSampleLocation(req)
     end
     bounds = (; req.bounds.lower, req.bounds.upper)
     # default values will be (0.0, false)
-    noise = (; req.noise.value, req.noise.learned)
+    noise_value = req.noise.value
+    noise_learn = req.noise.learn
 
-    beliefModel = MQGP(samples, bounds; noise)
+    beliefModel = MQGP(samples; bounds, noise_value, noise_learn)
 
     dims = Tuple(d.size for d in req.occupancy.layout.dim)
     occupancy = GridMap(reshape(Bool.(req.occupancy.data), dims), bounds)
@@ -153,9 +156,10 @@ function handleBeliefMapsAndNextSampleLocation(req)
     end
     bounds = (; req.bounds.lower, req.bounds.upper)
     # default values will be (0.0, false)
-    noise = (; req.noise.value, req.noise.learned)
+    noise_value = req.noise.value
+    noise_learn = req.noise.learn
 
-    beliefModel = MQGP(samples, bounds; noise)
+    beliefModel = MQGP(samples; bounds, noise_value, noise_learn)
 
     dims = Tuple(d.size for d in req.occupancy.layout.dim)
     quantity = req.quantity_index

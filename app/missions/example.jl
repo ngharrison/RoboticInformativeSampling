@@ -88,7 +88,8 @@ function synMission(; seed_val=0, num_samples=30, num_peaks=3, priors=Bool[1,1,1
                      for (i, d) in enumerate(prior_maps[priors])
                          for x in points_sp if !isnan(d(x))]
 
-    noise = (value=0.0, learned=true)
+    noise_value = 0.0
+    noise_learn = true
 
     mission = Mission(;
         occupancy,
@@ -98,7 +99,8 @@ function synMission(; seed_val=0, num_samples=30, num_peaks=3, priors=Bool[1,1,1
         weights,
         start_locs,
         prior_samples,
-        noise
+        noise_value,
+        noise_learn
     )
 
     return mission, prior_maps

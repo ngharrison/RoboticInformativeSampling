@@ -397,11 +397,11 @@ version = "2023.1.10"
 
 [[deps.MultiQuantityGPs]]
 deps = ["AbstractGPs", "DocStringExtensions", "IrrationalConstants", "LinearAlgebra", "Optim", "ParameterHandling", "Statistics"]
-git-tree-sha1 = "1d46d248a4b8d21d6c810a722f1f136f3de5eead"
+git-tree-sha1 = "9f2f52c53b82dcb9c5f2e3ee3b5e2ce731d7b7e8"
 repo-rev = "main"
 repo-url = "https://github.com/ngharrison/MultiQuantityGPs.jl.git"
 uuid = "f6349cb8-2139-4a62-bb23-95f1cd2c4c3a"
-version = "0.1.0"
+version = "0.2.0"
 
 [[deps.NLSolversBase]]
 deps = ["DiffResults", "Distributed", "FiniteDiff", "ForwardDiff"]

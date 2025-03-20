@@ -87,8 +87,8 @@ end
 
 ## run search alg
 @time samples, beliefs = mission() do M, samples, beliefModel, _, _
-    other_bm = MQGP(filter(s->s.x[2]!=1, samples),
-                           getBounds(M.occupancy); M.noise, M.kernel)
+    other_bm = MQGP(filter(s->s.x[2]!=1, samples);
+                           bounds=getBounds(M.occupancy), M.noise_value, M.noise_learn, M.kernel)
     bm_vals = map(enumerate((beliefModel, other_bm))) do (i, bm)
         bm(tuple.(vec(points), i))
     end

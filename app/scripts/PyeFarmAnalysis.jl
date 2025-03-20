@@ -42,7 +42,7 @@ samples = [data1["samples"]; data2["samples"]]
 mission = data1["mission"]
 bounds = getBounds(mission.occupancy)
 beliefs = map(1:length(samples)) do i
-    MQGP(samples[1:i], bounds)
+    MQGP(samples[1:i]; bounds)
 end
 save(mission, samples, beliefs; sub_dir_name="pye_farm_trial_gen")
 
@@ -87,7 +87,7 @@ display(scatter3d(x, y, z, legend=false))
 
 mission = load(readdir(output_dir * "pye_farm_trial", join=true)[end-1])["mission"]
 bounds = getBounds(mission.occupancy)
-beliefModel = MQGP(all_samples, bounds)
+beliefModel = MQGP(all_samples; bounds)
 
 vis(beliefModel, [], mission.occupancy)
 
@@ -114,7 +114,7 @@ prior_samples = [Sample{Float64}((x, i+length(mission.sampler)), d(x))
                      for x in points_sp if !isnan(d(x))]
 
 beliefs = map(1:length(samples)) do i
-    MQGP([prior_samples; samples[1:i]], bounds)
+    MQGP([prior_samples; samples[1:i]]; bounds)
 end
 
 vis(elevMap; points=points_sp)
@@ -133,7 +133,7 @@ for i in 1:30
     sleep(1.5)
 end
 
-prior_belief = MQGP(prior_samples, bounds)
+prior_belief = MQGP(prior_samples; bounds)
 vis(mission, prior_samples, prior_belief, nothing; quantity=2)
 
 
@@ -165,11 +165,11 @@ bounds = getBounds(mission.occupancy)
 
 beliefs[end]
 
-beliefModel = MQGP(all_samples, bounds)
+beliefModel = MQGP(all_samples; bounds)
 
 vis(beliefs[end], [], mission.occupancy)
 
-beliefModel = MQGP([prior_samples; samples], bounds)
+beliefModel = MQGP([prior_samples; samples]; bounds)
 
 quantityCorMat(beliefModel)
 
@@ -259,7 +259,7 @@ file_name = output_dir * "pye_farm_trial_named/" * name * output_ext
 data = load(file_name)
 mission = data["mission"]
 samples = data["samples"]
-bm = MQGP([mission.prior_samples; samples], bounds)
+bm = MQGP([mission.prior_samples; samples]; bounds)
 
 occupancy = mission.occupancy
 bounds = getBounds(occupancy)
@@ -303,7 +303,7 @@ display(p)
 #* test correlations
 axs, points = generateAxes(elevMap)
 ss = vec(Sample.(tuple.(points, 1), elevMap))
-bm = MQGP(ss, bounds)
+bm = MQGP(ss; bounds)
 vis(bm, [], GridMap(zeros(Bool,size(elev_img)), bounds))
 
 name = "pye_farm_trial_named/100samples_50x50_grid"
@@ -311,7 +311,7 @@ file_name = output_dir * "$(name)" * output_ext
 data = load(file_name)
 samples = data["samples"]
 ss = vec(Sample.(tuple.(points, 2), elevMap))
-bm = MQGP([ss; samples], bounds)
+bm = MQGP([ss; samples]; bounds)
 quantityCorMat(bm)
 vis(bm, [], GridMap(zeros(Bool,size(elev_img)), bounds); quantity=1)
 
@@ -340,7 +340,7 @@ for name in names15
     end
     mission = data["mission"]
     beliefs = map(1:mission.num_samples) do i
-        MQGP([mission.prior_samples; samples[1:i]], bounds)
+        MQGP([mission.prior_samples; samples[1:i]]; bounds)
     end
     occ = mission.occupancy
     axs, points = generateAxes(occ)
@@ -366,7 +366,7 @@ for name in names50
     end
     mission = data["mission"]
     beliefs = map(1:mission.num_samples) do i
-        MQGP([mission.prior_samples; samples[1:i]], bounds)
+        MQGP([mission.prior_samples; samples[1:i]]; bounds)
     end
     occ = mission.occupancy
     axs, points = generateAxes(occ)
@@ -435,7 +435,7 @@ data = load(file_name)
 mission = data["mission"]
 samples = data["samples"]
 cors15 = map(1:mission.num_samples) do i
-    bm = MQGP([mission.prior_samples; samples[1:i]], bounds)
+    bm = MQGP([mission.prior_samples; samples[1:i]]; bounds)
     quantityCorMat(bm)[2,1]
 end
 
@@ -445,7 +445,7 @@ data = load(file_name)
 mission = data["mission"]
 samples = data["samples"]
 cors50 = map(1:mission.num_samples) do i
-    bm = MQGP([mission.prior_samples; samples[1:i]], bounds)
+    bm = MQGP([mission.prior_samples; samples[1:i]]; bounds)
     quantityCorMat(bm)[2,1]
 end
 
@@ -454,7 +454,7 @@ file_name = output_dir * "pye_farm_trial_named/" * name * output_ext
 data = load(file_name)
 mission_grid = data["mission"]
 samples = data["samples"]
-bm = MQGP([mission.prior_samples; samples], bounds)
+bm = MQGP([mission.prior_samples; samples]; bounds)
 comp_cor = quantityCorMat(bm)[2,1]
 
 p = plot(
@@ -532,7 +532,7 @@ bounds = getBounds(mission.occupancy)
 global_logger(ConsoleLogger(stderr, Debug))
 
 new_beliefs = map(1:mission.num_samples) do i
-    bm = MQGP([mission.prior_samples; samples[1:i]], bounds; σn=1)
+    bm = MQGP([mission.prior_samples; samples[1:i]]; bounds, σn=1)
     vis(bm, samples[1:i], mission.occupancy)
     @debug bm.θ.σ
     @debug quantityCorMat(bm)
@@ -540,7 +540,7 @@ new_beliefs = map(1:mission.num_samples) do i
     bm
 end
 
-beliefModel = MQGP([mission.prior_samples[[1,end]]; samples[1:2]], bounds)
+beliefModel = MQGP([mission.prior_samples[[1,end]]; samples[1:2]]; bounds)
 
 vis(beliefModel, samples[1:2], mission.occupancy)
 
@@ -612,7 +612,7 @@ elev_vals = [elevMap(s.x[1]) for s in samples]
 
 cor(getfield.(samples, :y), elev_vals)
 
-bm = MQGP([mission.prior_samples; samples], bounds)
+bm = MQGP([mission.prior_samples; samples]; bounds)
 vis(bm, samples, mission.occupancy)
 bm
 quantityCorMat(bm)
@@ -627,10 +627,10 @@ cor(belief_vals, getfield.(mission.prior_samples, :y))
 
 elev_samples = Sample.(tuple.(first.(getfield.(samples, :x)), 2), elev_vals)
 
-bm1 = MQGP([elev_samples; samples], bounds)
+bm1 = MQGP([elev_samples; samples]; bounds)
 quantityCorMat(bm1)
 
-bm2 = MQGP([mission.prior_samples; samples], bounds)
+bm2 = MQGP([mission.prior_samples; samples]; bounds)
 quantityCorMat(bm2)
 
 # and with only two samples each
@@ -641,10 +641,10 @@ plot(
     layout=(2,1)
 ) |> display
 
-bm1 = MQGP([elev_samples[1:2]; samples[1:2]], bounds)
+bm1 = MQGP([elev_samples[1:2]; samples[1:2]]; bounds)
 quantityCorMat(bm1)
 
-bm2 = MQGP([mission.prior_samples[[1,end]]; samples[1:2]], bounds)
+bm2 = MQGP([mission.prior_samples[[1,end]]; samples[1:2]]; bounds)
 quantityCorMat(bm2)
 
 plot(
@@ -663,7 +663,7 @@ data = load(output_dir * "pye_farm_trial_named/" * name * output_ext)
 mission = data["mission"]
 samples = data["samples"]
 bounds = getBounds(mission.occupancy)
-bm = MQGP([mission.prior_samples; samples], bounds)
+bm = MQGP([mission.prior_samples; samples]; bounds)
 vis(bm, samples, mission.occupancy)
 axs, points = generateAxes(mission.occupancy)
 pred, _ = bm(tuple.(vec(points), 1))
@@ -677,7 +677,7 @@ quantityCorMat(bm)
 new_beliefs = map(1:mission.num_samples) do i
     @info "sample" i
     ss = [mission.prior_samples; samples[1:i]]
-    # bm = MQGP(ss, bounds)
+    # bm = MQGP(ss; bounds)
     bm = data["beliefs"][i]
     vis(bm, samples[1:i], mission.occupancy)
     # X = getfield.(ss, :x)
@@ -738,7 +738,7 @@ samples = data["samples"]
 bounds = getBounds(mission.occupancy)
 
 new_beliefs = map(1:mission.num_samples) do i
-    MQGP([mission.prior_samples; samples[1:i]], bounds)
+    MQGP([mission.prior_samples; samples[1:i]]; bounds)
 end
 
 [abs(bm.θ.ℓ) for bm in new_beliefs]
@@ -755,7 +755,7 @@ bounds = getBounds(mission.occupancy)
 
 vals = map(1:mission.num_samples) do i
     ss = [mission.prior_samples; samples[1:i]]
-    # bm = MQGP(ss, bounds)
+    # bm = MQGP(ss; bounds)
     bm = data["beliefs"][i]
     axs, points = generateAxes(mission.occupancy)
     _, err = bm(tuple.(vec(points), 1))
@@ -778,7 +778,7 @@ hs = map(1:6) do i
     mission = data["mission"]
     samples = data["samples"]
     bounds = getBounds(mission.occupancy)
-    bm = MQGP([mission.prior_samples; samples], bounds)
+    bm = MQGP([mission.prior_samples; samples]; bounds)
 
     axs, points = generateAxes(mission.occupancy)
     pred, err = bm(tuple.(vec(points), 1))
