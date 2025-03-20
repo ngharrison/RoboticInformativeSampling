@@ -1,3 +1,4 @@
+__precompile__(false)
 """
 This module contains the interface for passing data to and from other ROS nodes.
 It sets up an `informative_sampling` node and provides methods to handle the data.
