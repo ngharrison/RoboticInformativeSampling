@@ -96,72 +96,8 @@ end
 
 ### Samplers ###
 
-"""
-Handles samples of the form (location, quantity) to give the value from the
-right map. Internally a tuple of GridMaps.
+include("samplers/GridMapsSampler.jl")
 
-Constructor can take in a tuple or vector of GridMaps or each GridMap as a separate
-argument.
-
-# Examples
-```julia
-ss = GridMapsSampler(GridMap(zeros(5, 5)), GridMap(ones(5, 5)))
-
-loc = [.2, .75]
-ss(loc) # result: [0, 1]
-ss((loc, 2)) # result: 1
-```
-"""
-struct GridMapsSampler{T1<:Real}
-    maps::Tuple{Vararg{GridMap{T1}}}
-end
-
-GridMapsSampler(maps::GridMap...) = GridMapsSampler(maps)
-GridMapsSampler(maps::AbstractVector{<:GridMap}) = GridMapsSampler(Tuple(maps))
-
-(ss::GridMapsSampler)(loc::Location) = [map(loc) for map in ss]
-(ss::GridMapsSampler)((loc, q)::SampleInput) = ss[q](loc)
-
-# make it behave like a tuple
-Base.keys(m::GridMapsSampler) = keys(m.maps)
-Base.length(m::GridMapsSampler) = length(m.maps)
-Base.iterate(m::GridMapsSampler) = iterate(m.maps)
-Base.iterate(m::GridMapsSampler, i::Integer) = iterate(m.maps, i)
-Base.Broadcast.broadcastable(m::GridMapsSampler) = Ref(m) # don't broadcast
-Base.IndexStyle(::Type{<:GridMapsSampler}) = IndexLinear()
-Base.getindex(m::GridMapsSampler, i::Integer) = m.maps[i]
-
-# change display
-function Base.show(io::IO, ss::GridMapsSampler{T1}) where T1
-    print(io, "GridMapsSampler{$T1}:")
-    for map in ss
-        print("\n\t", map)
-    end
-end
-
-"""
-A sampler that asks the user to input measurement values, one for each quantity
-at the given location.
-"""
-struct UserSampler
-    "a list (or any iterable) of quantity indices, (e.g. [1,2])"
-    quantities
-end
-
-Base.keys(us::UserSampler) = us.quantities
-
-function (us::UserSampler)(loc::Location)
-    println("At location $loc")
-    return map(us.quantities) do q
-        print("Enter the value for quantity $q: ")
-        parse(Float64, readline())
-    end
-end
-
-function (us::UserSampler)((loc, q)::SampleInput)
-    println("At location $loc")
-    print("Enter the value for quantity $q: ")
-    return parse(Float64, readline())
-end
+include("samplers/UserSampler.jl")
 
 end
