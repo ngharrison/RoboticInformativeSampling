@@ -15,6 +15,7 @@ using GridMaps: GridMap, res, generateAxes, getBounds
 
 using InformativeSampling
 using .SampleCosts: SampleCost
+using .Samples: getQuant
 
 export visualize, vis
 
@@ -145,7 +146,7 @@ function visualize(beliefModel::MQGP, samples, occupancy, new_loc=nothing; quant
     pred_map[occupancy] .= NaN
     err_map[occupancy] .= NaN
 
-    xp = first.(getfield.(filter(s->s.x[2]==quantity, samples), :x))
+    xp = first.(getfield.(filter(s->getQuant(s)==quantity, samples), :x))
     x1 = getindex.(xp, 1)
     x2 = getindex.(xp, 2)
 

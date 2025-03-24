@@ -1,5 +1,6 @@
 
 using InformativeSampling
+using .Samples
 
 using InformativeSamplingUtils
 using .DataIO, .Visualization
@@ -79,7 +80,7 @@ for file_name in file_names
     writedlm(output_dir * dir * "packaged/" * base_name * "/avg_height_belief.csv", m, ',')
     writedlm(output_dir * dir * "packaged/" * base_name * "/avg_height_uncertainty.csv", s, ',')
 
-    ndvi_samples = filter(s->s.x[2]==2, samples)
+    ndvi_samples = filter(s->getQuant(s)==2, samples)
     if !isempty(ndvi_samples)
         bm = MQGP(ndvi_samples; mission.occupancy.bounds)
 
@@ -107,8 +108,8 @@ mkpath(base_name)
 new_samples = (s->((s.x...,), s.y)).(samples)
 writedlm(base_name * "/samples.txt", [new_samples], "\n")
 
-height_samples = filter(s->s.x[2]==1, samples)
-ndvi_samples = filter(s->s.x[2]==2, samples)
+height_samples = filter(s->getQuant(s)==1, samples)
+ndvi_samples = filter(s->getQuant(s)==2, samples)
 
 using GridMaps
 
@@ -143,7 +144,7 @@ writedlm(base_name * "/avg_ndvi_uncertainty.csv", s, ',')
 using Statistics
 
 vals = map((height_samples, ndvi_samples)) do a
-    getfield.(sort(a, by=s->s.x[1]), :y)
+    getfield.(sort(a, by=getLoc), :y)
 end
 
 cor(vals...)

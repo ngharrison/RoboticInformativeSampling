@@ -17,7 +17,7 @@ using MultiQuantityGPs: MQGP, quantityCorMat
 using MultiQuantityGPs.Kernels: multiKernel
 using GridMaps: randomPoint, getBounds
 
-using ..Samples: Sample, selectSampleLocation, takeSamples
+using ..Samples: Sample, selectSampleLocation, takeSamples, getQuant
 using ..SampleCosts: values, DistScaledEIGF
 
 export Mission, replay
@@ -61,7 +61,7 @@ mission = Mission(; occupancy,
     "whether or not to learn means (default false)"
     means_learn = false
     "a named tuple of noise value(s) (default [0.0, 0.0, ...])"
-    noise_value = zeros(maximum(s->s.x[2], prior_samples, init=length(sampler)))
+    noise_value = zeros(maximum(getQuant, prior_samples, init=length(sampler)))
     "whether or not to learn noise further (default false)"
     noise_learn=false
     "whether or not to use the conditional distribution of the data to train the belief model (default false)"
@@ -114,7 +114,7 @@ function (M::Mission)(func=Returns(nothing);
 
     prior_samples = copy(M.prior_samples)
     num_q = length(quantities) # number of quantities being sampled
-    N = maximum(s->s.x[2], prior_samples, init=num_q) # defaults to num_q
+    N = maximum(getQuant, prior_samples, init=num_q) # defaults to num_q
     prior_quantities = collect(range(num_q+1, N)) # will be empty if no prior_quantities
 
     println("Mission started")
@@ -168,7 +168,7 @@ function (M::Mission)(func=Returns(nothing);
                     || any(all(recent_coeffs_q[worst_q] .< other_recent_coeffs)
                            for other_recent_coeffs in recent_coeffs_q[others_q]))
                     filter!(!=(worst_q), prior_quantities)
-                    filter!(s -> s.x[2] != worst_q, prior_samples)
+                    filter!(s -> getQuant(s) != worst_q, prior_samples)
                 end
             end
 
@@ -261,7 +261,7 @@ end
 function replay(func, M::Mission, full_samples; sleep_time=0.0)
     quantities = 1:1 # only first quantity
     num_q = length(quantities) # number of quantities being sampled
-    N = maximum(s->s.x[2], M.prior_samples, init=num_q) # defaults to num_q
+    N = maximum(getQuant, M.prior_samples, init=num_q) # defaults to num_q
     beliefs = map(1:length(full_samples)) do i
         MQGP([M.prior_samples; full_samples[1:i]]; bounds=getBounds(M.occupancy),
              N, M.kernel, M.means_use, M.means_learn, M.noise_value, M.noise_learn, M.use_cond_pdf)

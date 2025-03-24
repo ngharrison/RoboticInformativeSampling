@@ -8,7 +8,7 @@ using GridMaps: GridMap, generateAxes, getBounds
 
 using InformativeSampling
 using .SampleCosts: EIGF, DistScaledEIGF
-using .Samples: Sample, GridMapsSampler
+using .Samples: Sample, GridMapsSampler, getQuant
 using .Missions: Mission
 
 # this requires a working rospy installation
@@ -62,8 +62,8 @@ function pyeFarmMission(; num_samples=4,
     #     name = "50x50_dense_grid"
     #     file_name = output_dir * "pye_farm_trial2/named/" * name * output_ext
     #     data = load(file_name)
-    #     height_samples = filter(s->s.x[2]==1, data["samples"])
-    #     ndvi_samples = filter(s->s.x[2]==2, data["samples"])
+    #     height_samples = filter(s->getQuant(s)==1, data["samples"])
+    #     ndvi_samples = filter(s->getQuant(s)==2, data["samples"])
     #
     #     bm = MQGP(height_samples; bounds)
     #     h, _ = produceMaps(bm, occupancy)
@@ -167,7 +167,7 @@ end
 rospy.sleep(.1)
 
 M = mission
-other_bm = MQGP(filter(s->s.x[2]==2, samples); bounds=getBounds(M.occupancy),
+other_bm = MQGP(filter(s->getQuant(s)==2, samples); bounds=getBounds(M.occupancy),
                        M.noise_value, M.noise_learn, M.kernel)
 bm_vals = map(enumerate((beliefs[end], other_bm))) do (i, bm)
     bm(tuple.(points, i))

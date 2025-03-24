@@ -16,6 +16,9 @@ using DocStringExtensions: TYPEDSIGNATURES, EXPORTS
 using MultiQuantityGPs: MQGP
 using GridMaps: generateAxes, GridMap, getBounds
 
+using InformativeSampling
+using .Samples: getQuant
+
 using ..Visualization: visualize
 
 export normalize, spatialAve, imgToMap, save, maps_dir,
@@ -158,7 +161,7 @@ function save(mission, samples, beliefs, times;
     jldsave(full_path_name; mission, samples, beliefs, times)
 
     if animation
-        first_samples = filter(s->s.x[2]==1, samples)
+        first_samples = filter(s->getQuant(s)==1, samples)
         animation = @animate for i in eachindex(beliefs)
             visualize(beliefs[i],
                       first_samples[begin:i],

@@ -14,7 +14,7 @@ using DocStringExtensions: TYPEDSIGNATURES, TYPEDFIELDS, TYPEDEF, EXPORTS
 using GridMaps: GridMap
 
 export Sample, selectSampleLocation, takeSamples, GridMapsSampler, UserSampler,
-       Location, SampleInput
+       Location, SampleInput, getLoc, getQuant, getObs
 
 """
 $(TYPEDEF)
@@ -46,6 +46,11 @@ struct Sample{T}
     "the sample output or observation, a scalar"
     y::T
 end
+
+# helpers
+getLoc(s::Sample) = s.x[1]
+getQuant(s::Sample) = s.x[2]
+getObs(s::Sample) = s.y
 
 """
 $(TYPEDSIGNATURES)

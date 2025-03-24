@@ -4,7 +4,7 @@ using GridMaps: res, generateAxes
 
 using InformativeSampling
 using .Missions: Mission
-using .Samples: Sample
+using .Samples: Sample, getQuant
 
 using InformativeSamplingUtils
 using .DataIO: output_dir, output_ext
@@ -27,9 +27,9 @@ samples = data["samples"]
 occ = mission.occupancy
 
 all_samples = [samples; mission.prior_samples]
-num_quant = maximum(s->s.x[2], all_samples)
+num_quant = maximum(getQuant, all_samples)
 # split samples by quantity and get just the values
-vals = [getfield.(filter(s->s.x[2]==i, all_samples), :y)
+vals = [getfield.(filter(s->getQuant(s)==i, all_samples), :y)
         for i in 1:num_quant]
 extrema.(vals)
 beliefModel = beliefs[end]
@@ -84,7 +84,7 @@ weights = σ -> @. 1/σ^2 # inverse variance
 
 # using Visualization: visualize
 # k=1
-# visualize(beliefModel, filter(s->s.x[2]==k, all_samples), occ, k)
+# visualize(beliefModel, filter(s->getQuant(s)==k, all_samples), occ, k)
 
 fs3 = []
 for k in 1:num_quant

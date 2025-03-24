@@ -1263,7 +1263,7 @@ for (j, run) in pairs(runs)
     samples = map(eachline(file_name)) do line
         Sample(eval(Meta.parse(line))...) # read each line as code and turn into Sample
     end
-    filter!(s->s.x[2]==1, samples) # only looking at height
+    filter!(s->getQuant(s)==1, samples) # only looking at height
     for i in eachindex(samples)[2:end]
         # calculate the cumulative distance traveled
         dists[i,j] = dists[i-1,j] + norm(samples[i].x[1] - samples[i-1].x[1])
@@ -1418,7 +1418,7 @@ full_data = map(runs) do run
     samples = map(eachline(run * "/samples.txt")) do line
         Sample(eval(Meta.parse(line))...)
     end
-    filter!(s->s.x[2]==1, samples) # only looking at height
+    filter!(s->getQuant(s)==1, samples) # only looking at height
     xp = [s.x[1] for s in samples]
     x1 = getindex.(xp, 1)
     x2 = getindex.(xp, 2)
@@ -1751,7 +1751,7 @@ for (j, run) in pairs(runs)
     samples = map(eachline(file_name)) do line
         Sample(eval(Meta.parse(line))...) # read each line as code and turn into Sample
     end
-    filter!(s->s.x[2]==1, samples) # only looking at height
+    filter!(s->getQuant(s)==1, samples) # only looking at height
     for i in eachindex(samples)[2:end]
         # calculate the cumulative distance traveled
         dists[i,j] = dists[i-1,j] + norm(samples[i].x[1] - samples[i-1].x[1])
@@ -1842,7 +1842,7 @@ full_data = map(runs) do run
     samples = map(eachline(run * "/samples.txt")) do line
         Sample(eval(Meta.parse(line))...)
     end
-    filter!(s->s.x[2]==1, samples) # only looking at height
+    filter!(s->getQuant(s)==1, samples) # only looking at height
     xp = [s.x[1] for s in samples]
     x1 = getindex.(xp, 1)
     x2 = getindex.(xp, 2)
@@ -1997,7 +1997,7 @@ name = run[findlast('/', run)+1:end]
 samples = map(eachline(run * "/samples.txt")) do line
     Sample(eval(Meta.parse(line))...)
 end
-filter!(s -> s.x[2] == 1, samples) # only looking at height
+filter!(s -> getQuant(s) == 1, samples) # only looking at height
 xp = [s.x[1] for s in samples]
 x1 = getindex.(xp, 1)
 x2 = getindex.(xp, 2)
@@ -2340,13 +2340,13 @@ savefig(output_dir * "thesis/$(region)_$(priors)/full_run_comparison.png")
 #* combined data maps
 
 samples = Iterators.flatmap([gt_dir]) do run
-    Iterators.filter(s -> s.x[2] == 1,
+    Iterators.filter(s -> getQuant(s) == 1,
         Iterators.map(eachline(run * "/samples.txt")) do line
             Sample(eval(Meta.parse(line))...)
         end)
 end |> collect
 
-argmax(s->s.y, samples)
+argmax(getObs, samples)
 
 bm = MQGP(samples; bounds=boundsn[extent],
             means_use=true, means_learn=true,
@@ -2455,7 +2455,7 @@ end
 #** dense field
 
 samples = Iterators.flatmap([gt_dir]) do run
-    Iterators.filter(s -> s.x[2] == 1,
+    Iterators.filter(s -> getQuant(s) == 1,
         Iterators.map(eachline(run * "/samples.txt")) do line
             Sample(eval(Meta.parse(line))...)
         end)

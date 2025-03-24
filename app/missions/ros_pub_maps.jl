@@ -11,6 +11,7 @@ using GridMaps: GridMap, generateAxes, getBounds
 using InformativeSampling
 using .SampleCosts: EIGF
 using .Missions: Mission
+using Samples: getQuant
 
 # this requires a working rospy installation
 include(dirname(Base.active_project()) * "/ros/ROSInterface.jl")
@@ -88,7 +89,7 @@ end
 
 ## run search alg
 @time samples, beliefs = mission() do M, samples, beliefModel, _, _
-    other_bm = MQGP(filter(s->s.x[2]!=1, samples);
+    other_bm = MQGP(filter(s->getQuant(s)!=1, samples);
                            bounds=getBounds(M.occupancy), M.noise_value, M.noise_learn, M.kernel)
     bm_vals = map(enumerate((beliefModel, other_bm))) do (i, bm)
         bm(tuple.(vec(points), i))
