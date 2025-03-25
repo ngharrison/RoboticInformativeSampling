@@ -1,12 +1,14 @@
 
 using Test
 
+using GridMaps: GridMap
+
 using InformativeSampling
 using .Missions: Mission
 using .Samples: GridMapsSampler
 using .SampleCosts: EIGF
 
-# Missions: standard mission run remains the same (will break a lot)
+# Missions: standard mission run doesn't error
 @testset "Missions" begin
     # set up mission
     bounds = (lower = [0.0, 0.0], upper = [1.0, 1.0])
