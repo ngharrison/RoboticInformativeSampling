@@ -10,12 +10,11 @@ module Visualization
 using Plots: plot, heatmap, scatter!, @layout, mm, grid
 using DocStringExtensions: TYPEDSIGNATURES, TYPEDEF, EXPORTS
 
-using MultiQuantityGPs: MQGP
+using MultiQuantityGPs: MQGP, getQuant
 using GridMaps: GridMap, res, generateAxes, getBounds
 
 using InformativeSampling
 using .SampleCosts: SampleCost
-using .Samples: getQuant
 
 export visualize, vis
 

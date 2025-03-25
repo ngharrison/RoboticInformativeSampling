@@ -112,7 +112,7 @@ prior_maps = [elevMap]
 n = (7,7)
 axs_sp = range.(bounds..., n)
 points_sp = vec(collect.(Iterators.product(axs_sp...)))
-prior_samples = [Sample{Float64}((x, i+length(mission.sampler)), d(x))
+prior_samples = [MQSample(((x, i+length(mission.sampler)), d(x)))
                  for (i, d) in enumerate(prior_maps)
                      for x in points_sp if !isnan(d(x))]
 
@@ -305,7 +305,7 @@ display(p)
 
 #* test correlations
 axs, points = generateAxes(elevMap)
-ss = vec(Sample.(tuple.(points, 1), elevMap))
+ss = vec(MQSample.(tuple.(tuple.(points, 1), elevMap)))
 bm = MQGP(ss; bounds)
 vis(bm, [], GridMap(zeros(Bool,size(elev_img)), bounds))
 
@@ -313,7 +313,7 @@ name = "pye_farm_trial_named/100samples_50x50_grid"
 file_name = output_dir * "$(name)" * output_ext
 data = load(file_name)
 samples = data["samples"]
-ss = vec(Sample.(tuple.(points, 2), elevMap))
+ss = vec(MQSample.(tuple.(tuple.(points, 2), elevMap)))
 bm = MQGP([ss; samples]; bounds)
 quantityCorMat(bm)
 vis(bm, [], GridMap(zeros(Bool,size(elev_img)), bounds); quantity=1)
@@ -628,7 +628,7 @@ cor(belief_vals, getfield.(mission.prior_samples, :y))
 
 #* now train a gp on the matching points
 
-elev_samples = Sample.(tuple.(first.(getfield.(samples, :x)), 2), elev_vals)
+elev_samples = MQSample.(tuple.(tuple.(first.(getfield.(samples, :x)), 2), elev_vals))
 
 bm1 = MQGP([elev_samples; samples]; bounds)
 quantityCorMat(bm1)

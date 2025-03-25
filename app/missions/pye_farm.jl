@@ -4,10 +4,10 @@ using FileIO: load
 using Images: gray
 
 using GridMaps: GridMap
+using MultiQuantityGPs: MQSample
 
 using InformativeSampling
 using .SampleCosts: EIGF
-using .Samples: Sample
 using .Missions: Mission
 
 # this requires a working rospy installation
@@ -72,10 +72,10 @@ function pyeFarmMission(; num_samples=4)
     n = (7,7) # number of samples in each dimension
     axs_sp = range.(bounds..., n)
     points_sp = vec(collect.(Iterators.product(axs_sp...)))
-    prior_samples = [Sample{Float64}((x, i+length(sampler)), d(x))
+    prior_samples = [MQSample(((x, i+length(sampler)), d(x)))
                      for (i, d) in enumerate(prior_maps)
                          for x in points_sp if !isnan(d(x))]
-    prior_samples = Sample{Float64}[]
+    prior_samples = MQSample[]
 
     sampleCostType = EIGF
 

@@ -1,3 +1,5 @@
+using GridMaps: GridMap
+
 """
 Handles samples of the form (location, quantity) to give the value from the
 right map. Internally a tuple of GridMaps.
@@ -22,7 +24,7 @@ GridMapsSampler(maps::GridMap...) = GridMapsSampler(maps)
 GridMapsSampler(maps::AbstractVector{<:GridMap}) = GridMapsSampler(Tuple(maps))
 
 (ss::GridMapsSampler)(loc::Location) = [map(loc) for map in ss]
-(ss::GridMapsSampler)((loc, q)::SampleInput) = ss[q](loc)
+(ss::GridMapsSampler)((loc, q)::MQSampleInput) = ss[q](loc)
 
 # make it behave like a tuple
 Base.keys(m::GridMapsSampler) = keys(m.maps)

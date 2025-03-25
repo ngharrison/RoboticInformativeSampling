@@ -19,10 +19,10 @@ from julia.InformativeSampling import Samples, SampleCosts, Missions
 
 # test creating simple belief model
 samples = [
-    Samples.Sample(([.1, .8], 1), 1.4),
-    Samples.Sample(([.5, .4], 1), .2),
-    Samples.Sample(([.2, .2], 2), .8),
-    Samples.Sample(([.9, .1], 2), .1),
+    MultiQuantityGPs.MQSample((([.1, .8], 1), 1.4)),
+    MultiQuantityGPs.MQSample((([.5, .4], 1), .2)),
+    MultiQuantityGPs.MQSample((([.2, .2], 2), .8)),
+    MultiQuantityGPs.MQSample((([.9, .1], 2), .1)),
 ]
 
 bounds = Main.eval('(lower=[0.0, 0.0], upper=[1.0, 1.0])')

@@ -1,7 +1,5 @@
 """
 This module contains everything to do with sampling values in the environment.
-Its alias types `Location` and `SampleInput` are fundamental pieces for MultiQuantityGPs
-as well.
 
 Main public types and functions:
 $(EXPORTS)
@@ -11,51 +9,14 @@ module Samples
 using Optim: optimize, ParticleSwarm
 using DocStringExtensions: TYPEDSIGNATURES, TYPEDFIELDS, TYPEDEF, EXPORTS
 
-using GridMaps: GridMap
+using MultiQuantityGPs: MQSample, Location, MQSampleInput
 
-export Sample, selectSampleLocation, takeSamples, GridMapsSampler, UserSampler,
-       Location, SampleInput, getLoc, getQuant, getObs
-
-"""
-$(TYPEDEF)
-Location of sample
-"""
-const Location = Vector{Float64}
-
-"""
-$(TYPEDEF)
-Sample input, the combination of: ([`Location`](@ref), sensor index)
-"""
-const SampleInput = Tuple{Location, Int}
-
-"""
-$(TYPEDEF)
-Value of sample measurement, the measurement mean and standard deviation
-"""
-const SampleOutput = Tuple{Float64, Float64}
-
-"""
-Struct to hold the input and output of a sample.
-
-Fields:
-$(TYPEDFIELDS)
-"""
-struct Sample{T}
-    "the sample input, usually a location and sensor id"
-    x::SampleInput
-    "the sample output or observation, a scalar"
-    y::T
-end
-
-# helpers
-getLoc(s::Sample) = s.x[1]
-getQuant(s::Sample) = s.x[2]
-getObs(s::Sample) = s.y
+export selectSampleLocation, takeSamples, GridMapsSampler, UserSampler
 
 """
 $(TYPEDSIGNATURES)
 
-Pulls a ground truth value from a given location and constructs a Sample object
+Pulls a ground truth value from a given location and constructs a MQSample object
 to hold them both.
 
 Inputs:
@@ -68,11 +29,11 @@ Outputs a vector of Samples containing input x and measurement y
 """
 function takeSamples(loc, sampler)
     Y = sampler(loc) # get sample values at location for all quantities
-    return [Sample((loc, q), y) for (q, y) in enumerate(Y)]
+    return [MQSample(((loc, q), y)) for (q, y) in enumerate(Y)]
 end
 
 function takeSamples(loc, sampler, quantities)
-    return [Sample((loc, q), sampler((loc, q))) for q in quantities]
+    return [MQSample(((loc, q), sampler((loc, q)))) for q in quantities]
 end
 
 """

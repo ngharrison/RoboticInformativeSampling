@@ -1,8 +1,9 @@
 
 using GridMaps: GridMap, generateAxes
+using MultiQuantityGPs: MQSample
 
 using InformativeSampling
-using .Samples: Sample, takeSamples
+using .Samples: takeSamples
 
 include(dirname(Base.active_project()) * "/ros/ROSInterface.jl")
 using .ROSInterface: ROSSampler

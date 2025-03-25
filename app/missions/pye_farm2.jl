@@ -3,12 +3,12 @@ using Logging: global_logger, ConsoleLogger, Info, Debug
 using FileIO: load
 using Images: gray
 
-using MultiQuantityGPs: MQGP
+using MultiQuantityGPs: MQGP, MQSample, getQuant
 using GridMaps: GridMap, generateAxes, getBounds
 
 using InformativeSampling
 using .SampleCosts: EIGF, DistScaledEIGF
-using .Samples: Sample, GridMapsSampler, getQuant
+using .Samples: GridMapsSampler
 using .Missions: Mission
 
 # this requires a working rospy installation
@@ -78,7 +78,7 @@ function pyeFarmMission(; num_samples=4,
 
     prior_maps = [elevMap]
 
-    prior_samples = Sample{Float64}[]
+    prior_samples = MQSample[]
 
     if use_priors
         # sample sparsely from the prior maps
@@ -86,7 +86,7 @@ function pyeFarmMission(; num_samples=4,
         n = (7, 7) # number of samples in each dimension
         axs_sp = range.(bounds..., n)
         points_sp = vec(collect.(Iterators.product(axs_sp...)))
-        prior_samples = [Sample{Float64}((x, i + 1), d(x))
+        prior_samples = [MQSample(((x, i + 1), d(x)))
                          for (i, d) in enumerate(prior_maps)
                          for x in points_sp if !isnan(d(x))]
     end

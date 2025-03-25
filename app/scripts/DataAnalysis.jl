@@ -4,8 +4,7 @@
 using InformativeSampling
 
 using .Missions: Mission
-using MultiQuantityGPs: MQGP
-using .Samples: Sample
+using MultiQuantityGPs: MQGP, MQSample
 
 using InformativeSamplingUtils
 using .DataIO: output_dir, output_ext

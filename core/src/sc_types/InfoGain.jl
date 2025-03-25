@@ -1,10 +1,8 @@
 
 using LinearAlgebra: logdet
 
-using MultiQuantityGPs: MQGP, fullCov
+using MultiQuantityGPs: MQGP, fullCov, MQSample
 using GridMaps: generateAxes
-
-using ..Samples: Sample
 
 @doc raw"""
 Derived from the idea of information gain across the region. Returns the entropy
@@ -45,7 +43,7 @@ end
 
 function values(sc::InfoGain, loc)
     # add new sample with filler y-value since mean isn't used
-    samples_c = [sc.samples; Sample((loc, 1), 0.0)]
+    samples_c = [sc.samples; MQSample(((loc, 1), 0.0))]
 
     belief_model_c = MQGP(samples_c, sc.beliefModel.θ; sc.beliefModel.N, sc.beliefModel.kernel)
 

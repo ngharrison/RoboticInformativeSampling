@@ -6,9 +6,10 @@ using DelimitedFiles: readdlm
 using Plots
 
 using GridMaps: GridMap, getBounds
+using MultiQuantityGPs: MQSample
 
 using InformativeSampling
-using .Samples: Sample, GridMapsSampler, selectSampleLocation
+using .Samples: GridMapsSampler, selectSampleLocation
 
 using InformativeSamplingUtils
 using .Visualization: visualize
@@ -52,7 +53,7 @@ occupancy = imgToMap(Matrix{Bool}(reduce(.|, [isnan.(i)
 n = (5,5) # number of samples in each dimension
 axs_sp = range.(bounds..., n)
 points_sp = vec(collect.(Iterators.product(axs_sp...)))
-prior_samples = [Sample((x, i+length(sampler)), d(x))
+prior_samples = [MQSample(((x, i+length(sampler)), d(x)))
                  for (i, d) in enumerate(prior_maps[priors])
                      for x in points_sp if !isnan(d(x))]
 
@@ -63,7 +64,7 @@ for _ in 1:25
     x = selectSampleLocation(sampleCost, getBounds(occupancy))
     push!(points_sp, x)
 end
-prior_samples = [Sample((x, i+length(sampler)), d(x))
+prior_samples = [MQSample(((x, i+length(sampler)), d(x)))
                  for (i, d) in enumerate(prior_maps[priors])
                      for x in points_sp if !isnan(d(x))]
 

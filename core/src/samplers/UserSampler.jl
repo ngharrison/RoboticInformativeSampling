@@ -17,7 +17,7 @@ function (us::UserSampler)(loc::Location)
     end
 end
 
-function (us::UserSampler)((loc, q)::SampleInput)
+function (us::UserSampler)((loc, q)::MQSampleInput)
     println("At location $loc")
     print("Enter the value for quantity $q: ")
     return parse(Float64, readline())

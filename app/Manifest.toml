@@ -2,7 +2,7 @@
 
 julia_version = "1.10.2"
 manifest_format = "2.0"
-project_hash = "f959fe26d9cbcdf46026fdf5c18e6432fd6c6f1f"
+project_hash = "df2b8ed1c06120afa2763d61a7335bb3b1f10a84"
 
 [[deps.AStarGridSearch]]
 deps = ["DataStructures", "DocStringExtensions", "LinearAlgebra"]
@@ -1084,9 +1084,9 @@ version = "2023.1.10"
 
 [[deps.MultiQuantityGPs]]
 deps = ["AbstractGPs", "DocStringExtensions", "IrrationalConstants", "LinearAlgebra", "Optim", "ParameterHandling", "Statistics"]
-git-tree-sha1 = "9f2f52c53b82dcb9c5f2e3ee3b5e2ce731d7b7e8"
+git-tree-sha1 = "bc5b8fd816f66330c07947cbd5c17ede644cef41"
 uuid = "f6349cb8-2139-4a62-bb23-95f1cd2c4c3a"
-version = "0.2.0"
+version = "0.3.0"
 
 [[deps.NLSolversBase]]
 deps = ["DiffResults", "Distributed", "FiniteDiff", "ForwardDiff"]

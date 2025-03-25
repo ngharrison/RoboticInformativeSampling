@@ -20,7 +20,7 @@ using MultiQuantityGPs
 using GridMaps
 
 using InformativeSampling
-using .Samples, .SampleCosts
+using .SampleCosts
 
 using Random: seed!
 
@@ -43,7 +43,7 @@ function handleGenerateBeliefModel(req)
     seed!(0)
 
     samples = map(req.samples) do s
-        Sample((s.location, s.quantity_index), s.measurement)
+        MQSample(((s.location, s.quantity_index), s.measurement))
     end
     bounds = (; req.bounds.lower, req.bounds.upper)
     # default values will be (0.0, false)
@@ -62,7 +62,7 @@ function handleGenerateBeliefMaps(req)
     seed!(0)
 
     samples = map(req.samples) do s
-        Sample((s.location, s.quantity_index), s.measurement)
+        MQSample(((s.location, s.quantity_index), s.measurement))
     end
     bounds = (; req.bounds.lower, req.bounds.upper)
     # default values will be (0.0, false)
@@ -92,7 +92,7 @@ function handleGenerateBeliefMapsFromModel(req)
     println("Generating belief maps from model")
 
     samples = map(req.samples) do s
-        Sample((s.location, s.quantity_index), s.measurement)
+        MQSample(((s.location, s.quantity_index), s.measurement))
     end
     params = (
         σ  = req.params.amplitudes,
@@ -126,7 +126,7 @@ function handleNextSampleLocation(req)
     seed!(0)
 
     samples = map(req.samples) do s
-        Sample((s.location, s.quantity_index), s.measurement)
+        MQSample(((s.location, s.quantity_index), s.measurement))
     end
     bounds = (; req.bounds.lower, req.bounds.upper)
     # default values will be (0.0, false)
@@ -152,7 +152,7 @@ function handleBeliefMapsAndNextSampleLocation(req)
     seed!(0)
 
     samples = map(req.samples) do s
-        Sample((s.location, s.quantity_index), s.measurement)
+        MQSample(((s.location, s.quantity_index), s.measurement))
     end
     bounds = (; req.bounds.lower, req.bounds.upper)
     # default values will be (0.0, false)
