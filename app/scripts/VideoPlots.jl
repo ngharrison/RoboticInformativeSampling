@@ -1,10 +1,9 @@
 
-using MultiQuantityGPs: MQGP
+using MultiQuantityGPs: MQGP, MQSample
 using GridMaps: generateAxes
 
 using InformativeSampling
 using .Missions: Mission
-using .Samples: Sample
 
 using InformativeSamplingUtils
 using .DataIO: output_dir, output_ext

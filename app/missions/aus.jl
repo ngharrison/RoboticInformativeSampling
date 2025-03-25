@@ -6,10 +6,11 @@ using Statistics: cor
 using Random: seed!
 
 using MultiQuantityGPs.Kernels: multiKernel, mtoKernel
+using MultiQuantityGPs: MQSample
 using GridMaps: GridMap, getBounds
 
 using InformativeSampling
-using .Samples: Sample, GridMapsSampler, selectSampleLocation
+using .Samples: GridMapsSampler, selectSampleLocation
 using .SampleCosts: MIPT, EIGF, DistScaledEIGF, OnlyVar, DerivVar, DistScaledDerivVar, LogLikelihood
 using .Missions: Mission
 
@@ -65,7 +66,7 @@ function ausMission(; seed_val=0, num_samples=30,
         # x, v = rand(occupancy)
         # !v && push!(points_sp, x)
     end
-    prior_samples = [Sample((x, i+length(sampler)), d(x))
+    prior_samples = [MQSample(((x, i+length(sampler)), d(x)))
                      for (i, d) in enumerate(prior_maps[priors])
                          for x in points_sp if !isnan(d(x))]
 

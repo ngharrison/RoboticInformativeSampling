@@ -1,10 +1,8 @@
 
 using LinearAlgebra: logdet
 
-using MultiQuantityGPs: MQGP
+using MultiQuantityGPs: MQGP, MQSample
 using GridMaps: generateAxes
-
-using ..Samples: Sample
 
 @doc raw"""
 Similar to [InfoGain](@ref) but uses only variances rather than the full
@@ -42,7 +40,7 @@ end
 
 function values(sc::VarTrace, loc)
     # add new sample with filler y-value since mean isn't used
-    samples_c = [sc.samples; Sample((loc, 1), 0.0)]
+    samples_c = [sc.samples; MQSample(((loc, 1), 0.0))]
 
     belief_model_c = MQGP(samples_c, sc.beliefModel.θ; sc.beliefModel.N, sc.beliefModel.kernel)
 

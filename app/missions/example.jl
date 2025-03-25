@@ -4,9 +4,10 @@ using Statistics: mean, cor
 using Random: seed!
 
 using GridMaps: GridMap, generateAxes
+using MultiQuantityGPs: MQSample
 
 using InformativeSampling
-using .Samples: Sample, GridMapsSampler
+using .Samples: GridMapsSampler
 using .SampleCosts: EIGF
 using .Missions: Mission
 
@@ -84,7 +85,7 @@ function synMission(; seed_val=0, num_samples=30, num_peaks=3, priors=Bool[1,1,1
     n = (5,5) # number of samples in each dimension
     axs_sp = range.(bounds..., n)
     points_sp = vec(collect.(Iterators.product(axs_sp...)))
-    prior_samples = [Sample((x, i+length(sampler)), d(x))
+    prior_samples = [MQSample(((x, i+length(sampler)), d(x)))
                      for (i, d) in enumerate(prior_maps[priors])
                          for x in points_sp if !isnan(d(x))]
 

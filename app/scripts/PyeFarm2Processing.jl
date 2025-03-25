@@ -1,4 +1,6 @@
 
+using MultiQuantityGPs
+
 using InformativeSampling
 using .Samples
 

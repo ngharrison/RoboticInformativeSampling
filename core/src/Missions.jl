@@ -13,11 +13,11 @@ using Random: seed!
 using Statistics: median
 using DocStringExtensions: TYPEDSIGNATURES, TYPEDFIELDS, EXPORTS
 
-using MultiQuantityGPs: MQGP, quantityCorMat
+using MultiQuantityGPs: MQGP, quantityCorMat, MQSample, getLoc, getQuant
 using MultiQuantityGPs.Kernels: multiKernel
 using GridMaps: randomPoint, getBounds
 
-using ..Samples: Sample, selectSampleLocation, takeSamples, getQuant
+using ..Samples: selectSampleLocation, takeSamples
 using ..SampleCosts: values, DistScaledEIGF
 
 export Mission, replay
@@ -53,7 +53,7 @@ mission = Mission(; occupancy,
     "the locations that should be sampled first (default [])"
     start_locs = []
     "any samples taken previously (default empty)"
-    prior_samples = Sample[]
+    prior_samples = MQSample[]
     "the kernel to be used in the belief model (default multiKernel)"
     kernel = multiKernel
     "whether or not to use a non-zero mean for each quantity (default true)"
@@ -101,8 +101,8 @@ samples, beliefs = mission(visuals=true, sleep_time=0.5) # run the mission
 ```
 """
 function (M::Mission)(func=Returns(nothing);
-                      samples=Sample[], beliefs=MQGP[],
-                      other_samples=Sample[], times=Float64[], cors=Vector{Float64}[],
+                      samples=MQSample[], beliefs=MQGP[],
+                      other_samples=MQSample[], times=Float64[], cors=Vector{Float64}[],
                       seed_val=0, sleep_time=0)
 
     # initialize
@@ -231,7 +231,7 @@ function replay(func, M::Mission, full_samples, beliefs; sleep_time=0.0)
 
         sample = full_samples[i]
 
-        new_loc = sample.x[1]
+        new_loc = getLoc(sample)
         println("Next sample location: $new_loc")
 
         new_vals = sample.y
@@ -244,7 +244,7 @@ function replay(func, M::Mission, full_samples, beliefs; sleep_time=0.0)
             M.occupancy, samples, beliefModel, quantities, M.weights
         )
 
-        new_loc = i < M.num_samples ? full_samples[i+1].x[1] : nothing
+        new_loc = i < M.num_samples ? getLoc(full_samples[i+1]) : nothing
         func(M, samples, beliefModel, sampleCost, new_loc)
         @debug "output correlation matrix:" quantityCorMat(beliefModel)
         sleep(sleep_time)
