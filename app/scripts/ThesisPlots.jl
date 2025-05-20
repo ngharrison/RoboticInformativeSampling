@@ -55,6 +55,41 @@ function group(f, a)
     return groups
 end
 
+function addPathsAndMarkers(i)
+    # to current plot
+    # plot the paths
+    for j in 1:i-1
+        # path = cellToPoint.(paths_cache[j], Ref(occ))
+        path = xp[j:j+1]
+        plot!(first.(path), last.(path);
+            label=false, color=:gray, line=:dash, lineopacity=0.7)
+    end
+    if i < length(samples)
+        # path = cellToPoint.(paths_cache[i], Ref(occ))
+        path = xp[i:i+1]
+        plot!(first.(path), last.(path);
+            label=false, color=:gray, line=:dash, linewidth=2)
+    end
+
+    # plot the markers
+    scatter!(x1[begin:i-1], x2[begin:i-1];
+        label=false,
+        color=:green,
+        markersize=6)
+    scatter!(x1[i:i], x2[i:i];
+        label=false,
+        color=:royalblue,
+        shape=:utriangle,
+        markersize=12)
+    if i < length(samples)
+        scatter!(x1[i+1:i+1], x2[i+1:i+1],
+            label=false,
+            color=:red,
+            shape=:xcross,
+            markersize=10)
+    end
+end
+
 num_samples = 30
 
 # NOTE: crop of depth image went from 5% to 15% from each side
@@ -218,7 +253,11 @@ end
 
 #* full run comparison
 
-pyplot()
+try
+    pyplot()
+catch
+    pyplot()
+end
 
 i=5
 plots = map(5:5:length(beliefs)) do i
@@ -254,22 +293,7 @@ plots = map(5:5:length(beliefs)) do i
         colorbar_tickfontsize=17,
         clim=(0, 1),
     )
-    scatter!(x1[1:i-1], x2[1:i-1];
-        label=false,
-        color=:green,
-        markersize=6)
-    scatter!(x1[i:i], x2[i:i];
-        label=false,
-        color=:royalblue,
-        shape=:utriangle,
-        markersize=12)
-    if i < num_samples
-        scatter!(x1[i+1:i+1], x2[i+1:i+1],
-            label=false,
-            color=:red,
-            shape=:xcross,
-            markersize=10)
-    end
+    addPathsAndMarkers(i)
 
     err_title = i == 5 ? "Uncertainties" : ""
     p2 = heatmap(axs..., err_map';
@@ -282,22 +306,7 @@ plots = map(5:5:length(beliefs)) do i
         clim=err_range,
         # colorbar_ticks=err_ticks,
     )
-    scatter!(x1[1:i-1], x2[1:i-1];
-        label=false,
-        color=:green,
-        markersize=6)
-    scatter!(x1[i:i], x2[i:i];
-        label=false,
-        color=:royalblue,
-        shape=:utriangle,
-        markersize=12)
-    if i < num_samples
-        scatter!(x1[i+1:i+1], x2[i+1:i+1],
-            label=false,
-            color=:red,
-            shape=:xcross,
-            markersize=10)
-    end
+    addPathsAndMarkers(i)
 
     sampleCost = mission.sampleCostType(
         occ, samples[1:i], bm, quantities, mission.weights
@@ -321,22 +330,7 @@ plots = map(5:5:length(beliefs)) do i
         clim=obj_range,
         colorbar_ticks=obj_ticks,
     )
-    scatter!(x1[1:i-1], x2[1:i-1];
-        label=false,
-        color=:green,
-        markersize=6)
-    scatter!(x1[i:i], x2[i:i];
-        label=false,
-        color=:royalblue,
-        shape=:utriangle,
-        markersize=12)
-    if i < num_samples
-        scatter!(x1[i+1:i+1], x2[i+1:i+1],
-            label=false,
-            color=:red,
-            shape=:xcross,
-            markersize=10)
-    end
+    addPathsAndMarkers(i)
 
     return p0, p1, p2, p3
 end
@@ -345,7 +339,7 @@ p = plot(Iterators.flatten(plots)...,
     layout=(6, 4),
     size=(1100, 1300))
 
-savefig(output_dir * "thesis/syn_000/full_run_comparison.png")
+savefig(output_dir * "thesis/syn_000/full_run_comparison_paths.png")
 
 #* distance scaling for objective function
 
@@ -1950,22 +1944,7 @@ plots = map(5:5:num_samples) do i
         colorbar_tickfontsize=17,
         clim=pred_range,
     )
-    scatter!(x1[1:i-1], x2[1:i-1];
-        label=false,
-        color=:green,
-        markersize=7)
-    scatter!(x1[i:i], x2[i:i];
-        label=false,
-        color=:royalblue,
-        shape=:utriangle,
-        markersize=12)
-    if i < num_samples
-        scatter!(x1[i+1:i+1], x2[i+1:i+1],
-            label=false,
-            color=:red,
-            shape=:xcross,
-            markersize=10)
-    end
+    addPathsAndMarkers(i)
 
     err_title = i == 5 ? "Uncertainties" : ""
     p2 = heatmap(axs..., err_map';
@@ -1978,22 +1957,7 @@ plots = map(5:5:num_samples) do i
         clim=(0, 43),
         # colorbar_ticks=err_ticks,
     )
-    scatter!(x1[1:i-1], x2[1:i-1];
-        label=false,
-        color=:green,
-        markersize=7)
-    scatter!(x1[i:i], x2[i:i];
-        label=false,
-        color=:royalblue,
-        shape=:utriangle,
-        markersize=12)
-    if i < num_samples
-        scatter!(x1[i+1:i+1], x2[i+1:i+1],
-            label=false,
-            color=:red,
-            shape=:xcross,
-            markersize=10)
-    end
+    addPathsAndMarkers(i)
 
     lessNotInf = x -> x === -Inf ? Inf : x
     greaterNotInf = x -> x === Inf ? -Inf : x
@@ -2012,22 +1976,7 @@ plots = map(5:5:num_samples) do i
         clim=obj_range,
         colorbar_ticks=obj_ticks,
     )
-    scatter!(x1[1:i-1], x2[1:i-1];
-        label=false,
-        color=:green,
-        markersize=7)
-    scatter!(x1[i:i], x2[i:i];
-        label=false,
-        color=:royalblue,
-        shape=:utriangle,
-        markersize=12)
-    if i < num_samples
-        scatter!(x1[i+1:i+1], x2[i+1:i+1],
-            label=false,
-            color=:red,
-            shape=:xcross,
-            markersize=10)
-    end
+    addPathsAndMarkers(i)
 
     return p0, p1, p2, p3
 end
@@ -2037,7 +1986,7 @@ p = plot(Iterators.flatten(plots)...,
     size=(1100, 1300))
 
 mkpath(save_dir * "full_runs")
-savefig(save_dir * "full_runs/$(name).png")
+savefig(save_dir * "full_runs/$(name)_paths.png")
 
 #* scatter comparison
 

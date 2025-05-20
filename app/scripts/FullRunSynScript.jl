@@ -22,39 +22,6 @@ function createColorbarTicks((l, h))
     return ticks, [@sprintf("%.1g", x) for x in ticks]
 end
 
-"""
-Takes a two-argument function `f(x, key)` that returns true or false for each
-element-key pair, an iterator of elements to group, and a set of keys.
-"""
-function group(f, a, keys)
-    result = Dict(key=>eltype(a)[] for key in keys)
-    for x in a, key in keys
-        if f(x, key)
-            push!(result[key], x)
-        end
-    end
-    return result
-end
-
-"""
-Takes a one-argument function `f(x)`, and an iterator of elements to group `a`.
-"""
-function group(f, a)
-    val_type = eltype(a)
-    # this next line actually makes it slower, requires compilation every time
-    # key_type = promote_type(Base.return_types(f, (eltype(a),))...)
-    groups = Dict{Any, Vector{val_type}}()
-    for x in a
-        key = f(x)
-        if haskey(groups, key)
-            push!(groups[key], x)
-        else
-            groups[key] = [x]
-        end
-    end
-    return groups
-end
-
 num_samples = 30
 
 
@@ -74,9 +41,10 @@ runs = [
 run = runs[8]
 
 priors = "111"
-file_name = output_dir * "new_syn/$(run)/data_$(priors)" * output_ext
+extra = run[5:7] == "mto" ? "_fix_mto_2" : ""
+file_name = output_dir * "new_syn$(extra)/$(run)/data_$(priors)" * output_ext
 
-save_file = output_dir * "thesis/syn_$(priors)_full_runs/$(run).png"
+save_file = output_dir * "thesis/syn_$(priors)_full_runs/$(run)_paths.png"
 mkpath(save_file[1:findlast('/', save_file)])
 
 data = load(file_name)
@@ -116,9 +84,48 @@ err_range = (0.0, err_range[2])
 pred_ticks = createColorbarTicks(pred_range)
 err_ticks = createColorbarTicks(err_range)
 
+function addPathsAndMarkers(i)
+    # to current plot
+    # plot the paths
+    for j in 1:i-1
+        # path = cellToPoint.(paths_cache[j], Ref(occ))
+        path = xp[j:j+1]
+        plot!(first.(path), last.(path);
+            label=false, color=:gray, line=:dash, lineopacity=0.7)
+    end
+    if i < length(samples)
+        # path = cellToPoint.(paths_cache[i], Ref(occ))
+        path = xp[i:i+1]
+        plot!(first.(path), last.(path);
+            label=false, color=:gray, line=:dash, linewidth=2)
+    end
+
+    # plot the markers
+    scatter!(x1[begin:i-1], x2[begin:i-1];
+        label=false,
+        color=:green,
+        markersize=6)
+    scatter!(x1[i:i], x2[i:i];
+        label=false,
+        color=:royalblue,
+        shape=:utriangle,
+        markersize=12)
+    if i < length(samples)
+        scatter!(x1[i+1:i+1], x2[i+1:i+1],
+            label=false,
+            color=:red,
+            shape=:xcross,
+            markersize=10)
+    end
+end
+
 #* full run comparison
 
-pyplot()
+try
+    pyplot()
+catch
+    pyplot()
+end
 
 i=5
 plots = map(5:5:length(beliefs)) do i
@@ -154,22 +161,7 @@ plots = map(5:5:length(beliefs)) do i
         colorbar_tickfontsize=17,
         clim=(0, 1),
     )
-    scatter!(x1[1:i-1], x2[1:i-1];
-        label=false,
-        color=:green,
-        markersize=6)
-    scatter!(x1[i:i], x2[i:i];
-        label=false,
-        color=:royalblue,
-        shape=:utriangle,
-        markersize=12)
-    if i < num_samples
-        scatter!(x1[i+1:i+1], x2[i+1:i+1],
-            label=false,
-            color=:red,
-            shape=:xcross,
-            markersize=10)
-    end
+    addPathsAndMarkers(i)
 
     err_title = i == 5 ? "Uncertainties" : ""
     p2 = heatmap(axs..., err_map';
@@ -182,22 +174,7 @@ plots = map(5:5:length(beliefs)) do i
         clim=err_range,
         # colorbar_ticks=err_ticks,
     )
-    scatter!(x1[1:i-1], x2[1:i-1];
-        label=false,
-        color=:green,
-        markersize=6)
-    scatter!(x1[i:i], x2[i:i];
-        label=false,
-        color=:royalblue,
-        shape=:utriangle,
-        markersize=12)
-    if i < num_samples
-        scatter!(x1[i+1:i+1], x2[i+1:i+1],
-            label=false,
-            color=:red,
-            shape=:xcross,
-            markersize=10)
-    end
+    addPathsAndMarkers(i)
 
     sampleCost = mission.sampleCostType(
         occ, samples[1:i], bm, quantities, mission.weights
@@ -221,22 +198,7 @@ plots = map(5:5:length(beliefs)) do i
         clim=obj_range,
         colorbar_ticks=obj_ticks,
     )
-    scatter!(x1[1:i-1], x2[1:i-1];
-        label=false,
-        color=:green,
-        markersize=6)
-    scatter!(x1[i:i], x2[i:i];
-        label=false,
-        color=:royalblue,
-        shape=:utriangle,
-        markersize=12)
-    if i < num_samples
-        scatter!(x1[i+1:i+1], x2[i+1:i+1],
-            label=false,
-            color=:red,
-            shape=:xcross,
-            markersize=10)
-    end
+    addPathsAndMarkers(i)
 
     return p0, p1, p2, p3
 end
