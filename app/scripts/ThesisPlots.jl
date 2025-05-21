@@ -2392,3 +2392,82 @@ p = plot(
 
 savefig(save_dir * "$(region)_computation_times.png")
 
+#* plot example primary and secondary quantity predictions
+dir = "new_syn/syn_multiKernel_means_noises_fullpdf_nodrop_OnlyVar"
+file_name = output_dir * "$dir/data_111" * output_ext
+
+data = load(file_name)
+i = 3
+maes = data["metrics"][i].mae
+mxaes = data["metrics"][i].mxae
+dists = cumsum(data["metrics"][i].dists)
+times = cumsum(data["metrics"][i].times)
+
+mission = data["missions"][i].mission
+samples = data["missions"][i].samples
+beliefs = data["missions"][i].beliefs
+
+occ = mission.occupancy
+quantities = eachindex(mission.sampler)
+num_quant = length(mission.sampler)
+
+xp = first.(getfield.(samples, :x))
+x1 = getindex.(xp, 1)
+x2 = getindex.(xp, 2)
+
+xp_prior = first.(getfield.(mission.prior_samples[1:25], :x))
+x1_prior = getindex.(xp_prior, 1)
+x2_prior = getindex.(xp_prior, 2)
+
+axs, points = generateAxes(occ)
+pred_maps, err_maps = beliefs[end](tuple.(points, reshape(1:4, 1,1,:)))
+mask = vec(.! mission.occupancy)
+
+pr2abs = abs.(@view pred_maps[:,:,2])
+pred_2_adjusted = 4.2.*(pr2abs.-minimum(pr2abs))
+
+# plot the things
+p1 = heatmap(axs..., pred_maps[:,:,1]', title="QOI", ticks=false)
+scatter!(x1, x2;
+         framestyle=:none,
+         label="Samples",
+         color=:green,
+         markersize=6)
+p2 = heatmap(axs..., pred_2_adjusted', title="High Dependence", ticks=false)
+scatter!(x1_prior, x2_prior;
+         framestyle=:none,
+         label="Samples",
+         color=:green,
+         markersize=6)
+p3 = heatmap(axs..., pred_maps[:,:,3]', title="Medium Dependence", ticks=false)
+scatter!(x1_prior, x2_prior;
+         framestyle=:none,
+         label="Samples",
+         color=:green,
+         markersize=6)
+p4 = heatmap(axs..., pred_maps[:,:,4]', title="Low Dependence", ticks=false)
+scatter!(x1_prior, x2_prior;
+         framestyle=:none,
+         label="Samples",
+         color=:green,
+         markersize=6)
+cy = 0:.001:1
+cbar = heatmap([0], cy, reshape(cy, :, 1),
+               # aspect_ratio=1/100,
+               xticks=false,
+               yticks=0:0.5:1,
+               mirror=true
+               )
+p = plot(p1, p2, p3, p4, cbar,
+     layout=@layout([grid(2,2){0.95w} c]),
+     clim=(0,1),
+     colorbar=false,
+     legend=false,
+     size=(1000, 800),
+     titlefontsize=24,
+     tickfontsize=20,
+     legendfontsize=14,
+     margin=4Plots.mm
+)
+
+savefig(output_dir * "thesis/all_quantity_predictions.png")
