@@ -6,7 +6,7 @@ using InformativeSampling: Missions, Samples, SampleCosts
 using InformativeSamplingUtils: DataIO, Visualization, Metrics
 
 makedocs(
-    sitename="InformativeSampling",
+    sitename="RoboticInformativeSampling",
     # remotes=nothing,
     pages = [
         "index.md",
@@ -20,6 +20,6 @@ makedocs(
 )
 
 deploydocs(
-    repo = "github.com/ngharrison/InformativeSampling.git",
+    repo = "github.com/ngharrison/RoboticInformativeSampling.git",
     versions = nothing,
 )
