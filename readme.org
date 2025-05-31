@@ -1,4 +1,4 @@
-#+title: Informative Sampling
+#+title: Robotic Informative Sampling
 
 This code was written as part of my PhD research in field robotics, specifically for robotic informative sampling in natural environments. The code is written in Julia for speed and code flexibility.
 
@@ -16,22 +16,22 @@ Recommended to add julia to your path.
 
 Use git to clone the repository to a local directory:
 #+begin_src shell
-git clone https://github.com/ngharrison/InformativeSampling.git
+git clone https://github.com/ngharrison/RoboticInformativeSampling.git
 #+end_src
 
-This will create a directory called =InformativeSampling=. Next run =julia InformativeSampling/setup.jl=. After that finishes, you should be good to go.
+This will create a directory called =RoboticInformativeSampling=. Next run =julia RoboticInformativeSampling/setup.jl=. After that finishes, you should be good to go.
 
 * Quick Start
 
 To see an example run of the project in its current state, after following the steps in [[*Installation and Setup][Installation and Setup]],
 
-1. Navigate into the =InformativeSampling= directory on the command line
+1. Navigate into the =RoboticInformativeSampling= directory on the command line
 2. Run =julia --project=app app/missions/example.jl=
 
 
 Normally you will want to run code from within the REPL since this keeps data around after it finishes and saves compilation so it goes much faster on repeated runs. To do this,
 
-1. Navigate into the =InformativeSampling= directory on the command line
+1. Navigate into the =RoboticInformativeSampling= directory on the command line
 2. Run =julia --project=app= to open the REPL with the app environment activated
 3. Run =include("app/missions/example.jl")=
 
@@ -124,7 +124,7 @@ To see how to call each service, look at the examples in the =app/ros/client_sim
 
 ** Other ways to use from python
 
-The code in this repository can be used from python through [[https://pyjulia.readthedocs.io/en/latest/][pyjulia]]. You will need to follow the instructions in their documentation to install the Julia package for python (within the =InformativeSampling= directory):
+The code in this repository can be used from python through [[https://pyjulia.readthedocs.io/en/latest/][pyjulia]]. You will need to follow the instructions in their documentation to install the Julia package for python (within the =RoboticInformativeSampling= directory):
 
 #+begin_src shell
 python -m pip install --user julia
@@ -143,7 +143,7 @@ Note that just the same as when running Julia code normally, if the interpreter 
 
 * Documentation
 
-The docs can be viewed at https://ngharrison.github.io/InformativeSampling.
+The docs can be viewed at https://ngharrison.github.io/RoboticInformativeSampling.
 
 If you want to view the docs locally, first generate them by running the following command(s) from the project root:
 
