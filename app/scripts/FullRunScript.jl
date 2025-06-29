@@ -28,11 +28,13 @@ num_samples = 30
 #* load mission
 
 region = "nsw"
+alpha = "alpha40"
 priors = "000"
-dir = "new_$(region)/$(region)_multiKernel_means_noises_fullpdf_nodrop_DistScaledEIGF"
+dir = "$(region)_$(alpha)/$(region)_multiKernel_means_noises_fullpdf_nodrop_DistScaledEIGF_$(alpha)"
 file_name = output_dir * "$dir/data_$(priors)" * output_ext
+save_dir = "thesis/$(region)_$(priors)_$(alpha)_final"
 
-mkpath(output_dir * "thesis/$(region)_$(priors)_final")
+mkpath(output_dir * save_dir)
 
 data = load(file_name)
 maes = data["metrics"].mae
@@ -194,4 +196,4 @@ p = plot(Iterators.flatten(plots)...,
     layout=(6, 4),
     size=(1100, 1300))
 
-savefig(output_dir * "thesis/$(region)_$(priors)_final/full_run_comparison_paths.png")
+savefig(output_dir * save_dir * "/full_run_comparison_paths.png")

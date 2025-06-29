@@ -28,21 +28,22 @@ num_samples = 30
 #* load mission
 
 runs = [
-    "syn_mtoKernel_means_noises_fullpdf_nodrop_DistScaledEIGF",
-    "syn_multiKernel_means_noises_condpdf_nodrop_DistScaledEIGF",
-    "syn_multiKernel_means_noises_fullpdf_hypdrop_DistScaledEIGF",
-    "syn_multiKernel_means_noises_fullpdf_nodrop_DerivVar",
-    "syn_multiKernel_means_noises_fullpdf_nodrop_DistScaledEIGF",
-    "syn_multiKernel_means_noises_fullpdf_nodrop_EIGF",
-    "syn_multiKernel_means_noises_fullpdf_nodrop_OnlyVar",
-    "syn_multiKernel_zeromean_noises_fullpdf_nodrop_OnlyVar",
+    "syn_mtoKernel_means_noises_fullpdf_nodrop_DistScaledEIGF_alpha5",
+    "syn_multiKernel_means_noises_condpdf_nodrop_DistScaledEIGF_alpha5",
+    "syn_multiKernel_means_noises_fullpdf_hypdrop_DistScaledEIGF_alpha5",
+    "syn_multiKernel_means_noises_fullpdf_nodrop_DerivVar_alpha50",
+    "syn_multiKernel_means_noises_fullpdf_nodrop_DistScaledEIGF_alpha5",
+    "syn_multiKernel_means_noises_fullpdf_nodrop_EIGF_alpha5",
+    "syn_multiKernel_means_noises_fullpdf_nodrop_OnlyVar_alpha5",
+    "syn_multiKernel_zeromean_noises_fullpdf_nodrop_OnlyVar_alpha5",
+    "syn_multiKernel_means_noises_fullpdf_nodrop_DistEIGF1e-2_alpha5",
 ]
 
-run = runs[8]
+run = runs[parse(Int, ARGS[1])]
 
 priors = "111"
-extra = run[5:7] == "mto" ? "_fix_mto_2" : ""
-file_name = output_dir * "new_syn$(extra)/$(run)/data_$(priors)" * output_ext
+# extra = run[5:7] == "mto" ? "_fix_mto_2" : ""
+file_name = output_dir * "syn_alphas/$(run)/data_$(priors)" * output_ext
 
 save_file = output_dir * "thesis/syn_$(priors)_full_runs/$(run)_paths.png"
 mkpath(save_file[1:findlast('/', save_file)])
