@@ -8,7 +8,7 @@ using Random: seed!
 using InformativeSampling
 using .Maps: Map, getBounds
 using .Samples: Sample, MapsSampler, selectSampleLocation
-using .SampleCosts: MIPT, EIGF, DistScaledEIGF, OnlyVar, DerivVar, DistScaledDerivVar, LogLikelihood
+using .SampleCosts: MIPT, EIGF, DistEIGF, DistScaledEIGF, OnlyVar, DerivVar, DistScaledDerivVar, LogLikelihood
 using .Missions: Mission
 using .Kernels: multiKernel, mtoKernel
 
@@ -110,8 +110,8 @@ end
 #     noise_learned = true,
 #     use_cond_pdf = false,
 #     use_hyp_drop = false,
-#     sampleCostType = DistScaledEIGF,
-#     weights = (; μ=1, σ=1e2, τ=1, d=1)
+#     sampleCostType = DistEIGF,
+#     weights = (; μ=1, σ=10, τ=7e-2, d=1)
 # )
 #
 # mission, prior_maps = ausMission(; num_samples=30, priors=Bool[1,1,1], options...)
@@ -186,6 +186,16 @@ runs = [
         sampleCostType = DerivVar
     ),
 
+    # dist-term eigf
+    (
+        kernel = multiKernel,
+        use_means = true,
+        noise_learned = true,
+        use_cond_pdf = false,
+        use_hyp_drop = false,
+        sampleCostType = DistEIGF
+    ),
+
     # dist-scaled eigf
     (
         kernel = multiKernel,
@@ -239,7 +249,7 @@ runs = [
 
 ]
 
-for options in runs
+# for options in runs
 
 
 #* Pair
@@ -252,7 +262,7 @@ using .BeliefModels: outputCorMat
 using .Metrics: calcMetrics
 using .DataIO: save
 
-# options = runs[3]
+options = runs[5]
 
 # # LogLikelihood
 # options = (
@@ -271,7 +281,9 @@ c = (options.use_cond_pdf ? "condpdf" : "fullpdf")
 h = (options.use_hyp_drop ? "hypdrop" : "nodrop")
 s = options.sampleCostType
 
-dir = "new_aus/aus_$(k)_$(m)_$(n)_$(c)_$(h)_$(s)"
+a = 10
+
+dir = "aus_alpha10/aus_$(k)_$(m)_$(n)_$(c)_$(h)_$(s)7e-2_alpha$(a)"
 
 all_metrics = Array{Any}(undef, 2)
 
@@ -279,7 +291,7 @@ all_metrics = Array{Any}(undef, 2)
     ## initialize data for mission
     # priors = (0,0,0)
     mission, _ = ausMission(; priors=collect(Bool, priors),
-                            weights = (; μ=1, σ=5e1, τ=1, d=1),
+                            weights = (; μ=1, σ=a, τ=7e-2, d=1),
                             options...)
     # empty!(mission.prior_samples)
 
@@ -309,6 +321,7 @@ using Plots
 using Plots: mm
 
 maes = stack(metrics.mae for metrics in all_metrics)
+rmses = sqrt.(stack(metrics.mse for metrics in all_metrics))
 mxaes = stack(metrics.mxae for metrics in all_metrics)
 dists = stack(cumsum(metrics.dists) for metrics in all_metrics)
 times = stack(cumsum(metrics.times) for metrics in all_metrics)
@@ -367,6 +380,29 @@ p_errs = plot(
 gui()
 
 savefig(output_dir * "$dir/errors.png")
+
+p_errs = plot(
+    rmses[1:30,:],
+    title="Root Mean Squared Prediction Errors",
+    xlabel="Sample Number",
+    ylabel="Root Mean Squared Map Error",
+    labels=["No Priors" "All Priors"],
+    seriescolors=[:black RGB(0.1,0.7,0.2)],
+    framestyle=:box,
+    marker=true,
+    ylim=(0,.3),
+    titlefontsize=24,
+    markersize=8,
+    tickfontsize=15,
+    labelfontsize=20,
+    legendfontsize=16,
+    margin=5mm,
+    linewidth=4,
+    size=(width, height)
+)
+gui()
+
+savefig(output_dir * "$dir/root_squared_errors.png")
 
 p_max_errs = plot(
     mxaes[1:30,:],
@@ -463,4 +499,4 @@ savefig(output_dir * "$dir/computation_times_full_run.png")
 
 #* End Runs
 
-end
+# end
