@@ -48,8 +48,22 @@ struct Sample{T}
 end
 
 # helpers
+"""
+$(TYPEDSIGNATURES)
+Get the location from a sample.
+"""
 getLoc(s::Sample) = s.x[1]
+
+"""
+$(TYPEDSIGNATURES)
+Get the quantity index from a sample.
+"""
 getQuant(s::Sample) = s.x[2]
+
+"""
+$(TYPEDSIGNATURES)
+Get the observation from a sample.
+"""
 getObs(s::Sample) = s.y
 
 """
