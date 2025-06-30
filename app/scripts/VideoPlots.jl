@@ -1,8 +1,10 @@
 
 using MultiQuantityGPs: MQGP, MQSample
-using GridMaps: generateAxes
+using GridMaps: generateAxes, pointToCell, cellToPoint
+using AStarGridSearch: getPath
 
 using InformativeSampling
+
 using .Missions: Mission
 
 using InformativeSamplingUtils
@@ -25,9 +27,10 @@ function createColorbarTicks(r)
 end
 
 #* load mission
-dir = "aus_ave"
+k = 4
+dir = output_dir * "new_aus/aus_multiKernel_means_noises_fullpdf_nodrop_DistScaledEIGF"
 mname = "111"
-file_name = output_dir * "$dir/mission_$(mname)" * output_ext
+file_name = "$dir/data_$(mname)" * output_ext
 
 data = load(file_name)
 mission = data["mission"]
@@ -36,11 +39,52 @@ samples = data["samples"]
 occ = mission.occupancy
 quantities = eachindex(mission.sampler)
 num_quant = length(mission.sampler)
+@assert num_quant == 1
 
 xp = first.(getfield.(samples, :x))
 x1 = getindex.(xp, 1)
 x2 = getindex.(xp, 2)
 
+# paths_cache = fill(CartesianIndex{2}[], length(samples)-1)
+
+function addPathsAndMarkers(i)
+    # to current plot
+    # plot the paths
+    for j in 1:i-1
+        # path = cellToPoint.(paths_cache[j], Ref(occ))
+        path = xp[j:j+1]
+        plot!(first.(path), last.(path);
+            label=false, color=:gray, line=:dash, lineopacity=0.7)
+    end
+    if i < length(samples)
+        # path = cellToPoint.(paths_cache[i], Ref(occ))
+        path = xp[i:i+1]
+        plot!(first.(path), last.(path);
+            label=false, color=:gray, line=:dash, linewidth=2)
+    end
+
+    # plot the markers
+    scatter!(x1[begin:i-1], x2[begin:i-1];
+        label=false,
+        color=:green,
+        legend=(0.15, 0.87),
+        markersize=8)
+    scatter!(x1[i:i], x2[i:i];
+        label=false,
+        color=:royalblue,
+        shape=:utriangle,
+        markersize=14)
+    if i < length(samples)
+        scatter!(x1[i+1:i+1], x2[i+1:i+1],
+            label=false,
+            color=:red,
+            shape=:xcross,
+            markersize=12)
+    end
+end
+
+out_dir = "$dir/data_$(mname)_frames_lines"
+mkpath(out_dir)
 for i in eachindex(beliefs)
     # GP maps
     axs, points = generateAxes(occ)
@@ -51,6 +95,12 @@ for i in eachindex(beliefs)
         mission.occupancy, samples[begin:i*num_quant], beliefs[i], quantities, mission.weights
     )
     obj_map = -sampleCost.(points)
+
+    # if i < length(samples)
+    #     next = pointToCell(xp[i+1], occ)
+    #     sampleCost.pathCost(next)
+    #     paths_cache[i] = getPath(sampleCost.pathCost, next)
+    # end
 
     # blocked points
     pred_map[occ] .= NaN
@@ -72,22 +122,14 @@ for i in eachindex(beliefs)
                  clim=(0,1),
                  colorbar_ticks=[0.0, 0.5, 1.0],
                  )
-    scatter!(x1[begin:i*num_quant], x2[begin:i*num_quant];
-             label=false,
-             color=:green,
-             legend=(0.15, 0.87),
-             markersize=8)
+    addPathsAndMarkers(i)
 
     p2 = heatmap(axs..., err_map',
                  title="Uncertainties",
                  clim=err_range,
                  colorbar=false,
                  )
-    scatter!(x1[begin:i*num_quant], x2[begin:i*num_quant];
-             label=false,
-             color=:green,
-             legend=(0.15, 0.87),
-             markersize=8)
+    addPathsAndMarkers(i)
 
     p3 = heatmap(axs..., mission.sampler[1]',
                  title="Ground Truth",
@@ -100,11 +142,7 @@ for i in eachindex(beliefs)
                  clim=obj_range,
                  colorbar=false,
                  )
-    scatter!(x1[begin:i*num_quant], x2[begin:i*num_quant];
-             label=false,
-             color=:green,
-             legend=(0.15, 0.87),
-             markersize=8)
+    addPathsAndMarkers(i)
 
     plot(p1, p2, p3, p4,
          layout=4,
@@ -116,8 +154,11 @@ for i in eachindex(beliefs)
          legendfontsize=14,
          )
 
-    # savefig(output_dir * "$dir/mission_$(mname)_frames/$(lpad(i, 2, '0')).png")
+    savefig("$(out_dir)/$(lpad(i, 2, '0')).png")
 end
+
+run(Cmd(`ffmpeg -framerate 25/18 -i %02d.png -c:v libx264 -pix_fmt yuv420p -y output.mp4`;
+    dir=out_dir))
 
 #* load missions
 dir = "aus_ave"

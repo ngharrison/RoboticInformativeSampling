@@ -41,7 +41,7 @@ using GridMaps: pointToCell, cellToPoint, res, getBounds
 
 export SampleCost, values, DistProx,
        LogNormed, MIPT, EIGF, OnlyVar,
-       DistScaledEIGF, DistLogEIGF,
+       DistEIGF, DistScaledEIGF, DistLogEIGF,
        DerivVar, DistScaledDerivVar,
        InfoGain, VarTrace, LogLikelihood,
        LogLikelihoodFull
@@ -92,6 +92,7 @@ include("sc_types/DistProx.jl")
 include("sc_types/LogNormed.jl")
 include("sc_types/MIPT.jl")
 include("sc_types/EIGF.jl")
+include("sc_types/DistEIGF.jl")
 include("sc_types/DistScaledEIGF.jl")
 include("sc_types/DistLogEIGF.jl")
 include("sc_types/MEPE.jl")

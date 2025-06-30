@@ -1,10 +1,12 @@
 # script for analyzing data from missions
 # can be run after Main.jl or by opening a saved file
 
+using MultiQuantityGPs: MQGP, MQSample
+using GridMaps: generateAxes
+
 using InformativeSampling
 
 using .Missions: Mission
-using MultiQuantityGPs: MQGP, MQSample
 
 using InformativeSamplingUtils
 using .DataIO: output_dir, output_ext
@@ -49,28 +51,77 @@ function meanAndStdM(dets)
     return m, s
 end
 
-#* Aus
-# for dir in readdir(output_dir * "new_aus", join=true)
-dir = output_dir * "new_aus/aus_multiKernel_means_noises_fullpdf_nodrop_LogLikelihood"
+#* aus/nsw
+# for dir in readdir(output_dir * "new_nsw", join=true)
+dir = output_dir * "nsw_alpha40/nsw_multiKernel_means_noises_fullpdf_nodrop_OnlyVar_alpha40"
 # file_name = output_dir * "2023-08-28-16-58-29_metrics" * output_ext
 file_name_s = "$dir/data_000" * output_ext
 file_name_m = "$dir/data_111" * output_ext
 
 data = load(file_name_s)
 maes = data["metrics"].mae
+mses = data["metrics"].mse
 mxaes = data["metrics"].mxae
 dists = cumsum(data["metrics"].dists)
 times = cumsum(data["metrics"].times)
 
+# _, points = generateAxes(data["mission"].occupancy)
+# true_vals = vec(data["mission"].sampler[1])
+# mask = vec(.!data["mission"].occupancy)
+#
+# # Mean Squared Error
+# mse_s = map(1:30) do i
+#     μ, σ = data["beliefs"][i](tuple.(vec(points), 1))
+#     mean((μ[mask] .- true_vals[mask]) .^ 2)
+# end
+
 data = load(file_name_m)
 maes = [maes data["metrics"].mae]
+mses = [mses data["metrics"].mse]
 mxaes = [mxaes data["metrics"].mxae]
 dists = [dists cumsum(data["metrics"].dists)]
 times = [times cumsum(data["metrics"].times)]
 cors = data["metrics"].cors
 dets = [u.^2 for u in cors]
 
+# _, points = generateAxes(data["mission"].occupancy)
+# true_vals = vec(data["mission"].sampler[1])
+# mask = vec(.!data["mission"].occupancy)
+#
+# # Mean Squared Error
+# mse_m = map(1:30) do i
+#     μ, σ = data["beliefs"][i](tuple.(vec(points), 1))
+#     mean((μ[mask] .- true_vals[mask]) .^ 2)
+# end
+#
+# rmses = sqrt.([mse_s mse_m])
+
+rmses = sqrt.(mses)
+
 width, height = 1200, 800
+
+p_errs = plot(
+    rmses[1:30,:],
+    title="Root Mean Squared Prediction Errors",
+    xlabel="Sample Number",
+    ylabel="Root Mean Squared Map Error",
+    labels=["No Priors" "All Priors"],
+    seriescolors=[:black RGB(0.1,0.7,0.2)],
+    framestyle=:box,
+    marker=true,
+    ylim=(0,.35),
+    titlefontsize=24,
+    markersize=8,
+    tickfontsize=15,
+    labelfontsize=20,
+    legendfontsize=16,
+    margin=5mm,
+    linewidth=4,
+    size=(width, height)
+)
+gui()
+
+savefig("$dir/root_squared_errors.png")
 
 p_cors = plot(
     hcat((c[2:end] for c in cors[1:30,:])...)',
@@ -217,17 +268,21 @@ savefig("$dir/computation_times_full_run.png")
 # end
 
 #* Batch
-for dir in readdir(output_dir * "new_syn", join=true)
-# dir = output_dir * "new_syn/syn_multiKernel_means_noises_fullpdf_nodrop_DistLogEIGF"
+# for dir in readdir(output_dir * "syn_alphas", join=true)
+dir = output_dir * "syn_alphas/syn_multiKernel_means_noises_fullpdf_nodrop_OnlyVar_alpha5"
 
 p_err = Vector{Any}(undef, 8)
 p_cor = Vector{Any}(undef, 8)
 
 err_means = zeros(30, 8)
 err_stds = zeros(30, 8)
+sqr_err_means = zeros(30, 8)
+sqr_err_stds = zeros(30, 8)
 
 max_err_means = zeros(30, 8)
 max_err_stds = zeros(30, 8)
+max_sqr_err_means = zeros(30, 8)
+max_sqr_err_stds = zeros(30, 8)
 
 det_means = Vector{Any}(undef, 8)
 det_stds = Vector{Any}(undef, 8)
@@ -256,7 +311,9 @@ for (i, p) in enumerate(priors)
 
     data = load(file_name)
     maes = [run.mae for run in data["metrics"]]
+    mses = [run.mse for run in data["metrics"]]
     mxaes = [run.mxae for run in data["metrics"]]
+    mxses = [run.mxse for run in data["metrics"]]
     cors = [run.cors for run in data["metrics"]]
     dets = [[v.^2 for v in u] for u in cors]
     dists = [cumsum(run.dists) for run in data["metrics"]]
@@ -264,9 +321,13 @@ for (i, p) in enumerate(priors)
 
     err_means[:,i] .= mean(maes)
     err_stds[:,i] .= std(maes)
+    sqr_err_means[:,i] .= sqrt.(mean(mses))
+    sqr_err_stds[:,i] .= sqrt.(std(mses))
 
     max_err_means[:,i] .= mean(mxaes)
     max_err_stds[:,i] .= std(mxaes)
+    max_sqr_err_means[:,i] .= sqrt.(mean(mxses))
+    max_sqr_err_stds[:,i] .= sqrt.(std(mxses))
 
     det_means[i], det_stds[i] = meanAndStdM(dets)
 
@@ -348,6 +409,79 @@ gui()
 savefig("$dir/errors.png")
 
 plot(
+    sqr_err_means,
+    # ribbon=err_stds,
+    xlabel="Sample Number",
+    ylabel="Root Mean Squared Map Error",
+    title="Root Mean Squared Prediction Errors",
+    ylim=(0,.4),
+    seriescolors=[(RGB((p.*0.8)...) for p in priors)...;;],
+    labels=[replace([join(c for (p, c) in zip(p, chars) if p==1) for p in priors], ""=>"none")...;;],
+    framestyle=:box,
+    markers=true,
+    legendcolumns=2, # OR layout=2,
+    titlefontsize=24,
+    markersize=8,
+    tickfontsize=15,
+    labelfontsize=20,
+    legendfontsize=16,
+    margin=5mm,
+    linewidth=4,
+    size=(width, height)
+)
+gui()
+
+savefig("$dir/root_squared_errors.png")
+
+plot(
+    err_stds,
+    xlabel="Sample Number",
+    ylabel="Std Absolute Map Error",
+    title="Std Prediction Errors",
+    ylim=(0,.4),
+    seriescolors=[(RGB((p.*0.8)...) for p in priors)...;;],
+    labels=[replace([join(c for (p, c) in zip(p, chars) if p==1) for p in priors], ""=>"none")...;;],
+    framestyle=:box,
+    markers=true,
+    legendcolumns=2, # OR layout=2,
+    titlefontsize=24,
+    markersize=8,
+    tickfontsize=15,
+    labelfontsize=20,
+    legendfontsize=16,
+    margin=5mm,
+    linewidth=4,
+    size=(width, height)
+)
+gui()
+
+savefig("$dir/std_errors.png")
+
+plot(
+    sqr_err_stds,
+    xlabel="Sample Number",
+    ylabel="Root Std Squared Map Error",
+    title="Root Std Squared Prediction Errors",
+    ylim=(0,0.8),
+    seriescolors=[(RGB((p.*0.8)...) for p in priors)...;;],
+    labels=[replace([join(c for (p, c) in zip(p, chars) if p==1) for p in priors], ""=>"none")...;;],
+    framestyle=:box,
+    markers=true,
+    legendcolumns=2, # OR layout=2,
+    titlefontsize=24,
+    markersize=8,
+    tickfontsize=15,
+    labelfontsize=20,
+    legendfontsize=16,
+    margin=5mm,
+    linewidth=4,
+    size=(width, height)
+)
+gui()
+
+savefig("$dir/root_std_squared_errors.png")
+
+plot(
     max_err_means,
     # ribbon=max_err_stds,
     xlabel="Sample Number",
@@ -371,6 +505,31 @@ plot(
 gui()
 
 savefig("$dir/max_errors.png")
+
+plot(
+    max_sqr_err_means,
+    # ribbon=max_err_stds,
+    xlabel="Sample Number",
+    ylabel="Root Max Squared Map Error",
+    title="Root Max Squared Prediction Errors",
+    ylim=(0,1.2),
+    seriescolors=[(RGB((p.*0.8)...) for p in priors)...;;],
+    labels=[replace([join(c for (p, c) in zip(p, chars) if p==1) for p in priors], ""=>"none")...;;],
+    framestyle=:box,
+    markers=true,
+    legendcolumns=2, # OR layout=2,
+    titlefontsize=24,
+    markersize=8,
+    tickfontsize=15,
+    labelfontsize=20,
+    legendfontsize=16,
+    margin=5mm,
+    linewidth=4,
+    size=(width, height)
+)
+gui()
+
+savefig("$dir/root_max_squared_errors.png")
 
 plot(
     dist_means,
@@ -452,12 +611,20 @@ savefig("$dir/computation_times_full_run.png")
 
 #* Calculating statistical significance of difference between means
 using Distributions
-p = 4; a = 8; b = 2; n = 18;
-t = abs(err_means[p,a] - err_means[p,b])/sqrt(err_stds[p,a]^2/n + err_stds[p,b]^2/n)
-cdf(TDist(n-1), t) # t-test
+
+combos = [(1,5),(1,7),(3,5),(3,7),
+          (3,2),(3,4),(3,6),(3,8),
+          (5,2),(5,4),(5,6),(5,8),]
+
+t_tests = map(combos) do (a,b)
+    p = 5; n = 18;
+    # a = 5; b = 4;
+    t = abs(err_means[p,a] - err_means[p,b])/sqrt(err_stds[p,a]^2/n + err_stds[p,b]^2/n)
+    cdf(TDist(n-1), t) # t-test
+end
 
 # calc number of samples from t-score
-t^2*(err_stds[p,a]^2 + err_stds[p,b]^2)/(err_means[p,a] - err_means[p,b])^2
+# t^2*(err_stds[p,a]^2 + err_stds[p,b]^2)/(err_means[p,a] - err_means[p,b])^2
 
 
 #* True mean coefficients

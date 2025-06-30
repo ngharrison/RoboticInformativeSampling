@@ -10,7 +10,7 @@ using GridMaps: GridMap, generateAxes
 
 using InformativeSampling
 using .Samples: GridMapsSampler
-using .SampleCosts: MIPT, EIGF, DistScaledEIGF, OnlyVar,
+using .SampleCosts: MIPT, EIGF, DistEIGF, DistScaledEIGF, OnlyVar,
                     DerivVar, DistScaledDerivVar, LogLikelihood,
                     LogLikelihoodFull, DistLogEIGF
 using .Missions: Mission
@@ -18,6 +18,8 @@ using .Missions: Mission
 using InformativeSamplingUtils
 using .DataIO: GaussGroundTruth, Peak
 using .Visualization: vis
+
+a = 5
 
 function synMission(; seed_val=0, num_samples=30,
                     num_peaks=3, priors=Bool[1, 1, 1],
@@ -87,7 +89,7 @@ function synMission(; seed_val=0, num_samples=30,
     # weights = (; μ=17, σ=1.5, τ=7)
     # weights = (; μ=3, σ=1, τ=.5, d=1)
     # weights = (; μ=1, σ=1e1, τ=1, d=1) # sogp
-    weights = (; μ=1, σ=1e2, τ=1, d=1) # others
+    weights = (; μ=1, σ=a, τ=1e-2, d=1) # others
     # weights = (; μ=1, σ=1, τ=.1, d=1)
     start_locs = [] # starting location
 
@@ -139,23 +141,23 @@ end
 #* Run
 
 # # set the logging level: Info or Debug
-# global_logger(ConsoleLogger(stderr, Debug))
+# global_logger(ConsoleLogger(stderr, Info))
 #
 # options = (
 #     means_use=true,
 #     noise_learn=true,
-#     sampleCostType=OnlyVar
+#     sampleCostType=DistEIGF
 # )
 #
 # ## initialize data for mission
-# mission, prior_maps = synMission(; num_samples=30, priors=Bool[1,1,1], seed_val=0, options...)
+# mission, prior_maps = synMission(; num_samples=30, priors=Bool[1,1,1], seed_val=6, num_peaks=5, options...)
 #
 # vis(mission.sampler..., prior_maps...;
 #     titles=["QOI", "Scaling Factor", "Additive Noise", "Random Map"],
 #     points=first.(getfield.(mission.prior_samples, :x)))
 #
 # ## run search alg
-# @time samples, beliefs, cors, times = mission(vis; sleep_time=0.0);
+# @time samples, beliefs, cors, times = mission(vis; seed_val=1, sleep_time=0.0);
 #
 # for bm in beliefs
 #     println(quantityCorMat(bm)[1,:])
@@ -220,6 +222,16 @@ runs = [
         use_cond_pdf = false,
         use_hyp_drop = false,
         sampleCostType = DerivVar
+    ),
+
+    # dist-term eigf
+    (
+        kernel = multiKernel,
+        means_use = true,
+        noise_learn = true,
+        use_cond_pdf = false,
+        use_hyp_drop = false,
+        sampleCostType = DistEIGF
     ),
 
     # dist-scaled eigf
@@ -295,7 +307,7 @@ using .DataIO: save
 #     sampleCostType = DistScaledEIGF
 # )
 
-options = runs[1]
+options = runs[5]
 
 # # LogLikelihood
 # options = (
@@ -314,12 +326,12 @@ c = (options.use_cond_pdf ? "condpdf" : "fullpdf")
 h = (options.use_hyp_drop ? "hypdrop" : "nodrop")
 s = options.sampleCostType
 
-dir = "new_syn/syn_$(k)_$(m)_$(n)_$(c)_$(h)_$(s)"
+dir = "syn_alphas/syn_$(k)_$(m)_$(n)_$(c)_$(h)_$(s)1e-2_alpha$(a)"
 mission, _ = synMission(; options...)
 save(; file_name="$(dir)/mission", mission)
 
-mission_peaks = [3]
-num_runs = 1
+mission_peaks = [3,3,4,4,5,5]
+num_runs = 3
 missions = Array{Any, 2}(undef, (length(mission_peaks), num_runs))
 metrics = Array{Any, 2}(undef, (length(mission_peaks), num_runs))
 # pick all the prior data combinations
@@ -398,9 +410,13 @@ p_cor = Vector{Any}(undef, 8)
 
 err_means = zeros(30, 8)
 err_stds = zeros(30, 8)
+sqr_err_means = zeros(30, 8)
+sqr_err_stds = zeros(30, 8)
 
 max_err_means = zeros(30, 8)
 max_err_stds = zeros(30, 8)
+max_sqr_err_means = zeros(30, 8)
+max_sqr_err_stds = zeros(30, 8)
 
 det_means = Vector{Any}(undef, 8)
 det_stds = Vector{Any}(undef, 8)
@@ -429,7 +445,9 @@ for (i, p) in enumerate(priors)
 
     data = load(file_name)
     maes = [run.mae for run in data["metrics"]]
+    mses = [run.mse for run in data["metrics"]]
     mxaes = [run.mxae for run in data["metrics"]]
+    mxses = [run.mxse for run in data["metrics"]]
     cors = [run.cors for run in data["metrics"]]
     dets = [[v.^2 for v in u] for u in cors]
     dists = [cumsum(run.dists) for run in data["metrics"]]
@@ -437,9 +455,13 @@ for (i, p) in enumerate(priors)
 
     err_means[:,i] .= mean(maes)
     err_stds[:,i] .= std(maes)
+    sqr_err_means[:,i] .= sqrt.(mean(mses))
+    sqr_err_stds[:,i] .= sqrt.(std(mses))
 
     max_err_means[:,i] .= mean(mxaes)
     max_err_stds[:,i] .= std(mxaes)
+    max_sqr_err_means[:,i] .= sqrt.(mean(mxses))
+    max_sqr_err_stds[:,i] .= sqrt.(std(mxses))
 
     det_means[i], det_stds[i] = meanAndStdM(dets)
 
@@ -500,7 +522,7 @@ plot(
     # ribbon=err_stds,
     xlabel="Sample Number",
     ylabel="Mean Absolute Map Error",
-    title="Prediction Errors",
+    title="Mean Prediction Errors",
     ylim=(0,.4),
     seriescolors=[(RGB((p.*0.8)...) for p in priors)...;;],
     labels=[replace([join(c for (p, c) in zip(p, chars) if p==1) for p in priors], ""=>"none")...;;],
@@ -519,6 +541,79 @@ plot(
 gui()
 
 savefig(output_dir * "$dir/errors.png")
+
+plot(
+    sqr_err_means,
+    # ribbon=err_stds,
+    xlabel="Sample Number",
+    ylabel="Root Mean Squared Map Error",
+    title="Root Mean Squared Prediction Errors",
+    ylim=(0,.4),
+    seriescolors=[(RGB((p.*0.8)...) for p in priors)...;;],
+    labels=[replace([join(c for (p, c) in zip(p, chars) if p==1) for p in priors], ""=>"none")...;;],
+    framestyle=:box,
+    markers=true,
+    legendcolumns=2, # OR layout=2,
+    titlefontsize=24,
+    markersize=8,
+    tickfontsize=15,
+    labelfontsize=20,
+    legendfontsize=16,
+    margin=5mm,
+    linewidth=4,
+    size=(width, height)
+)
+gui()
+
+savefig(output_dir * "$dir/root_squared_errors.png")
+
+plot(
+    err_stds,
+    xlabel="Sample Number",
+    ylabel="Std Absolute Map Error",
+    title="Std Prediction Errors",
+    ylim=(0,.4),
+    seriescolors=[(RGB((p.*0.8)...) for p in priors)...;;],
+    labels=[replace([join(c for (p, c) in zip(p, chars) if p==1) for p in priors], ""=>"none")...;;],
+    framestyle=:box,
+    markers=true,
+    legendcolumns=2, # OR layout=2,
+    titlefontsize=24,
+    markersize=8,
+    tickfontsize=15,
+    labelfontsize=20,
+    legendfontsize=16,
+    margin=5mm,
+    linewidth=4,
+    size=(width, height)
+)
+gui()
+
+savefig(output_dir * "$dir/std_errors.png")
+
+plot(
+    sqr_err_stds,
+    xlabel="Sample Number",
+    ylabel="Root Std Squared Map Error",
+    title="Root Std Squared Prediction Errors",
+    ylim=(0,.4),
+    seriescolors=[(RGB((p.*0.8)...) for p in priors)...;;],
+    labels=[replace([join(c for (p, c) in zip(p, chars) if p==1) for p in priors], ""=>"none")...;;],
+    framestyle=:box,
+    markers=true,
+    legendcolumns=2, # OR layout=2,
+    titlefontsize=24,
+    markersize=8,
+    tickfontsize=15,
+    labelfontsize=20,
+    legendfontsize=16,
+    margin=5mm,
+    linewidth=4,
+    size=(width, height)
+)
+gui()
+
+savefig(output_dir * "$dir/root_std_squared_errors.png")
 
 plot(
     max_err_means,
@@ -544,6 +639,31 @@ plot(
 gui()
 
 savefig(output_dir * "$dir/max_errors.png")
+
+plot(
+    max_sqr_err_means,
+    # ribbon=max_err_stds,
+    xlabel="Sample Number",
+    ylabel="Root Max Squared Map Error",
+    title="Root Max Squared Prediction Errors",
+    ylim=(0,1.2),
+    seriescolors=[(RGB((p.*0.8)...) for p in priors)...;;],
+    labels=[replace([join(c for (p, c) in zip(p, chars) if p==1) for p in priors], ""=>"none")...;;],
+    framestyle=:box,
+    markers=true,
+    legendcolumns=2, # OR layout=2,
+    titlefontsize=24,
+    markersize=8,
+    tickfontsize=15,
+    labelfontsize=20,
+    legendfontsize=16,
+    margin=5mm,
+    linewidth=4,
+    size=(width, height)
+)
+gui()
+
+savefig(output_dir * "$dir/root_max_squared_errors.png")
 
 plot(
     dist_means,
