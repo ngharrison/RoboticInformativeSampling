@@ -21,7 +21,7 @@ using .DataIO: normalize, maps_dir, imgToMap
 function ausMission(; seed_val=0, num_samples=30,
                     priors=Bool[1, 1, 1],
                     sampleCostType=DistScaledEIGF, kernel=multiKernel,
-                    use_means=true, noise_learned=true, use_cond_pdf=false,
+                    means_use=true, noise_learn=true, use_cond_pdf=false,
                     use_hyp_drop=false, weights = (; μ=1, σ=1e2, τ=1, d=1))
 
     # have it run around australia
@@ -75,10 +75,10 @@ function ausMission(; seed_val=0, num_samples=30,
     [cor(vec(map0[.!occupancy]), vec(d[.!occupancy])) for d in prior_maps]
     # scatter(vec(map0[.!occupancy]), [vec(d[.!occupancy]) for d in prior_maps], layout=3)
 
-    noise = (value = zeros(length(sampler) + sum(priors)), learned = noise_learned)
+    noise_value = zeros(length(sampler) + sum(priors))
     hyp_drop = (dropout=use_hyp_drop, start=10, num=5, threshold=0.4)
 
-    means = (use = use_means, learned = true)
+    means_learn = true
 
     mission = Mission(;
         occupancy,
@@ -89,8 +89,10 @@ function ausMission(; seed_val=0, num_samples=30,
         start_locs,
         prior_samples,
         kernel,
-        means,
-        noise,
+        means_use,
+        means_learn,
+        noise_value,
+        noise_learn,
         use_cond_pdf,
         hyp_drop,
     )
@@ -108,8 +110,8 @@ end
 #
 # options = (
 #     kernel = multiKernel,
-#     use_means = true,
-#     noise_learned = true,
+#     means_use = true,
+#     noise_learn = true,
 #     use_cond_pdf = false,
 #     use_hyp_drop = false,
 #     sampleCostType = DistScaledEIGF,
@@ -141,8 +143,8 @@ runs = [
     # only var
     (
         kernel = multiKernel,
-        use_means = true,
-        noise_learned = true,
+        means_use = true,
+        noise_learn = true,
         use_cond_pdf = false,
         use_hyp_drop = false,
         sampleCostType = OnlyVar
@@ -151,8 +153,8 @@ runs = [
     # no means
     (
         kernel = multiKernel,
-        use_means = false,
-        noise_learned = true,
+        means_use = false,
+        noise_learn = true,
         use_cond_pdf = false,
         use_hyp_drop = false,
         sampleCostType = OnlyVar
@@ -161,8 +163,8 @@ runs = [
     # eigf
     (
         kernel = multiKernel,
-        use_means = true,
-        noise_learned = true,
+        means_use = true,
+        noise_learn = true,
         use_cond_pdf = false,
         use_hyp_drop = false,
         sampleCostType = EIGF
@@ -171,8 +173,8 @@ runs = [
     # # no noise
     # (
     #     kernel = multiKernel,
-    #     use_means = true,
-    #     noise_learned = false,
+    #     means_use = true,
+    #     noise_learn = false,
     #     use_cond_pdf = false,
     #     use_hyp_drop = false,
     #     sampleCostType = EIGF
@@ -181,8 +183,8 @@ runs = [
     # deriv var
     (
         kernel = multiKernel,
-        use_means = true,
-        noise_learned = true,
+        means_use = true,
+        noise_learn = true,
         use_cond_pdf = false,
         use_hyp_drop = false,
         sampleCostType = DerivVar
@@ -191,8 +193,8 @@ runs = [
     # dist-scaled eigf
     (
         kernel = multiKernel,
-        use_means = true,
-        noise_learned = true,
+        means_use = true,
+        noise_learn = true,
         use_cond_pdf = false,
         use_hyp_drop = false,
         sampleCostType = DistScaledEIGF
@@ -201,8 +203,8 @@ runs = [
     # # dist-scaled deriv var
     # (
     #     kernel = multiKernel,
-    #     use_means = true,
-    #     noise_learned = true,
+    #     means_use = true,
+    #     noise_learn = true,
     #     use_cond_pdf = false,
     #     use_hyp_drop = false,
     #     sampleCostType = DistScaledDerivVar
@@ -211,8 +213,8 @@ runs = [
     # many-to-one
     (
         kernel = mtoKernel,
-        use_means = true,
-        noise_learned = true,
+        means_use = true,
+        noise_learn = true,
         use_cond_pdf = false,
         use_hyp_drop = false,
         sampleCostType = DistScaledEIGF
@@ -221,8 +223,8 @@ runs = [
     # conditional likelihood
     (
         kernel = multiKernel,
-        use_means = true,
-        noise_learned = true,
+        means_use = true,
+        noise_learn = true,
         use_cond_pdf = true,
         use_hyp_drop = false,
         sampleCostType = DistScaledEIGF
@@ -231,8 +233,8 @@ runs = [
     # hypothesis dropout
     (
         kernel = multiKernel,
-        use_means = true,
-        noise_learned = true,
+        means_use = true,
+        noise_learn = true,
         use_cond_pdf = false,
         use_hyp_drop = true,
         sampleCostType = DistScaledEIGF
@@ -259,16 +261,16 @@ using .DataIO: save
 # # LogLikelihood
 # options = (
 #     kernel = multiKernel,
-#     use_means = true,
-#     noise_learned = true,
+#     means_use = true,
+#     noise_learn = true,
 #     use_cond_pdf = false,
 #     use_hyp_drop = false,
 #     sampleCostType = LogLikelihood
 # )
 
 k = options.kernel
-m = (options.use_means ? "means" : "zeromean")
-n = (options.noise_learned ? "noises" : "zeronoise")
+m = (options.means_use ? "means" : "zeromean")
+n = (options.noise_learn ? "noises" : "zeronoise")
 c = (options.use_cond_pdf ? "condpdf" : "fullpdf")
 h = (options.use_hyp_drop ? "hypdrop" : "nodrop")
 s = options.sampleCostType
