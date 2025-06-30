@@ -11,7 +11,7 @@ module ROSInterface
 using PyCall: pyimport, PyNULL
 using DocStringExtensions: TYPEDSIGNATURES, TYPEDFIELDS, FUNCTIONNAME, EXPORTS
 
-using ..Samples: Location, SampleInput
+using MultiQuantityGPs: Location, MQSampleInput
 
 export ROSSampler
 
@@ -29,7 +29,7 @@ end
 A struct that stores information for communicating with Swagbot.
 
 Objects of this type can be used as samplers in missions, meaning they can be
-called with a SampleInput to return its value. This object also has a length,
+called with a MQSampleInput to return its value. This object also has a length,
 which is the length of the number of its subscriptions and can be iterated over
 to get the name of each one.
 
@@ -159,7 +159,7 @@ end
 
 """
 ```julia
-function (R::ROSSampler{String})(new_index::SampleInput)
+function (R::ROSSampler{String})(new_index::MQSampleInput)
 ```
 
 Returns a single value from the sample location of the chosen quantity.  It does
@@ -169,7 +169,7 @@ sampled, it calls out to each topic in sequence and waits for its message.
 Currently will be unused.
 
 ```julia
-function (R::ROSSampler{NTuple{2, String}})(new_index::SampleInput)
+function (R::ROSSampler{NTuple{2, String}})(new_index::MQSampleInput)
 ```
 
 Returns a single value and its error from the sample location of the chosen
@@ -179,7 +179,7 @@ its message.
 
 Currently will be unused.
 """
-function (R::ROSSampler{String})(new_index::SampleInput)
+function (R::ROSSampler{String})(new_index::MQSampleInput)
     loc, quantity = new_index
     publishNextLocation(R.publisher, loc)
 
@@ -197,7 +197,7 @@ function (R::ROSSampler{String})(new_index::SampleInput)
     return value
 end
 
-function (R::ROSSampler{NTuple{2, String}})(new_index::SampleInput)
+function (R::ROSSampler{NTuple{2, String}})(new_index::MQSampleInput)
     loc, quantity = new_index
     publishNextLocation(R.publisher, loc)
 

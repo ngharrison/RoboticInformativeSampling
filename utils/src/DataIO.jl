@@ -13,11 +13,10 @@ using Images: save as saveImg, colorview, RGBA
 using Plots
 using DocStringExtensions: TYPEDSIGNATURES, EXPORTS
 
-using MultiQuantityGPs: MQGP
+using MultiQuantityGPs: MQGP, getQuant
 using GridMaps: generateAxes, GridMap, getBounds
 
 using InformativeSampling
-using .Samples: getQuant
 
 using ..Visualization: visualize
 

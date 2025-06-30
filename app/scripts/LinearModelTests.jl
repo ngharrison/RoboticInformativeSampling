@@ -1,10 +1,9 @@
 
-using MultiQuantityGPs: MQGP, quantityCovMat, LinearModel, rSquared
+using MultiQuantityGPs: MQGP, quantityCovMat, LinearModel, rSquared, MQSample, getQuant
 using GridMaps: res, generateAxes
 
 using InformativeSampling
 using .Missions: Mission
-using .Samples: Sample, getQuant
 
 using InformativeSamplingUtils
 using .DataIO: output_dir, output_ext

@@ -5,9 +5,10 @@ using Statistics: cor
 using Plots
 
 using GridMaps: GridMap, generateAxes
+using MultiQuantityGPs: MQSample
 
 using InformativeSampling
-using .Samples: Sample, GridMapsSampler
+using .Samples: GridMapsSampler
 
 using InformativeSamplingUtils
 using .DataIO: output_dir, GaussGroundTruth, Peak
@@ -59,7 +60,7 @@ sampler = GridMapsSampler(map0)
 n = (5,5) # number of samples in each dimension
 axs_sp = range.(bounds..., n)
 points_sp = vec(collect.(Iterators.product(axs_sp...)))
-prior_samples = [Sample((x, i+length(sampler)), d(x))
+prior_samples = [MQSample(((x, i+length(sampler)), d(x)))
                  for (i, d) in enumerate(prior_maps[priors])
                      for x in points_sp if !isnan(d(x))]
 

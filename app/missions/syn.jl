@@ -5,11 +5,11 @@ using Statistics: mean, cor
 using Random: seed!
 
 using MultiQuantityGPs.Kernels: multiKernel, mtoKernel
-using MultiQuantityGPs: quantityCorMat
+using MultiQuantityGPs: quantityCorMat, MQSample
 using GridMaps: GridMap, generateAxes
 
 using InformativeSampling
-using .Samples: Sample, GridMapsSampler
+using .Samples: GridMapsSampler
 using .SampleCosts: MIPT, EIGF, DistScaledEIGF, OnlyVar,
                     DerivVar, DistScaledDerivVar, LogLikelihood,
                     LogLikelihoodFull, DistLogEIGF
@@ -22,7 +22,7 @@ using .Visualization: vis
 function synMission(; seed_val=0, num_samples=30,
                     num_peaks=3, priors=Bool[1, 1, 1],
                     sampleCostType=DistScaledEIGF, kernel=multiKernel,
-                    use_means=true, noise_learned=true, use_cond_pdf=false,
+                    means_use=true, noise_learn=true, use_cond_pdf=false,
                     use_hyp_drop=false)
 
     seed!(seed_val) # make random values deterministic
@@ -101,7 +101,7 @@ function synMission(; seed_val=0, num_samples=30,
     n = (5,5) # number of samples in each dimension
     axs_sp = range.(bounds..., n)
     points_sp = vec(collect.(Iterators.product(axs_sp...)))
-    prior_samples = [Sample((x, i+length(sampler)), d(x))
+    prior_samples = [MQSample(((x, i+length(sampler)), d(x)))
                      for (i, d) in enumerate(prior_maps[priors])
                          for x in points_sp if !isnan(d(x))]
 
@@ -109,10 +109,10 @@ function synMission(; seed_val=0, num_samples=30,
     @debug [cor(map0.(points_sp), d.(points_sp)) for d in prior_maps]
     # @debug [cor(vec(map0), vec(d)) for d in prior_maps]
 
-    noise = (value = zeros(length(sampler) + sum(priors)), learned = noise_learned)
+    noise_value = zeros(length(sampler) + sum(priors))
     hyp_drop = (dropout=use_hyp_drop, start=10, num=5, threshold=0.4)
 
-    means = (use = use_means, learned = true)
+    means_learn = true
 
     mission = Mission(;
         occupancy,
@@ -123,8 +123,10 @@ function synMission(; seed_val=0, num_samples=30,
         start_locs,
         prior_samples,
         kernel,
-        means,
-        noise,
+        means_use,
+        means_learn,
+        noise_value,
+        noise_learn,
         use_cond_pdf,
         hyp_drop,
     )
@@ -140,8 +142,8 @@ end
 # global_logger(ConsoleLogger(stderr, Debug))
 #
 # options = (
-#     use_means=true,
-#     noise_learned=true,
+#     means_use=true,
+#     noise_learn=true,
 #     sampleCostType=OnlyVar
 # )
 #
@@ -173,8 +175,8 @@ runs = [
     # only var
     (
         kernel = multiKernel,
-        use_means = true,
-        noise_learned = true,
+        means_use = true,
+        noise_learn = true,
         use_cond_pdf = false,
         use_hyp_drop = false,
         sampleCostType = OnlyVar
@@ -183,8 +185,8 @@ runs = [
     # no means
     (
         kernel = multiKernel,
-        use_means = false,
-        noise_learned = true,
+        means_use = false,
+        noise_learn = true,
         use_cond_pdf = false,
         use_hyp_drop = false,
         sampleCostType = OnlyVar
@@ -193,8 +195,8 @@ runs = [
     # eigf
     (
         kernel = multiKernel,
-        use_means = true,
-        noise_learned = true,
+        means_use = true,
+        noise_learn = true,
         use_cond_pdf = false,
         use_hyp_drop = false,
         sampleCostType = EIGF
@@ -203,8 +205,8 @@ runs = [
     # # no noise
     # (
     #     kernel = multiKernel,
-    #     use_means = true,
-    #     noise_learned = false,
+    #     means_use = true,
+    #     noise_learn = false,
     #     use_cond_pdf = false,
     #     use_hyp_drop = false,
     #     sampleCostType = EIGF
@@ -213,8 +215,8 @@ runs = [
     # deriv var
     (
         kernel = multiKernel,
-        use_means = true,
-        noise_learned = true,
+        means_use = true,
+        noise_learn = true,
         use_cond_pdf = false,
         use_hyp_drop = false,
         sampleCostType = DerivVar
@@ -223,8 +225,8 @@ runs = [
     # dist-scaled eigf
     (
         kernel = multiKernel,
-        use_means = true,
-        noise_learned = true,
+        means_use = true,
+        noise_learn = true,
         use_cond_pdf = false,
         use_hyp_drop = false,
         sampleCostType = DistScaledEIGF
@@ -233,8 +235,8 @@ runs = [
     # # dist-scaled deriv var
     # (
     #     kernel = multiKernel,
-    #     use_means = true,
-    #     noise_learned = true,
+    #     means_use = true,
+    #     noise_learn = true,
     #     use_cond_pdf = false,
     #     use_hyp_drop = false,
     #     sampleCostType = DistScaledDerivVar
@@ -243,8 +245,8 @@ runs = [
     # many-to-one
     (
         kernel = mtoKernel,
-        use_means = true,
-        noise_learned = true,
+        means_use = true,
+        noise_learn = true,
         use_cond_pdf = false,
         use_hyp_drop = false,
         sampleCostType = DistScaledEIGF
@@ -253,8 +255,8 @@ runs = [
     # conditional likelihood
     (
         kernel = multiKernel,
-        use_means = true,
-        noise_learned = true,
+        means_use = true,
+        noise_learn = true,
         use_cond_pdf = true,
         use_hyp_drop = false,
         sampleCostType = DistScaledEIGF
@@ -263,8 +265,8 @@ runs = [
     # hypothesis dropout
     (
         kernel = multiKernel,
-        use_means = true,
-        noise_learned = true,
+        means_use = true,
+        noise_learn = true,
         use_cond_pdf = false,
         use_hyp_drop = true,
         sampleCostType = DistScaledEIGF
@@ -286,8 +288,8 @@ using .DataIO: save
 
 # options = (
 #     kernel = multiKernel,
-#     use_means = true,
-#     noise_learned = true,
+#     means_use = true,
+#     noise_learn = true,
 #     use_cond_pdf = false,
 #     use_hyp_drop = false,
 #     sampleCostType = DistScaledEIGF
@@ -298,16 +300,16 @@ options = runs[1]
 # # LogLikelihood
 # options = (
 #     kernel = multiKernel,
-#     use_means = true,
-#     noise_learned = true,
+#     means_use = true,
+#     noise_learn = true,
 #     use_cond_pdf = false,
 #     use_hyp_drop = false,
 #     sampleCostType = LogLikelihood
 # )
 
 k = options.kernel
-m = (options.use_means ? "means" : "zeromean")
-n = (options.noise_learned ? "noises" : "zeronoise")
+m = (options.means_use ? "means" : "zeromean")
+n = (options.noise_learn ? "noises" : "zeronoise")
 c = (options.use_cond_pdf ? "condpdf" : "fullpdf")
 h = (options.use_hyp_drop ? "hypdrop" : "nodrop")
 s = options.sampleCostType
@@ -316,8 +318,8 @@ dir = "new_syn/syn_$(k)_$(m)_$(n)_$(c)_$(h)_$(s)"
 mission, _ = synMission(; options...)
 save(; file_name="$(dir)/mission", mission)
 
-mission_peaks = [3,3,4,4,5,5]
-num_runs = 3
+mission_peaks = [3]
+num_runs = 1
 missions = Array{Any, 2}(undef, (length(mission_peaks), num_runs))
 metrics = Array{Any, 2}(undef, (length(mission_peaks), num_runs))
 # pick all the prior data combinations

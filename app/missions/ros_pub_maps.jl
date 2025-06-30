@@ -5,13 +5,12 @@ Pkg.activate(Base.source_dir() * "/..")
 
 using Logging: global_logger, ConsoleLogger, Info, Debug
 
-using MultiQuantityGPs: MQGP
+using MultiQuantityGPs: MQGP, getQuant
 using GridMaps: GridMap, generateAxes, getBounds
 
 using InformativeSampling
 using .SampleCosts: EIGF
 using .Missions: Mission
-using Samples: getQuant
 
 # this requires a working rospy installation
 include(dirname(Base.active_project()) * "/ros/ROSInterface.jl")

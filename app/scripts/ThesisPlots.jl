@@ -1087,7 +1087,7 @@ axs, points = generateAxes(bounds, dims)
 
 # file_name = output_dir * "pye_farm_trial2/packaged/50x50_dense_grid/samples.txt"
 # samples = map(eachline(file_name)) do line
-#     Sample(eval(Meta.parse(line))...) # read each line as code and turn into Sample
+#     MQSample(eval(Meta.parse(line))) # read each line as code and turn into Sample
 # end
 #
 # xp = [s.x[1] for s in samples]
@@ -1261,7 +1261,7 @@ dists = zeros(num_samples, length(runs))
 for (j, run) in pairs(runs)
     file_name = run * "/samples.txt"
     samples = map(eachline(file_name)) do line
-        Sample(eval(Meta.parse(line))...) # read each line as code and turn into Sample
+        MQSample(eval(Meta.parse(line))) # read each line as code and turn into Sample
     end
     filter!(s->getQuant(s)==1, samples) # only looking at height
     for i in eachindex(samples)[2:end]
@@ -1416,7 +1416,7 @@ full_data = map(runs) do run
     final_uncertainty = imgToMap(readdlm(run * "/avg_height_uncertainty.csv", ','), boundsn[extent])
 
     samples = map(eachline(run * "/samples.txt")) do line
-        Sample(eval(Meta.parse(line))...)
+        MQSample(eval(Meta.parse(line)))
     end
     filter!(s->getQuant(s)==1, samples) # only looking at height
     xp = [s.x[1] for s in samples]
@@ -1749,7 +1749,7 @@ dists = zeros(num_samples, length(runs))
 for (j, run) in pairs(runs)
     file_name = run * "/samples.txt"
     samples = map(eachline(file_name)) do line
-        Sample(eval(Meta.parse(line))...) # read each line as code and turn into Sample
+        MQSample(eval(Meta.parse(line))) # read each line as code and turn into Sample
     end
     filter!(s->getQuant(s)==1, samples) # only looking at height
     for i in eachindex(samples)[2:end]
@@ -1840,7 +1840,7 @@ full_data = map(runs) do run
     final_uncertainty = imgToMap(readdlm(run * "/avg_height_uncertainty.csv", ','), boundsn[extent])
 
     samples = map(eachline(run * "/samples.txt")) do line
-        Sample(eval(Meta.parse(line))...)
+        MQSample(eval(Meta.parse(line)))
     end
     filter!(s->getQuant(s)==1, samples) # only looking at height
     xp = [s.x[1] for s in samples]
@@ -1995,7 +1995,7 @@ run = runs[j]
 name = run[findlast('/', run)+1:end]
 
 samples = map(eachline(run * "/samples.txt")) do line
-    Sample(eval(Meta.parse(line))...)
+    MQSample(eval(Meta.parse(line)))
 end
 filter!(s -> getQuant(s) == 1, samples) # only looking at height
 xp = [s.x[1] for s in samples]
@@ -2342,7 +2342,7 @@ savefig(output_dir * "thesis/$(region)_$(priors)/full_run_comparison.png")
 samples = Iterators.flatmap([gt_dir]) do run
     Iterators.filter(s -> getQuant(s) == 1,
         Iterators.map(eachline(run * "/samples.txt")) do line
-            Sample(eval(Meta.parse(line))...)
+            MQSample(eval(Meta.parse(line)))
         end)
 end |> collect
 
@@ -2457,7 +2457,7 @@ end
 samples = Iterators.flatmap([gt_dir]) do run
     Iterators.filter(s -> getQuant(s) == 1,
         Iterators.map(eachline(run * "/samples.txt")) do line
-            Sample(eval(Meta.parse(line))...)
+            MQSample(eval(Meta.parse(line)))
         end)
 end |> collect
 
@@ -2480,7 +2480,7 @@ for run in filter(contains("prior"), runs)
     N = 2
     beliefs = map(enumerate(eachline(run * "/belief_params.txt"))) do (i, line)
         params = (; eval(Meta.parse(line))..., μ = [0, 0])
-        MQGP([Sample(([0.0,0.0],1),0.0)], params; N)
+        MQGP([MQSample((([0.0,0.0],1),0.0))], params; N)
     end
     cors = [quantityCorMat(bm)[:, 1] for bm in beliefs]
     writedlm(run * "/correlations_new.txt", [cors], "\n")
