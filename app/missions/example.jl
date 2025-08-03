@@ -15,6 +15,8 @@ using InformativeSamplingUtils
 using .DataIO: GaussGroundTruth, Peak
 using .Visualization: vis
 
+include("dashboard.jl")
+
 function synMission(; seed_val=0, num_samples=30, num_peaks=3, priors=Bool[1,1,1])
     seed!(seed_val) # make random values deterministic
 
@@ -110,6 +112,9 @@ end
 
 
 #* Run
+
+using Logging: global_logger, ConsoleLogger, Info, Debug
+global_logger(ConsoleLogger(stderr, Info))
 
 ## initialize data for mission
 mission, prior_maps = synMission(num_samples=5)
