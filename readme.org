@@ -2,7 +2,7 @@
 
 This code was written as part of my PhD research in field robotics, specifically for robotic informative sampling in natural environments. The code is written in Julia for speed and code flexibility.
 
-The purpose of this repository is mainly to serve as a reference implementation for the methods in my thesis (link will be included once published). However, the code is organized and documented to be usable by others for their own applications. If you have questions about the code or problems trying to use it, feel free to post in the Discussions or Issues, and I'll see how I can help. Also important to know, I am currently in the process of improving the organization, so things are not guaranteed to be very stable just yet.
+The purpose of this repository is mainly to serve as a reference implementation for the methods in [[https://hdl.handle.net/2123/34094][my thesis]]. However, the code is organized and documented to make it easier for others to use and build off it. In particular, it contains two reusable submodules that contain core informative sampling and utility pieces. If you have questions about the code or problems trying to use it, feel free to post in the Discussions or Issues, and I'll see how I can help.
 
 Some packages used by this code used to be submodules within it: [[https://github.com/ngharrison/GridMaps.jl][GridMaps]], [[https://github.com/ngharrison/AStarGridSearch.jl][AStarGridSearch]], [[https://github.com/ngharrison/MultiQuantityGPs.jl][MultiQuantityGPs]].
 
@@ -50,17 +50,6 @@ An interesting and flexible mission is found in =user.jl=. This script does all 
 
 The =--project=<path>= flag automatically activates a project environment after starting the REPL. You can run this manually by =]activate <path>= within the julia REPL. Both of these forms accept the path to the directory that contains the =Project.toml= file, e.g. the app directory of this repository. If you are already within a project directory, you can simply run it without a value (=julia --project=) with the same effect.
 
-*** rospy error
-
-If you get: =Error: Unable to load the 'rospy' python package!=
-
-1. Run ~ENV["PYTHON"] = "/usr/bin/python"~ (or whatever the path is to the python executable that has the rospy package installed)
-2. Run =]build PyCall=
-3. Restart the julia REPL
-
-
-If you get: =ERROR: LoadError: PyError ... ROSInterruptException('rospy shutdown',)= from within the Julia REPL, this indicates that you interrupted a previous running ROS node (using =ctrl-c=) and a new node can't be created because that flag sticks around inside the same Julia process. You will need to close and reopen the REPL to run new nodes again.
-
 *** Code reloading
 
 When developing the code, you'll want to install Revise.jl in order to reload code you've changed while using an open REPL. Follow these steps and you won't have to worry about it again.
@@ -75,7 +64,7 @@ You can read a bit more about this in the docs.
 
 * Using as a ROS Package
 
-The project includes code to communicate with other nodes in the Robot Operating System (ROS). This code is designed to work with ROS1 and has been tested on Melodic and Noetic. These features will work just by running the code as normal from the command line or within the Julia REPL.
+The project includes code to communicate with other nodes in the Robot Operating System (ROS). Specific missions use rospy, typically through the module in =app/ros/ROSInterface.jl=, and require a working rospy installation. They have been designed to work with ROS 1 and have been tested on Melodic and Noetic. These ROS features will work just by running the code as normal from the command line or within the Julia REPL.
 
 In addition, this project can be used as a ROS package itself by simply putting it inside your workspace source directory (e.g. =catkin_ws/src=). It works similar to using a ROS python package because it uses rospy behind the scenes. To test your ROS+Julia setup, run the following:
 
@@ -140,6 +129,17 @@ python app/missions/from_python.py
 #+end_src
 
 Note that just the same as when running Julia code normally, if the interpreter process ends, all compilation will disappear. That means running scripts straight from the command line has to pay the start-up cost every time. If instead the code is run from within a python shell, it will keep compiled methods around and subsequent runs will go much faster.
+
+** rospy error
+
+If you get: =Error: Unable to load the 'rospy' python package!=
+
+1. Run ~ENV["PYTHON"] = "/usr/bin/python"~ (or whatever the path is to the python executable that has the rospy package installed)
+2. Run =]build PyCall=
+3. Restart the julia REPL
+
+
+If you get: =ERROR: LoadError: PyError ... ROSInterruptException('rospy shutdown',)= from within the Julia REPL, this indicates that you interrupted a previous running ROS node (using =ctrl-c=) and a new node can't be created because that flag sticks around inside the same Julia process. You will need to close and reopen the REPL to run new nodes again.
 
 * Documentation
 
